@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DollarSign, Users, BookOpen, Award } from "lucide-react";
+import { 
+  DollarSign, Users, BookOpen, Award, TrendingUp, Eye
+} from "lucide-react";
 import PropTypes from "prop-types";
 
 function InstructorDashboard({ listOfCourses = [] }) {
@@ -37,88 +39,214 @@ function InstructorDashboard({ listOfCourses = [] }) {
 
   const totals = calculateTotalStudentsAndProfit();
   const kpis = [
-    { icon: Users, label: "Total Students", value: totals.totalStudents },
-    { icon: BookOpen, label: "Total Courses", value: listOfCourses.length },
-    { icon: DollarSign, label: "Total Revenue", value: totals.totalProfit },
-    { icon: Award, label: "Avg. Revenue / Course", value: listOfCourses.length ? Math.round(totals.totalProfit / listOfCourses.length) : 0 },
+    { 
+      icon: Users, 
+      label: "Total Students", 
+      value: totals.totalStudents,
+      color: "from-blue-500 to-blue-600",
+      bgColor: "bg-blue-50",
+      iconColor: "text-blue-600",
+      trend: "+12%",
+      description: "Active enrollments"
+    },
+    { 
+      icon: BookOpen, 
+      label: "Total Courses", 
+      value: listOfCourses.length,
+      color: "from-green-500 to-green-600",
+      bgColor: "bg-green-50",
+      iconColor: "text-green-600",
+      trend: "+5%",
+      description: "Published courses"
+    },
+    { 
+      icon: DollarSign, 
+      label: "Total Revenue", 
+      value: `$${totals.totalProfit.toLocaleString()}`,
+      color: "from-purple-500 to-purple-600",
+      bgColor: "bg-purple-50",
+      iconColor: "text-purple-600",
+      trend: "+18%",
+      description: "This month"
+    },
+    { 
+      icon: Award, 
+      label: "Avg. Revenue / Course", 
+      value: `$${listOfCourses.length ? Math.round(totals.totalProfit / listOfCourses.length).toLocaleString() : 0}`,
+      color: "from-orange-500 to-orange-600",
+      bgColor: "bg-orange-50",
+      iconColor: "text-orange-600",
+      trend: "+8%",
+      description: "Per course"
+    },
   ];
 
   return (
-    <div className="space-y-8">
-      {/* KPI strip */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div className="p-6 space-y-8">
+      {/* Welcome Section */}
+      {/* <div className="mb-8">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white">
+          <h1 className="text-3xl font-bold mb-2">Welcome back, Instructor! 👋</h1>
+          <p className="text-blue-100 text-lg">Here&apos;s what&apos;s happening with your courses today</p>
+          <div className="flex items-center gap-4 mt-4">
+            <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full">
+              <BookOpen className="w-4 h-4" />
+              <span className="text-sm">{listOfCourses.length} Active Courses</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full">
+              <Users className="w-4 h-4" />
+              <span className="text-sm">{totals.totalStudents} Students</span>
+            </div>
+          </div>
+        </div>
+      </div> */}
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
         {kpis.map((item, index) => (
-          <Card key={index} className="border-0 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{item.label}</CardTitle>
-              <item.icon className="h-5 w-5 text-gray-500" />
+          <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className={`p-3 rounded-xl ${item.bgColor}`}>
+                  <item.icon className={`h-6 w-6 ${item.iconColor}`} />
+                </div>
+                <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                  <TrendingUp className="w-4 h-4" />
+                  {item.trend}
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-extrabold">{item.value}</div>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold text-gray-900 mb-1">{item.value}</div>
+              <p className="text-sm text-gray-600 mb-2">{item.label}</p>
+              <p className="text-xs text-gray-500">{item.description}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Courses overview */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <CardTitle>Your Courses</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table className="w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Course</TableHead>
-                  <TableHead>Students</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Revenue</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {listOfCourses.map((c) => (
-                  <TableRow key={c._id}>
-                    <TableCell className="font-medium">{c.title}</TableCell>
-                    <TableCell>{c.students?.length}</TableCell>
-                    <TableCell>${c.pricing}</TableCell>
-                    <TableCell>${(c.students?.length || 0) * c.pricing}</TableCell>
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* Courses Overview */}
+        <Card className="border-0 shadow-lg bg-white">
+          <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-semibold text-gray-900">Your Courses Performance</CardTitle>
+                  <p className="text-sm text-gray-500">Revenue and enrollment overview</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-blue-600">{listOfCourses.length}</div>
+                <div className="text-sm text-gray-500">Total Courses</div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50 hover:bg-gray-50">
+                    <TableHead className="font-semibold text-gray-700">Course</TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-center">Students</TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-right">Revenue</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {listOfCourses.map((c) => (
+                    <TableRow key={c._id} className="hover:bg-gray-50 transition-colors">
+                      <TableCell className="font-medium text-gray-900">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                            <BookOpen className="w-4 h-4 text-white" />
+                          </div>
+                          <span>{c.title}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Users className="h-4 w-4 text-blue-600" />
+                          <span className="font-semibold text-gray-900">{c.students?.length || 0}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="font-bold text-green-600">${(c.students?.length || 0) * c.pricing}</span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Students table */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <CardTitle>Recent Students</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table className="w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Course Name</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead>Student Email</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {totals.studentList.slice(0, 10).map((s, i) => (
-                  <TableRow key={`${s.studentEmail}-${i}`}>
-                    <TableCell className="font-medium">{s.courseTitle}</TableCell>
-                    <TableCell>{s.studentName}</TableCell>
-                    <TableCell>{s.studentEmail}</TableCell>
+        {/* Recent Students */}
+        <Card className="border-0 shadow-lg bg-white">
+          <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-semibold text-gray-900">Recent Students</CardTitle>
+                  <p className="text-sm text-gray-500">Latest enrollments and activity</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-green-600">{Math.min(10, totals.studentList.length)}</div>
+                <div className="text-sm text-gray-500">New Students</div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50 hover:bg-gray-50">
+                    <TableHead className="font-semibold text-gray-700">Course Name</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Student Name</TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-center">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {totals.studentList.slice(0, 10).map((s, i) => (
+                    <TableRow key={`${s.studentEmail}-${i}`} className="hover:bg-gray-50 transition-colors">
+                      <TableCell className="font-medium text-gray-900">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                            <BookOpen className="w-4 h-4 text-white" />
+                          </div>
+                          <span className="truncate max-w-32">{s.courseTitle}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium text-gray-800">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <span>{s.studentName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <button className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                          <Eye className="h-4 w-4 text-gray-500" />
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

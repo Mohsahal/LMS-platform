@@ -26,6 +26,9 @@ export async function mediaUploadService(formData, onProgressCallback) {
       );
       onProgressCallback(percentCompleted);
     },
+    timeout: 300000, // 5 minutes timeout for large files
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
   });
 
   return data;
@@ -74,6 +77,9 @@ export async function mediaBulkUploadService(formData, onProgressCallback) {
       );
       onProgressCallback(percentCompleted);
     },
+    timeout: 600000, // 10 minutes timeout for bulk uploads
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
   });
 
   return data;

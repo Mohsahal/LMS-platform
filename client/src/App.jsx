@@ -8,7 +8,7 @@ import StudentViewCommonLayout from "./components/student-view/common-layout";
 import StudentHomePage from "./pages/student/home";
 import StudentViewCoursesPage from "./pages/student/courses";
 import StudentViewCourseDetailsPage from "./pages/student/course-details";
-import PaypalPaymentReturnPage from "./pages/student/payment-return";
+import PaypalPaymentReturnPage from "./pages/student/payment-return/index.jsx";
 import StudentCoursesPage from "./pages/student/student-courses";
 import StudentViewCourseProgressPage from "./pages/student/course-progress";
 import AboutPage from "./pages/student/about";
