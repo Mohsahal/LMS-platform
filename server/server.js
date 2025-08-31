@@ -14,8 +14,7 @@ const studentViewCourseRoutes = require("./routes/student-routes/course-routes")
 const studentViewOrderRoutes = require("./routes/student-routes/order-routes");
 const studentCoursesRoutes = require("./routes/student-routes/student-courses-routes");
 const studentCourseProgressRoutes = require("./routes/student-routes/course-progress-routes");
-const notificationRoutes = require("./routes/notification-routes/index");
-const NotificationHelper = require("./helpers/notification-helper");
+
 
 const app = express();
 app.set("trust proxy", 1);
@@ -119,7 +118,7 @@ app.use("/student/course", studentViewCourseRoutes);
 app.use("/student/order", studentViewOrderRoutes);
 app.use("/student/courses-bought", studentCoursesRoutes);
 app.use("/student/course-progress", studentCourseProgressRoutes);
-app.use("/notifications", notificationRoutes);
+
 
 app.use((err, req, res, next) => {
   console.log("Global error handler triggered:");
@@ -162,28 +161,4 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`Server is now running on port ${PORT}`);
-  
-  // Clean up expired notifications every hour
-  setInterval(async () => {
-    try {
-      const deletedCount = await NotificationHelper.cleanupExpiredNotifications();
-      if (deletedCount > 0) {
-        console.log(`🧹 Cleaned up ${deletedCount} expired notifications`);
-      }
-    } catch (error) {
-      console.error('Error cleaning up notifications:', error);
-    }
-  }, 60 * 60 * 1000); // Every hour
-  
-  // Initial cleanup
-  setTimeout(async () => {
-    try {
-      const deletedCount = await NotificationHelper.cleanupExpiredNotifications();
-      if (deletedCount > 0) {
-        console.log(`🧹 Initial cleanup: ${deletedCount} expired notifications removed`);
-      }
-    } catch (error) {
-      console.error('Error in initial notification cleanup:', error);
-    }
-  }, 5000); // After 5 seconds
 });

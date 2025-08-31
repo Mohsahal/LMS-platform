@@ -2,17 +2,15 @@ import InstructorCourses from "@/components/instructor-view/courses";
 import InstructorDashboard from "@/components/instructor-view/dashboard";
 import { AuthContext } from "@/context/auth-context";
 import { InstructorContext } from "@/context/instructor-context";
-import { fetchInstructorCourseListService, getUserNotificationsService, markNotificationAsReadService } from "@/services";
+import { fetchInstructorCourseListService } from "@/services";
 import { useContext, useEffect, useState } from "react";
-import { Search, Bell, Calendar, User, LogOut, BarChart3, BookOpen } from "lucide-react";
+import { Search, Calendar, User, LogOut, BarChart3, BookOpen } from "lucide-react";
 
 function InstructorDashboardpage() {
   const [currentView, setCurrentView] = useState("dashboard");
   const [isOnline, setIsOnline] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
   const { resetCredentials, user } = useContext(AuthContext);
   const { instructorCoursesList, setInstructorCoursesList } =
     useContext(InstructorContext);
@@ -22,44 +20,10 @@ function InstructorDashboardpage() {
     if (response?.success) setInstructorCoursesList(response?.data);
   }
 
-  // Fetch real notifications from server
-  async function fetchNotifications() {
-    if (!user?.userEmail) {
-      console.log('No user email found, skipping notification fetch');
-      return;
-    }
-    
-    try {
-      setNotificationsLoading(true);
-      console.log('Fetching notifications for:', user.userEmail);
-      
-      const response = await getUserNotificationsService(user.userEmail, {
-        limit: 50,
-        unreadOnly: false
-      });
-      
-      console.log('Notification API response:', response);
-      
-      if (response?.success) {
-        const notificationsList = response.data.notifications || [];
-        console.log('Setting notifications:', notificationsList.length);
-        setNotifications(notificationsList);
-      } else {
-        console.error('Notification response not successful:', response);
-        setNotifications([]);
-      }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      // Fallback to empty array if API fails
-      setNotifications([]);
-    } finally {
-      setNotificationsLoading(false);
-    }
-  }
+
 
   useEffect(() => {
     fetchAllCourses();
-    fetchNotifications();
     
     // Set online status based on user activity
     const handleOnline = () => setIsOnline(true);
@@ -71,19 +35,11 @@ function InstructorDashboardpage() {
     // Check initial online status
     setIsOnline(navigator.onLine);
     
-    // Set up periodic notification refresh (every 30 seconds)
-    const notificationInterval = setInterval(() => {
-      if (user?.userEmail) {
-        fetchNotifications();
-      }
-    }, 30000);
-    
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      clearInterval(notificationInterval);
     };
-  }, [user?.userEmail]); // Re-fetch when user changes
+  }, []); // Re-fetch when user changes
 
   function handleLogout() {
     resetCredentials();
@@ -106,27 +62,7 @@ function InstructorDashboardpage() {
     setSearchQuery(e.target.value);
   };
 
-  // Mark notification as read
-  const markNotificationAsRead = async (notificationId) => {
-    try {
-      // Call API to mark as read
-      const response = await markNotificationAsReadService(notificationId);
-      
-      if (response?.success) {
-        // Update local state
-        setNotifications(prev => 
-          prev.map(notif => 
-            notif._id === notificationId ? { ...notif, isRead: true } : notif
-          )
-        );
-      }
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
 
-  // Get unread notifications count
-  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   // Render the appropriate component based on current view
   const renderContent = () => {
@@ -152,7 +88,6 @@ function InstructorDashboardpage() {
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
               <div>
-                {/* <h1 className="text-xl font-bold text-white">E-Learn Pro</h1> */}
                 <p className="text-xs text-blue-100">Instructor Portal</p>
               </div>
             </div>
@@ -294,168 +229,7 @@ function InstructorDashboardpage() {
                 )}
               </div>
               
-              {/* Enhanced Notifications */}
-              <div className="relative">
-                                                  <button 
-                   onClick={() => {
-                     if (!showNotifications) {
-                       fetchNotifications(); // Refresh notifications when opening
-                     }
-                     setShowNotifications(!showNotifications);
-                   }}
-                   disabled={notificationsLoading}
-                   className="p-2 rounded-lg hover:bg-gray-100 relative disabled:opacity-50 disabled:cursor-not-allowed"
-                 >
-                   {notificationsLoading ? (
-                     <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                   ) : (
-                     <Bell className="w-5 h-5 text-gray-600" />
-                   )}
-                   {unreadCount > 0 && (
-                     <div className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                       {unreadCount > 9 ? '9+' : unreadCount}
-                     </div>
-                   )}
-                 </button>
-                 
-                 {/* Test notification button */}
-                 <button
-                   onClick={async () => {
-                     try {
-                       console.log('Testing notification system...');
-                       const accessToken = JSON.parse(localStorage.getItem("accessToken")) || "";
-                       if (!accessToken) {
-                         alert("No access token found. Please login first.");
-                         return;
-                       }
-                       
-                       // First test if the notification system is accessible
-                       console.log('Testing notification system access...');
-                       const testResponse = await fetch('http://localhost:5000/notifications/test', {
-                         method: 'GET',
-                         credentials: 'include',
-                         headers: {
-                           'Content-Type': 'application/json',
-                           'Authorization': `Bearer ${accessToken}`
-                         }
-                       });
-                       
-                       const testData = await testResponse.json();
-                       console.log('Test response:', testData);
-                       
-                       if (testData.success) {
-                         // Now create a test notification
-                         console.log('Creating test notification...');
-                         const response = await fetch('http://localhost:5000/notifications/create', {
-                           method: 'POST',
-                           credentials: 'include',
-                           headers: {
-                             'Content-Type': 'application/json',
-                             'Authorization': `Bearer ${accessToken}`
-                           },
-                           body: JSON.stringify({
-                             userId: user?.userEmail,
-                             userType: 'instructor',
-                             type: 'system',
-                             title: 'Test Notification',
-                             message: 'This is a test notification to verify the system is working.'
-                           })
-                         });
-                         
-                         const data = await response.json();
-                         console.log('Test notification response:', data);
-                         alert(`Test notification: ${JSON.stringify(data)}`);
-                         
-                         // Refresh notifications
-                         await fetchNotifications();
-                       } else {
-                         alert(`Notification system test failed: ${JSON.stringify(testData)}`);
-                       }
-                     } catch (error) {
-                       console.error('Test notification failed:', error);
-                       alert(`Test notification failed: ${error.message}`);
-                     }
-                   }}
-                   className="ml-2 p-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                   title="Test notification system"
-                 >
-                   Test
-                 </button>
-                 
 
-                
-                {/* Notifications Dropdown */}
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                                         <div className="p-4 border-b border-gray-200">
-                       <div className="flex items-center justify-between">
-                         <div>
-                           <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
-                           <p className="text-sm text-gray-500">{unreadCount} unread</p>
-                         </div>
-                         <button
-                           onClick={fetchNotifications}
-                           disabled={notificationsLoading}
-                           className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                           title="Refresh notifications"
-                         >
-                           <svg className={`w-4 h-4 ${notificationsLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                           </svg>
-                         </button>
-                       </div>
-                     </div>
-                                         <div className="max-h-96 overflow-y-auto">
-                       {notificationsLoading ? (
-                         <div className="p-4 text-center text-gray-500">
-                           <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                           Loading notifications...
-                         </div>
-                       ) : notifications.length > 0 ? (
-                         notifications.map((notification) => (
-                           <div
-                             key={notification._id}
-                             onClick={() => markNotificationAsRead(notification._id)}
-                             className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                               !notification.isRead ? 'bg-blue-50' : ''
-                             }`}
-                           >
-                             <div className="flex items-start gap-3">
-                               <div className={`w-2 h-2 rounded-full mt-2 ${
-                                 notification.type === 'payment' ? 'bg-green-500' :
-                                 notification.type === 'enrollment' ? 'bg-blue-500' :
-                                 notification.type === 'course_completion' ? 'bg-purple-500' :
-                                 notification.type === 'course_published' ? 'bg-indigo-500' :
-                                 notification.type === 'achievement' ? 'bg-yellow-500' :
-                                 'bg-gray-500'
-                               }`}></div>
-                               <div className="flex-1">
-                                 <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-                                 <p className="text-sm text-gray-700 mt-1">{notification.message}</p>
-                                 <p className="text-xs text-gray-500 mt-2">
-                                   {new Date(notification.createdAt).toLocaleDateString('en-US', {
-                                     month: 'short',
-                                     day: 'numeric',
-                                     hour: '2-digit',
-                                     minute: '2-digit'
-                                   })}
-                                 </p>
-                               </div>
-                               {!notification.isRead && (
-                                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                               )}
-                             </div>
-                           </div>
-                         ))
-                       ) : (
-                         <div className="p-4 text-center text-gray-500">
-                           No notifications yet
-                         </div>
-                       )}
-                     </div>
-                  </div>
-                )}
-              </div>
               
               {/* Enhanced Date Display */}
               <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg flex items-center gap-2">
@@ -477,13 +251,7 @@ function InstructorDashboardpage() {
         </main>
       </div>
 
-      {/* Click outside to close notifications */}
-      {showNotifications && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowNotifications(false)}
-        />
-      )}
+
     </div>
   );
 }

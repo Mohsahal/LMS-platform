@@ -166,45 +166,4 @@ export async function resetCourseProgressService(userId, courseId) {
   return data;
 }
 
-// Notification Services
-export async function createNotificationService(notificationData) {
-  const { data } = await axiosInstance.post("/notifications/create", notificationData);
-  return data;
-}
 
-export async function getUserNotificationsService(userId, options = {}) {
-  const { page = 1, limit = 20, unreadOnly = false } = options;
-  const queryParams = new URLSearchParams({
-    page: page.toString(),
-    limit: limit.toString(),
-    unreadOnly: unreadOnly.toString()
-  });
-  
-  const { data } = await axiosInstance.get(`/notifications/user/${userId}?${queryParams}`);
-  return data;
-}
-
-export async function markNotificationAsReadService(notificationId) {
-  const { data } = await axiosInstance.put(`/notifications/read/${notificationId}`);
-  return data;
-}
-
-export async function markAllNotificationsAsReadService(userId) {
-  const { data } = await axiosInstance.put(`/notifications/read-all/${userId}`);
-  return data;
-}
-
-export async function deleteNotificationService(notificationId) {
-  const { data } = await axiosInstance.delete(`/notifications/${notificationId}`);
-  return data;
-}
-
-export async function deleteAllUserNotificationsService(userId) {
-  const { data } = await axiosInstance.delete(`/notifications/user/${userId}`);
-  return data;
-}
-
-export async function bulkCreateNotificationsService(notifications) {
-  const { data } = await axiosInstance.post("/notifications/bulk-create", { notifications });
-  return data;
-}

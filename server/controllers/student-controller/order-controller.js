@@ -2,7 +2,7 @@ const paypal = require("../../helpers/paypal");
 const Order = require("../../models/Order");
 const Course = require("../../models/Course");
 const StudentCourses = require("../../models/StudentCourses");
-const NotificationHelper = require("../../helpers/notification-helper");
+
 
 const createOrder = async (req, res) => {
   try {
@@ -171,40 +171,7 @@ const capturePaymentAndFinalizeOrder = async (req, res) => {
       },
     });
 
-    // Create payment completion notification for student
-    await NotificationHelper.createPaymentNotification(
-      order.userId,
-      'student',
-      {
-        paymentId: order.paymentId,
-        amount: order.coursePricing,
-        courseId: order.courseId,
-        courseTitle: order.courseTitle
-      }
-    );
 
-    // Create enrollment notification for student
-    await NotificationHelper.createEnrollmentNotification(
-      order.userId,
-      'student',
-      {
-        courseId: order.courseId,
-        courseTitle: order.courseTitle,
-        instructorName: order.instructorName
-      }
-    );
-
-    // Create notification for instructor about new student
-    await NotificationHelper.createEnrollmentNotification(
-      order.instructorId,
-      'instructor',
-      {
-        courseId: order.courseId,
-        courseTitle: order.courseTitle,
-        studentName: order.userName,
-        studentEmail: order.userEmail
-      }
-    );
 
     res.status(200).json({
       success: true,

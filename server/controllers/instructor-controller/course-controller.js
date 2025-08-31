@@ -1,23 +1,19 @@
 const Course = require("../../models/Course");
-const NotificationHelper = require("../../helpers/notification-helper");
+
 
 const addNewCourse = async (req, res) => {
   try {
     const courseData = req.body;
+    console.log('=== ADDING NEW COURSE ===');
+    console.log('Course data:', courseData);
+    
     const newlyCreatedCourse = new Course(courseData);
     const saveCourse = await newlyCreatedCourse.save();
 
     if (saveCourse) {
-      // Create course published notification for instructor
-      await NotificationHelper.createCoursePublishedNotification(
-        saveCourse.instructorId,
-        'instructor',
-        {
-          courseId: saveCourse._id,
-          title: saveCourse.title,
-          courseUrl: `/instructor/edit-course/${saveCourse._id}`
-        }
-      );
+      console.log('Course saved successfully:', saveCourse._id);
+      console.log('Instructor ID from course:', saveCourse.instructorId);
+      console.log('Instructor Name from course:', saveCourse.instructorName);
 
       res.status(201).json({
         success: true,
@@ -26,7 +22,7 @@ const addNewCourse = async (req, res) => {
       });
     }
   } catch (e) {
-    console.log(e);
+    console.error('Error adding new course:', e);
     res.status(500).json({
       success: false,
       message: "Some error occured!",
@@ -94,21 +90,7 @@ const updateCourseByID = async (req, res) => {
       });
     }
 
-    // Create course updated notification for instructor
-    await NotificationHelper.createSystemNotification(
-      updatedCourse.instructorId,
-      'instructor',
-      {
-        title: 'Course Updated Successfully!',
-        message: `Your course "${updatedCourse.title}" has been updated successfully.`,
-        data: {
-          courseId: updatedCourse._id,
-          courseTitle: updatedCourse.title,
-          updateDate: new Date()
-        },
-        priority: 'medium'
-      }
-    );
+
 
     res.status(200).json({
       success: true,
@@ -204,51 +186,10 @@ const deleteCourseByID = async (req, res) => {
           // Remove course progress for all students
           await CourseProgress.deleteMany({ courseId: id });
           console.log(`Cleaned up CourseProgress for course ${id}`);
-          
-          // Notify all students about course deletion
-          for (const student of courseData.students) {
-            try {
-              await NotificationHelper.createSystemNotification(
-                student.studentId,
-                'student',
-                {
-                  title: 'Course Unavailable',
-                  message: `The course "${courseData.title}" you enrolled in is no longer available. Please contact support for assistance.`,
-                  data: {
-                    courseId: courseData._id,
-                    courseTitle: courseData.title,
-                    instructorId: courseData.instructorId,
-                    deletionDate: new Date()
-                  },
-                  priority: 'high'
-                }
-              );
-            } catch (studentNotificationError) {
-              console.error(`Failed to notify student ${student.studentId}:`, studentNotificationError);
-            }
-          }
         }
-
-        // Create course deleted notification for instructor (only if instructorId exists)
-        if (courseData.instructorId) {
-          await NotificationHelper.createSystemNotification(
-            courseData.instructorId,
-            'instructor',
-            {
-              title: 'Course Deleted Successfully!',
-              message: `Your course "${courseData.title}" has been deleted successfully.`,
-              data: {
-                courseId: courseData._id,
-                courseTitle: courseData.title,
-                deleteDate: new Date()
-              },
-              priority: 'medium'
-            }
-          );
-        }
-      } catch (notificationError) {
-        // Log notification error but don't fail the deletion
-        console.error('Notification creation failed:', notificationError);
+      } catch (cleanupError) {
+        console.error('Error during cleanup:', cleanupError);
+        // Continue with deletion even if cleanup fails
       }
 
       console.log('Course deleted successfully:', deletedCourse._id);
