@@ -1,0 +1,132 @@
+const User = require("../../models/User");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const validator = require("validator");
+
+const registerUser = async (req, res) => {
+  console.log("=== REGISTRATION REQUEST ===");
+  console.log("Request body:", req.body);
+  console.log("Request headers:", req.headers);
+  
+  const { userName, userEmail, password } = req.body || {};
+  
+  console.log("Extracted fields:", { userName, userEmail, password: password ? "present" : "missing" });
+
+  // Validate required fields
+  if (!userName || !userEmail || !password) {
+    console.log("❌ Missing required fields:", { 
+      userName: userName || "MISSING", 
+      userEmail: userEmail || "MISSING", 
+      password: password ? "present" : "MISSING" 
+    });
+    return res.status(400).json({
+      success: false,
+      message: "Missing required fields: userName, userEmail, and password are required",
+      missingFields: {
+        userName: !userName,
+        userEmail: !userEmail,
+        password: !password
+      }
+    });
+  }
+
+  // Normalize & validate
+  const normalizedEmail = validator.normalizeEmail(userEmail + "");
+  if (!validator.isEmail(normalizedEmail || "")) {
+    return res.status(400).json({ success: false, message: "Invalid email address" });
+  }
+  if (!validator.isLength(userName + "", { min: 3, max: 60 })) {
+    return res.status(400).json({ success: false, message: "Invalid name length" });
+  }
+  if (!validator.isStrongPassword(password + "", { minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1 })) {
+    return res.status(400).json({ success: false, message: "Weak password: include upper, lower, number, min 8" });
+  }
+
+    try {
+    const existingUser = await User.findOne({
+      $or: [{ userEmail: normalizedEmail }, { userName }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User name or user email already exists",
+      });
+    }
+
+    const hashPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      userName: validator.escape(userName + ""),
+      userEmail: normalizedEmail,
+      role: "user",
+      password: hashPassword,
+    });
+
+    await newUser.save();
+    
+    console.log("✅ User registered successfully:", {
+      userName: newUser.userName,
+      userEmail: newUser.userEmail,
+      role: newUser.role,
+      id: newUser._id
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully!",
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error during registration",
+    });
+  }
+};
+
+const loginUser = async (req, res) => {
+  const { userEmail, password } = req.body || {};
+  const normalizedEmail = validator.normalizeEmail(userEmail + "");
+  if (!validator.isEmail(normalizedEmail || "")) {
+    return res.status(400).json({ success: false, message: "Invalid email address" });
+  }
+  if (!password || !validator.isLength(password + "", { min: 6 })) {
+    return res.status(400).json({ success: false, message: "Password required" });
+  }
+
+  const checkUser = await User.findOne({ userEmail: normalizedEmail });
+
+  if (!checkUser || !(await bcrypt.compare(password, checkUser.password))) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid credentials",
+    });
+  }
+
+  const accessToken = jwt.sign(
+    {
+      _id: checkUser._id,
+      userName: checkUser.userName,
+      userEmail: checkUser.userEmail,
+      role: checkUser.role,
+    },
+    process.env.JWT_SECRET || "JWT_SECRET",
+    { expiresIn: "120m" }
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "Logged in successfully",
+    data: {
+      accessToken,
+      user: {
+        _id: checkUser._id,
+        userName: checkUser.userName,
+        userEmail: checkUser.userEmail,
+        role: checkUser.role,
+      },
+    },
+  });
+};
+
+module.exports = { registerUser, loginUser };
