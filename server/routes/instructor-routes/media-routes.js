@@ -1,11 +1,15 @@
 const express = require("express");
 const multer = require("multer");
+const authenticate = require("../../middleware/auth-middleware");
 const {
   uploadMediaToCloudinary,
   deleteMediaFromCloudinary,
 } = require("../../helpers/cloudinary");
 
 const router = express.Router();
+
+// Apply authentication middleware to all media routes
+router.use(authenticate);
 
 const upload = multer({ dest: "uploads/" });
 

@@ -13,18 +13,78 @@ import {
   courseLandingInitialFormData,
 } from "@/config";
 import { InstructorContext } from "@/context/instructor-context";
-import { Delete, Edit, Plus, BookOpen, Users, DollarSign } from "lucide-react";
-import { useContext } from "react";
+import { Delete, Edit, Plus, BookOpen, Users, DollarSign, AlertTriangle } from "lucide-react";
+import { useContext, useState } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
+import { deleteCourseService } from "@/services";
+
 
 function InstructorCourses({ listOfCourses }) {
   const navigate = useNavigate();
+  const [deletingCourseId, setDeletingCourseId] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const {
     setCurrentEditedCourseId,
     setCourseLandingFormData,
     setCourseCurriculumFormData,
+    instructorCoursesList,
+    setInstructorCoursesList,
   } = useContext(InstructorContext);
+
+                           // Handle course deletion
+            const handleDeleteCourse = async (courseId, courseTitle, forceDelete = false) => {
+              if (!courseId) return;
+              
+              console.log(`Attempting to delete course: ${courseId}, force: ${forceDelete}`);
+              
+              try {
+                setDeletingCourseId(courseId);
+                
+                // Use the deleteCourseService with proper authentication
+                const response = await deleteCourseService(courseId, forceDelete);
+                
+                console.log('Delete response:', response);
+                
+                if (response?.success) {
+                  // Remove course from local state
+                  const updatedCourses = instructorCoursesList.filter(course => course._id !== courseId);
+                  setInstructorCoursesList(updatedCourses);
+                  
+                  // Close confirmation dialog
+                  setShowDeleteConfirm(null);
+                  
+                  // Show success message
+                  alert(`Course "${courseTitle}" deleted successfully!`);
+                } else {
+                  throw new Error(response?.message || "Failed to delete course");
+                }
+              } catch (error) {
+                console.error("Delete course error:", error);
+                
+                // Check if it's a student enrollment error
+                if (error.message && error.message.includes("enrolled students")) {
+                  const shouldForceDelete = confirm(
+                    `This course has enrolled students. Are you sure you want to force delete it? This will remove all student enrollments.`
+                  );
+                  
+                  if (shouldForceDelete) {
+                    // Retry with force delete
+                    await handleDeleteCourse(courseId, courseTitle, true);
+                    return;
+                  }
+                } else {
+                  alert(`Failed to delete course: ${error.message || 'Unknown error occurred'}`);
+                }
+              } finally {
+                setDeletingCourseId(null);
+              }
+            };
+
+             // Confirm delete dialog
+           const confirmDelete = (courseId, courseTitle, studentCount = 0) => {
+             setShowDeleteConfirm({ id: courseId, title: courseTitle, studentCount });
+           };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -35,18 +95,26 @@ function InstructorCourses({ listOfCourses }) {
               <CardTitle className="text-3xl font-bold text-gray-900 mb-2">Course Management</CardTitle>
               <p className="text-gray-600">Create, edit, and manage your online courses</p>
             </div>
-            <Button
-              onClick={() => {
-                setCurrentEditedCourseId(null);
-                setCourseLandingFormData(courseLandingInitialFormData);
-                setCourseCurriculumFormData(courseCurriculumInitialFormData);
-                navigate("/instructor/create-new-course");
-              }}
-              className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Create New Course
-            </Button>
+                         <div className="flex gap-3">
+               <Button
+                 onClick={() => {
+                   setCurrentEditedCourseId(null);
+                   setCourseLandingFormData(courseLandingInitialFormData);
+                   setCourseCurriculumFormData(courseCurriculumInitialFormData);
+                   navigate("/instructor/create-new-course");
+                 }}
+                 className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+               >
+                 <Plus className="w-5 h-5 mr-2" />
+                 Create New Course
+               </Button>
+               
+
+               
+
+               
+
+             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -102,13 +170,19 @@ function InstructorCourses({ listOfCourses }) {
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 transition-all duration-200"
-                          >
-                            <Delete className="h-4 w-4 mr-1" />
-                            Delete
+                                                             <Button 
+                                     onClick={() => confirmDelete(course._id, course.title, course.students?.length || 0)}
+                                     variant="outline" 
+                                     size="sm"
+                                     disabled={deletingCourseId === course._id}
+                                     className="border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 transition-all duration-200"
+                                   >
+                            {deletingCourseId === course._id ? (
+                              <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin mr-1"></div>
+                            ) : (
+                              <Delete className="h-4 w-4 mr-1" />
+                            )}
+                            {deletingCourseId === course._id ? 'Deleting...' : 'Delete'}
                           </Button>
                         </div>
                       </TableCell>
@@ -140,6 +214,66 @@ function InstructorCourses({ listOfCourses }) {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setShowDeleteConfirm(null)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Delete Course</h3>
+                <p className="text-sm text-gray-500">This action cannot be undone</p>
+              </div>
+            </div>
+            
+                                 <p className="text-gray-700 mb-6">
+                       Are you sure you want to delete <span className="font-semibold">&ldquo;{showDeleteConfirm.title}&rdquo;</span>? 
+                       This will permanently remove the course and all its content.
+                       {showDeleteConfirm.studentCount > 0 && (
+                         <span className="block mt-2 text-red-600 font-medium">
+                           ⚠️ This course has {showDeleteConfirm.studentCount} enrolled students. 
+                           Deleting will remove all student enrollments.
+                         </span>
+                       )}
+                     </p>
+            
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowDeleteConfirm(null)}
+                variant="outline"
+                className="flex-1"
+                disabled={deletingCourseId === showDeleteConfirm.id}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleDeleteCourse(showDeleteConfirm.id, showDeleteConfirm.title)}
+                variant="destructive"
+                className="flex-1"
+                disabled={deletingCourseId === showDeleteConfirm.id}
+              >
+                {deletingCourseId === showDeleteConfirm.id ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Course'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

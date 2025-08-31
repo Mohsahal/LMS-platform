@@ -14,6 +14,8 @@ const studentViewCourseRoutes = require("./routes/student-routes/course-routes")
 const studentViewOrderRoutes = require("./routes/student-routes/order-routes");
 const studentCoursesRoutes = require("./routes/student-routes/student-courses-routes");
 const studentCourseProgressRoutes = require("./routes/student-routes/course-progress-routes");
+const notificationRoutes = require("./routes/notification-routes/index");
+const NotificationHelper = require("./helpers/notification-helper");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -117,15 +119,71 @@ app.use("/student/course", studentViewCourseRoutes);
 app.use("/student/order", studentViewOrderRoutes);
 app.use("/student/courses-bought", studentCoursesRoutes);
 app.use("/student/course-progress", studentCourseProgressRoutes);
+app.use("/notifications", notificationRoutes);
 
 app.use((err, req, res, next) => {
-  console.log(err.stack);
+  console.log("Global error handler triggered:");
+  console.log("Error:", err.message);
+  console.log("Stack:", err.stack);
+  console.log("Request path:", req.path);
+  console.log("Request method:", req.method);
+  
+  // Handle specific error types
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      message: "Validation error",
+      details: err.message
+    });
+  }
+  
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid ID format",
+      details: err.message
+    });
+  }
+  
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required",
+      details: err.message
+    });
+  }
+  
   res.status(500).json({
     success: false,
     message: "Something went wrong",
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
 });
 
 app.listen(PORT, () => {
   console.log(`Server is now running on port ${PORT}`);
+  
+  // Clean up expired notifications every hour
+  setInterval(async () => {
+    try {
+      const deletedCount = await NotificationHelper.cleanupExpiredNotifications();
+      if (deletedCount > 0) {
+        console.log(`🧹 Cleaned up ${deletedCount} expired notifications`);
+      }
+    } catch (error) {
+      console.error('Error cleaning up notifications:', error);
+    }
+  }, 60 * 60 * 1000); // Every hour
+  
+  // Initial cleanup
+  setTimeout(async () => {
+    try {
+      const deletedCount = await NotificationHelper.cleanupExpiredNotifications();
+      if (deletedCount > 0) {
+        console.log(`🧹 Initial cleanup: ${deletedCount} expired notifications removed`);
+      }
+    } catch (error) {
+      console.error('Error in initial notification cleanup:', error);
+    }
+  }, 5000); // After 5 seconds
 });

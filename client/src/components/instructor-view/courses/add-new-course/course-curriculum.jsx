@@ -167,10 +167,28 @@ function CourseCurriculum() {
           public_id: "",
         };
         setCourseCurriculumFormData(cpyCourseCurriculumFormData);
+      } else {
+        throw new Error(deleteResponse.message || "Failed to delete video");
       }
     } catch (error) {
-      console.error("Delete error:", error);
-      alert("Failed to delete video. Please try again.");
+      console.error("Replace video error:", error);
+      
+      // Check if it's an authentication error
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        alert("Authentication error. Please login again.");
+      } else if (error.message?.includes('404')) {
+        alert("Video not found. It may have been already deleted.");
+        // Clear the video anyway
+        let cpyCourseCurriculumFormData = [...courseCurriculumFormData];
+        cpyCourseCurriculumFormData[currentIndex] = {
+          ...cpyCourseCurriculumFormData[currentIndex],
+          videoUrl: "",
+          public_id: "",
+        };
+        setCourseCurriculumFormData(cpyCourseCurriculumFormData);
+      } else {
+        alert(`Failed to replace video: ${error.message || 'Unknown error'}`);
+      }
     }
   }
 
@@ -253,10 +271,14 @@ function CourseCurriculum() {
         cpyCourseCurriculumFormdata = [...cpyCourseCurriculumFormdata, ...newLectures];
         setCourseCurriculumFormData(cpyCourseCurriculumFormdata);
 
-        // Show completion for 2 seconds
+        // Show success message
+        alert(`Successfully uploaded ${selectedFiles.length} video(s)!`);
+        
+        // Show completion for 3 seconds
         setTimeout(() => {
           setMediaUploadProgress(false);
-        }, 2000);
+          setMediaUploadProgressPercentage(0);
+        }, 3000);
       } else {
         throw new Error(response.message || "Bulk upload failed");
       }
@@ -287,11 +309,24 @@ function CourseCurriculum() {
         );
         setCourseCurriculumFormData(cpyCourseCurriculumFormData);
       } else {
-        alert("Failed to delete video. Please try again.");
+        throw new Error(response.message || "Failed to delete video");
       }
     } catch (error) {
-      console.error("Delete error:", error);
-      alert("Failed to delete video. Please try again.");
+      console.error("Delete lecture error:", error);
+      
+      // Check if it's an authentication error
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        alert("Authentication error. Please login again.");
+      } else if (error.message?.includes('404')) {
+        alert("Video not found. It may have been already deleted.");
+        // Remove from local state anyway
+        let cpyCourseCurriculumFormData = courseCurriculumFormData.filter(
+          (_, index) => index !== currentIndex
+        );
+        setCourseCurriculumFormData(cpyCourseCurriculumFormData);
+      } else {
+        alert(`Failed to delete video: ${error.message || 'Unknown error'}`);
+      }
     }
   }
 

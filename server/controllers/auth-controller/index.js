@@ -2,6 +2,7 @@ const User = require("../../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const validator = require("validator");
+const NotificationHelper = require("../../helpers/notification-helper");
 
 const registerUser = async (req, res) => {
   console.log("=== REGISTRATION REQUEST ===");
@@ -64,6 +65,27 @@ const registerUser = async (req, res) => {
 
     await newUser.save();
     
+    // Create welcome notification for new user
+    try {
+      await NotificationHelper.createSystemNotification(
+        newUser.userEmail,
+        newUser.role === 'instructor' ? 'instructor' : 'student',
+        {
+          title: 'Welcome to E-Learn Platform! 🎉',
+          message: `Hi ${newUser.userName}! Welcome to our learning community. Start exploring courses and begin your learning journey!`,
+          data: {
+            registrationDate: new Date(),
+            userRole: newUser.role,
+            welcomeMessage: 'Welcome to the platform!'
+          },
+          priority: 'high'
+        }
+      );
+    } catch (notificationError) {
+      // Log notification error but don't fail the registration
+      console.error('Welcome notification creation failed:', notificationError);
+    }
+    
     console.log("✅ User registered successfully:", {
       userName: newUser.userName,
       userEmail: newUser.userEmail,
@@ -113,6 +135,27 @@ const loginUser = async (req, res) => {
     process.env.JWT_SECRET || "JWT_SECRET",
     { expiresIn: "120m" }
   );
+
+  // Create login notification
+  try {
+    await NotificationHelper.createSystemNotification(
+      checkUser.userEmail,
+      checkUser.role === 'instructor' ? 'instructor' : 'student',
+      {
+        title: 'Welcome Back! 👋',
+        message: `Successfully logged in to your account. Welcome back, ${checkUser.userName}!`,
+        data: {
+          loginTime: new Date(),
+          userAgent: req.headers['user-agent'] || 'Unknown',
+          ipAddress: req.ip || 'Unknown'
+        },
+        priority: 'low'
+      }
+    );
+  } catch (notificationError) {
+    // Log notification error but don't fail the login
+    console.error('Login notification creation failed:', notificationError);
+  }
 
   res.status(200).json({
     success: true,

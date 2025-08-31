@@ -2,19 +2,16 @@ import axiosInstance from "@/api/axiosInstance";
 
 export async function registerService(formData) {
   const { data } = await axiosInstance.post("/auth/register", formData);
-
   return data;
 }
 
 export async function loginService(formData) {
   const { data } = await axiosInstance.post("/auth/login", formData);
-
   return data;
 }
 
 export async function checkAuthService() {
   const { data } = await axiosInstance.get("/auth/check-auth");
-
   return data;
 }
 
@@ -30,25 +27,21 @@ export async function mediaUploadService(formData, onProgressCallback) {
     maxContentLength: Infinity,
     maxBodyLength: Infinity,
   });
-
   return data;
 }
 
 export async function mediaDeleteService(id) {
   const { data } = await axiosInstance.delete(`/media/delete/${id}`);
-
   return data;
 }
 
 export async function fetchInstructorCourseListService() {
   const { data } = await axiosInstance.get(`/instructor/course/get`);
-
   return data;
 }
 
 export async function addNewCourseService(formData) {
   const { data } = await axiosInstance.post(`/instructor/course/add`, formData);
-
   return data;
 }
 
@@ -56,7 +49,6 @@ export async function fetchInstructorCourseDetailsService(id) {
   const { data } = await axiosInstance.get(
     `/instructor/course/get/details/${id}`
   );
-
   return data;
 }
 
@@ -65,8 +57,24 @@ export async function updateCourseByIdService(id, formData) {
     `/instructor/course/update/${id}`,
     formData
   );
-
   return data;
+}
+
+export async function deleteCourseService(id, forceDelete = false) {
+  try {
+    const url = forceDelete ? `/instructor/course/delete/${id}?force=true` : `/instructor/course/delete/${id}`;
+    const { data } = await axiosInstance.delete(url);
+    return data;
+  } catch (error) {
+    // Re-throw the error with proper message
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    } else if (error.message) {
+      throw new Error(error.message);
+    } else {
+      throw new Error('Failed to delete course');
+    }
+  }
 }
 
 export async function mediaBulkUploadService(formData, onProgressCallback) {
@@ -81,13 +89,11 @@ export async function mediaBulkUploadService(formData, onProgressCallback) {
     maxContentLength: Infinity,
     maxBodyLength: Infinity,
   });
-
   return data;
 }
 
 export async function fetchStudentViewCourseListService(query) {
   const { data } = await axiosInstance.get(`/student/course/get?${query}`);
-
   return data;
 }
 
@@ -95,7 +101,6 @@ export async function fetchStudentViewCourseDetailsService(courseId) {
   const { data } = await axiosInstance.get(
     `/student/course/get/details/${courseId}`
   );
-
   return data;
 }
 
@@ -103,13 +108,11 @@ export async function checkCoursePurchaseInfoService(courseId, studentId) {
   const { data } = await axiosInstance.get(
     `/student/course/purchase-info/${courseId}/${studentId}`
   );
-
   return data;
 }
 
 export async function createPaymentService(formData) {
   const { data } = await axiosInstance.post(`/student/order/create`, formData);
-
   return data;
 }
 
@@ -123,7 +126,6 @@ export async function captureAndFinalizePaymentService(
     payerId,
     orderId,
   });
-
   return data;
 }
 
@@ -131,7 +133,6 @@ export async function fetchStudentBoughtCoursesService(studentId) {
   const { data } = await axiosInstance.get(
     `/student/courses-bought/get/${studentId}`
   );
-
   return data;
 }
 
@@ -139,7 +140,6 @@ export async function getCurrentCourseProgressService(userId, courseId) {
   const { data } = await axiosInstance.get(
     `/student/course-progress/get/${userId}/${courseId}`
   );
-
   return data;
 }
 
@@ -152,7 +152,6 @@ export async function markLectureAsViewedService(userId, courseId, lectureId) {
       lectureId,
     }
   );
-
   return data;
 }
 
@@ -164,6 +163,48 @@ export async function resetCourseProgressService(userId, courseId) {
       courseId,
     }
   );
+  return data;
+}
 
+// Notification Services
+export async function createNotificationService(notificationData) {
+  const { data } = await axiosInstance.post("/notifications/create", notificationData);
+  return data;
+}
+
+export async function getUserNotificationsService(userId, options = {}) {
+  const { page = 1, limit = 20, unreadOnly = false } = options;
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    unreadOnly: unreadOnly.toString()
+  });
+  
+  const { data } = await axiosInstance.get(`/notifications/user/${userId}?${queryParams}`);
+  return data;
+}
+
+export async function markNotificationAsReadService(notificationId) {
+  const { data } = await axiosInstance.put(`/notifications/read/${notificationId}`);
+  return data;
+}
+
+export async function markAllNotificationsAsReadService(userId) {
+  const { data } = await axiosInstance.put(`/notifications/read-all/${userId}`);
+  return data;
+}
+
+export async function deleteNotificationService(notificationId) {
+  const { data } = await axiosInstance.delete(`/notifications/${notificationId}`);
+  return data;
+}
+
+export async function deleteAllUserNotificationsService(userId) {
+  const { data } = await axiosInstance.delete(`/notifications/user/${userId}`);
+  return data;
+}
+
+export async function bulkCreateNotificationsService(notifications) {
+  const { data } = await axiosInstance.post("/notifications/bulk-create", { notifications });
   return data;
 }
