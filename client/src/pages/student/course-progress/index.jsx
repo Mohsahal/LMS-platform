@@ -4,8 +4,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogOverlay,
-  DialogPortal,
+  
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -18,6 +17,7 @@ import {
   getCurrentCourseProgressService,
   markLectureAsViewedService,
   resetCourseProgressService,
+  downloadCertificateService,
 } from "@/services";
 import { Check, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
@@ -102,6 +102,30 @@ function StudentViewCourseProgressPage() {
       setShowConfetti(false);
       setShowCourseCompleteDialog(false);
       fetchCurrentCourseProgress();
+    }
+  }
+
+  async function handleDownloadCertificate() {
+    try {
+      const res = await downloadCertificateService(
+        auth?.user?._id,
+        studentCurrentCourseProgress?.courseDetails?._id
+      );
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `certificate_${
+        auth?.user?.userName || "student"
+      }_${
+        studentCurrentCourseProgress?.courseDetails?.title || "course"
+      }.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
     }
   }
 
@@ -221,7 +245,7 @@ function StudentViewCourseProgressPage() {
       <Dialog open={lockCourse}>
         <DialogContent className="sm:w-[425px]">
           <DialogHeader>
-            <DialogTitle>You can't view this page</DialogTitle>
+            <DialogTitle>You can&apos;t view this page</DialogTitle>
             <DialogDescription>
               Please purchase this course to get access
             </DialogDescription>
@@ -239,6 +263,9 @@ function StudentViewCourseProgressPage() {
                   My Courses Page
                 </Button>
                 <Button onClick={handleRewatchCourse}>Rewatch Course</Button>
+                <Button onClick={handleDownloadCertificate} variant="secondary">
+                  Download Certificate
+                </Button>
               </div>
             </DialogDescription>
           </DialogHeader>

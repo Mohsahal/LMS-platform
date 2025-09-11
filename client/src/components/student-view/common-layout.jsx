@@ -1,9 +1,34 @@
 import { Outlet, useLocation } from "react-router-dom";
 import StudentViewCommonHeader from "./header";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { contactAdminService } from "@/services";
 
 function StudentViewCommonLayout() {
   const location = useLocation();
+  const [contactForm, setContactForm] = useState({ fromName: "", fromEmail: "", subject: "", message: "" });
+  const [sending, setSending] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
+
+  async function handleContactSubmit(e) {
+    e.preventDefault();
+    setStatusMsg("");
+    setSending(true);
+    try {
+      const res = await contactAdminService({
+        fromEmail: contactForm.fromEmail,
+        fromName: contactForm.fromName,
+        subject: contactForm.subject || "Website contact",
+        message: contactForm.message,
+      });
+      setStatusMsg(res?.success ? "Message sent successfully." : res?.message || "Failed to send.");
+      if (res?.success) setContactForm({ fromName: "", fromEmail: "", subject: "", message: "" });
+    } catch (err) {
+      setStatusMsg(err?.message || "Failed to send.");
+    } finally {
+      setSending(false);
+    }
+  }
   return (
     <div>
       {!location.pathname.includes("course-progress") ? (
@@ -37,11 +62,42 @@ function StudentViewCommonLayout() {
             </div>
             <div>
               <h4 className="font-semibold mb-2">Contact Us</h4>
-              <form onSubmit={(e)=>e.preventDefault()} className="flex flex-col gap-2">
-                <input type="text" placeholder="Your name" className="rounded border px-3 py-2 text-sm" />
-                <input type="email" placeholder="Your email" className="rounded border px-3 py-2 text-sm" />
-                <textarea placeholder="Message" rows={3} className="rounded border px-3 py-2 text-sm" />
-                <button className="inline-flex h-9 items-center justify-center rounded-md bg-black px-4 text-white text-sm hover:bg-black/90" type="submit">Send</button>
+              <form onSubmit={handleContactSubmit} className="flex flex-col gap-2">
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  className="rounded border px-3 py-2 text-sm"
+                  value={contactForm.fromName}
+                  onChange={(e)=>setContactForm({ ...contactForm, fromName: e.target.value })}
+                  required
+                />
+                <input
+                  type="email"
+                  placeholder="Your email"
+                  className="rounded border px-3 py-2 text-sm"
+                  value={contactForm.fromEmail}
+                  onChange={(e)=>setContactForm({ ...contactForm, fromEmail: e.target.value })}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Subject (optional)"
+                  className="rounded border px-3 py-2 text-sm"
+                  value={contactForm.subject}
+                  onChange={(e)=>setContactForm({ ...contactForm, subject: e.target.value })}
+                />
+                <textarea
+                  placeholder="Message"
+                  rows={3}
+                  className="rounded border px-3 py-2 text-sm"
+                  value={contactForm.message}
+                  onChange={(e)=>setContactForm({ ...contactForm, message: e.target.value })}
+                  required
+                />
+                <button disabled={sending} className="inline-flex h-9 items-center justify-center rounded-md bg-black px-4 text-white text-sm hover:bg-black/90 disabled:opacity-50" type="submit">
+                  {sending ? "Sending..." : "Send"}
+                </button>
+                {statusMsg ? <p className="text-xs text-gray-600">{statusMsg}</p> : null}
               </form>
             </div>
           </div>

@@ -166,4 +166,24 @@ export async function resetCourseProgressService(userId, courseId) {
   return data;
 }
 
+export async function downloadCertificateService(userId, courseId) {
+  const response = await axiosInstance.get(
+    `/student/course-progress/certificate/${userId}/${courseId}`,
+    {
+      responseType: "blob",
+    }
+  );
+  return response;
+}
+
+export async function contactAdminService({ fromEmail, fromName, subject, message }) {
+  const { data } = await axiosInstance.post(`/notify/contact-admin`, {
+    fromEmail,
+    fromName,
+    subject,
+    message,
+  });
+  return data;
+}
+
 

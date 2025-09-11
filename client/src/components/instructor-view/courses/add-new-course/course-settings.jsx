@@ -147,6 +147,84 @@ function CourseSettings() {
                       })}
                     />
                   </div>
+                  {Boolean(courseLandingFormData?.certificateEnabled) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="certificateCourseName" className="text-sm font-medium text-gray-700 mb-2 block">Certificate Course Name</Label>
+                        <Input
+                          id="certificateCourseName"
+                          placeholder="Name to print on certificate"
+                          value={courseLandingFormData?.certificateCourseName || ""}
+                          onChange={(e) => setCourseLandingFormData({
+                            ...courseLandingFormData,
+                            certificateCourseName: e.target.value,
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="certificateTemplateUrl" className="text-sm font-medium text-gray-700 mb-2 block">Template Image URL</Label>
+                        <Input
+                          id="certificateTemplateUrl"
+                          placeholder="https://.../certificate.png"
+                          value={courseLandingFormData?.certificateTemplateUrl || ""}
+                          onChange={(e) => setCourseLandingFormData({
+                            ...courseLandingFormData,
+                            certificateTemplateUrl: e.target.value,
+                          })}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Provide the exact template background image URL. We will overlay text precisely.</p>
+                      </div>
+                      <div>
+                        <Label htmlFor="certificateIssuer" className="text-sm font-medium text-gray-700 mb-2 block">Issuer Title</Label>
+                        <Input
+                          id="certificateIssuer"
+                          placeholder="Chief Executive Officer"
+                          value={courseLandingFormData?.certificateIssuer || ""}
+                          onChange={(e) => setCourseLandingFormData({
+                            ...courseLandingFormData,
+                            certificateIssuer: e.target.value,
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="certificateOrganization" className="text-sm font-medium text-gray-700 mb-2 block">Issuer Organization</Label>
+                        <Input
+                          id="certificateOrganization"
+                          placeholder="BRAVYNEX ENGINEERING"
+                          value={courseLandingFormData?.certificateOrganization || ""}
+                          onChange={(e) => setCourseLandingFormData({
+                            ...courseLandingFormData,
+                            certificateOrganization: e.target.value,
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="certificateFrom" className="text-sm font-medium text-gray-700 mb-2 block">From (Printed)</Label>
+                        <Input
+                          id="certificateFrom"
+                          placeholder="BRAVYNEX ENGINEERING"
+                          value={courseLandingFormData?.certificateFrom || ""}
+                          onChange={(e) => setCourseLandingFormData({
+                            ...courseLandingFormData,
+                            certificateFrom: e.target.value,
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="defaultCertificateGrade" className="text-sm font-medium text-gray-700 mb-2 block">Default Grade</Label>
+                        <Input
+                          id="defaultCertificateGrade"
+                          placeholder="A"
+                          value={courseLandingFormData?.defaultCertificateGrade || ""}
+                          onChange={(e) => setCourseLandingFormData({
+                            ...courseLandingFormData,
+                            defaultCertificateGrade: e.target.value,
+                          })}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Used if your grading logic isn&apos;t provided elsewhere.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

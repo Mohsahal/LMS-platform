@@ -22,6 +22,15 @@ const CourseSchema = new mongoose.Schema({
   welcomeMessage: String,
   pricing: Number,
   objectives: String,
+  // certificate settings
+  certificateEnabled: Boolean,
+  certificateTemplateUrl: String, // optional remote/background image
+  certificateIssuer: { type: String, default: "Chief Executive Officer" },
+  certificateOrganization: { type: String, default: "BRAVYNEX ENGINEERING" },
+  certificateGradeEnabled: { type: Boolean, default: false },
+  certificateCourseName: String, // optional custom course name to print
+  certificateFrom: { type: String, default: "BRAVYNEX ENGINEERING" },
+  defaultCertificateGrade: { type: String, default: "A" },
   students: [
     {
       studentId: String,
