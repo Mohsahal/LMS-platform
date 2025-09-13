@@ -46,10 +46,6 @@ function InstructorDashboardpage() {
     sessionStorage.clear();
   }
 
-  // Get user data from context or fallback to defaults
-  const userEmail = user?.userEmail || user?.email || "admin@elearn.com";
-  const userName = user?.userName || user?.name || user?.firstName || "Instructor";
-  const userRole = user?.role || "Instructor";
 
   // Filter courses based on search query
   const filteredCourses = instructorCoursesList?.filter(course => 
@@ -93,26 +89,8 @@ function InstructorDashboardpage() {
             </div>
           </div>
 
-          {/* User Profile Section */}
-          <div className="px-6 py-6 border-b border-gray-200 bg-gradient-to-br from-gray-50 to-white">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
-                <User className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-gray-900 text-lg truncate">{userName}</h3>
-                <p className="text-sm text-gray-600 truncate">{userEmail}</p>
-                <p className="text-xs text-gray-500 mt-1">{userRole}</p>
-                <div className="flex items-center gap-1 mt-2">
-                  <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  <span className={`text-xs font-medium ${isOnline ? 'text-green-600' : 'text-red-600'}`}>
-                    {isOnline ? 'Online' : 'Offline'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        
+     
           {/* Navigation Menu */}
           <nav className="flex-1 px-3 py-6">
             <div className="mb-4">

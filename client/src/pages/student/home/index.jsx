@@ -124,30 +124,49 @@ function StudentHomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Slider */}
       <section className="px-4 lg:px-8 pt-6">
-        <div className="relative bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="relative bg-white rounded-2xl shadow-transparent overflow-hidden border-0">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center p-6 lg:p-10">
             {/* Left: Copy */}
             <div>
-              <span className="inline-flex items-center text-sm px-3 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+              <span className="inline-flex items-center text-sm px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold shadow-lg">
                 {slides[current].badge}
               </span>
-              <h1 className="mt-4 text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight whitespace-pre-line">
+              <h1 className="mt-6 text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight whitespace-pre-line">
                 {slides[current].title}
               </h1>
-              <p className="mt-4 text-gray-600 text-lg max-w-xl">
+              <p className="mt-6 text-gray-600 text-lg max-w-xl leading-relaxed">
                 {slides[current].sub}
               </p>
-              <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-gray-700">
-                <div className="flex items-center gap-2"><span>👥</span>{slides[current].statLeft.label}</div>
-                <div className="flex items-center gap-2"><span>⭐</span>{slides[current].statMid.label}</div>
-                <div className="flex items-center gap-2"><span>🕒</span>{slides[current].statRight.label}</div>
+              <div className="mt-8 flex flex-wrap items-center gap-6 text-sm text-gray-700">
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="font-medium">{slides[current].statLeft.label}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <span className="font-medium">{slides[current].statMid.label}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="font-medium">{slides[current].statRight.label}</span>
+                </div>
               </div>
-              <div className="mt-8 flex gap-3">
-                <Button onClick={() => navigate("/courses")}>Explore Programming</Button>
-                <Button variant="outline">Watch Preview</Button>
+              <div className="mt-10 flex gap-4">
+                <Button 
+                  onClick={() => navigate("/courses")}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  Explore Programming
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-8 py-3 transition-all duration-200"
+                >
+                  Watch Preview
+                </Button>
               </div>
             </div>
 
@@ -158,46 +177,49 @@ function StudentHomePage() {
                 src={slides[current].image}
                 alt="E-learning hero"
                 loading="eager"
-                className="w-full h-[320px] lg:h-[420px] object-cover rounded-xl transition-opacity duration-500"
+                className="w-full h-[320px] lg:h-[420px] object-cover rounded-xl transition-opacity duration-500 shadow-lg"
               />
               {/* Controls inside the image container so both arrows align on the same vertical axis */}
               <button
                 onClick={prev}
                 aria-label="Previous slide"
-                className="hidden lg:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="hidden lg:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
               >
                 ‹
               </button>
               <button
                 onClick={next}
                 aria-label="Next slide"
-                className="hidden lg:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="hidden lg:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
               >
                 ›
               </button>
             </div>
           </div>
 
-
           {/* Dots */}
-          <div className="flex items-center justify-center gap-2 pb-5">
+          <div className="flex items-center justify-center gap-2 pb-6">
             {slides.map((s, i) => (
               <button
                 key={`dot-${s.id}`}
                 onClick={() => goTo(i)}
-                className={`h-2 rounded-full transition-all ${i === current ? "w-6 bg-blue-600" : "w-2 bg-gray-300"}`}
+                className={`h-2 rounded-full transition-all duration-300 ${i === current ? "w-8 bg-gradient-to-r from-blue-600 to-indigo-600" : "w-2 bg-gray-300 hover:bg-gray-400"}`}
                 aria-label={`Go to slide ${i + 1}`}
               />
             ))}
           </div>
         </div>
       </section>
-      <section className="py-8 px-4 lg:px-8 bg-gray-100">
-        <h2 className="text-2xl font-bold mb-6">Course Categories</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <section className="py-12 px-4 lg:px-8 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Course Categories</h2>
+            <p className="text-gray-600 text-lg">Explore our diverse range of programming courses</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {courseCategories.map((categoryItem) => (
             <Button
-              className="justify-start"
+                className="justify-start h-16 bg-white border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-700 hover:text-blue-700 font-semibold transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg"
               variant="outline"
               key={categoryItem.id}
               onClick={() => handleNavigateToCoursesPage(categoryItem.id)}
@@ -205,38 +227,71 @@ function StudentHomePage() {
               {categoryItem.label}
             </Button>
           ))}
+          </div>
         </div>
       </section>
-      <section className="py-12 px-4 lg:px-8">
-        <h2 className="text-2xl font-bold mb-6">Featured COourses</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section className="py-16 px-4 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Courses</h2>
+            <p className="text-gray-600 text-lg">Discover our most popular and highly-rated courses</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {studentViewCoursesList && studentViewCoursesList.length > 0 ? (
             studentViewCoursesList.map((courseItem) => (
               <div
                 key={courseItem?._id}
                 onClick={() => handleCourseNavigate(courseItem?._id)}
-                className="border rounded-lg overflow-hidden shadow cursor-pointer"
+                  className="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border-0"
               >
+                  <div className="relative">
                 <img
                   src={courseItem?.image}
                   width={300}
-                  height={150}
-                  className="w-full h-40 object-cover"
-                />
-                <div className="p-4">
-                  <h3 className="font-bold mb-2">{courseItem?.title}</h3>
-                  <p className="text-sm text-gray-700 mb-2">
-                    {courseItem?.instructorName}
-                  </p>
-                  <p className="font-bold text-[16px]">
+                      height={200}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-3 right-3">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
+                        <span className="text-xs font-semibold text-gray-700">Featured</span>
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
+                      {courseItem?.title}
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                      <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+                        <span className="text-xs text-white font-bold">
+                          {courseItem?.instructorName?.charAt(0)}
+                        </span>
+                      </div>
+                      <span className="font-medium">{courseItem?.instructorName}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-xs text-green-600 font-medium">Available</span>
+                      </div>
+                      <p className="font-bold text-xl text-gray-900">
                     ${courseItem?.pricing}
                   </p>
+                    </div>
                 </div>
               </div>
             ))
           ) : (
-            <h1>No Courses Found</h1>
-          )}
+              <div className="col-span-full text-center py-16">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">📚</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">No Courses Found</h3>
+                <p className="text-gray-600">Check back later for new courses!</p>
+              </div>
+            )}
+          </div>
         </div>
       </section>
     </div>

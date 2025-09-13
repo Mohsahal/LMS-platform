@@ -45,6 +45,9 @@ app.use(cookieParser());
 
 app.use(express.json());
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
+
 // Sanitize MongoDB operators from payloads
 app.use(mongoSanitize());
 
