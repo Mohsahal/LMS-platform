@@ -7,6 +7,7 @@ const axios = require("axios");
 const { randomBytes } = require("crypto");
 const path = require("path");
 const fs = require("fs");
+const QRCode = require("qrcode");
 
 
 //mark current lecture as viewed
@@ -304,6 +305,34 @@ const generateCompletionCertificate = async (req, res) => {
 
     // Date of Issuance value on its line
     doc.text(`${issuedOn}`, 240, 425, { width: 220, align: "left" });
+
+    // Generate and place QR code that links to student dashboard
+    try {
+      // Build a dashboard URL; prefer FRONTEND_URL env, else infer from request
+      const frontendBase = process.env.CLIENT_URL || `${req.protocol}://${req.get("host")}`.replace(/\/$/, "");
+      // Adjust path to your student dashboard route
+      const dashboardPath = "/student/home"; // update if different
+      const qrTargetUrl = `${frontendBase}${dashboardPath}`;
+
+      const qrDataUrl = await QRCode.toDataURL(qrTargetUrl, {
+        errorCorrectionLevel: "H",
+        margin: 1,
+        scale: 6,
+      });
+      const qrBase64 = qrDataUrl.split(",")[1];
+      const qrBuffer = Buffer.from(qrBase64, "base64");
+
+      // Position QR at bottom-right; adjust size/coords to fit template
+      const qrSize = 90; // pixels
+      const qrX = doc.page.width - qrSize - 570;
+      const qrY = doc.page.height - qrSize - 60;
+      doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
+
+      // Optional label under QR
+      // doc.fillColor("#3b0764").fontSize(10).text("Scan for Student Dashboard", qrX - 10, qrY + qrSize + 5, { width: qrSize + 20, align: "center" });
+    } catch (_) {
+      // If QR generation fails, continue without blocking certificate
+    }
 
     // Issuer/signature area (right side)
     // Do not reprint issuer/organization if your template already contains them

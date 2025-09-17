@@ -1,45 +1,34 @@
 import InstructorCourses from "@/components/instructor-view/courses";
 import InstructorDashboard from "@/components/instructor-view/dashboard";
+import RevenueAnalysis from "@/components/instructor-view/revenue-analysis/real-time";
 import { AuthContext } from "@/context/auth-context";
 import { InstructorContext } from "@/context/instructor-context";
 import { fetchInstructorCourseListService } from "@/services";
-import { useContext, useEffect, useState } from "react";
-import { Search, Calendar, User, LogOut, BarChart3, BookOpen } from "lucide-react";
+import { useContext, useEffect, useState, useCallback } from "react";
+import { Search, Calendar, LogOut, BarChart3, BookOpen, TrendingUp } from "lucide-react";
 
 function InstructorDashboardpage() {
   const [currentView, setCurrentView] = useState("dashboard");
-  const [isOnline, setIsOnline] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { resetCredentials, user } = useContext(AuthContext);
+  const { resetCredentials } = useContext(AuthContext);
   const { instructorCoursesList, setInstructorCoursesList } =
     useContext(InstructorContext);
 
-  async function fetchAllCourses() {
+  const fetchAllCourses = useCallback(async () => {
     const response = await fetchInstructorCourseListService();
     if (response?.success) setInstructorCoursesList(response?.data);
-  }
+  }, [setInstructorCoursesList]);
+
+
+  
+
 
 
 
   useEffect(() => {
     fetchAllCourses();
-    
-    // Set online status based on user activity
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    // Check initial online status
-    setIsOnline(navigator.onLine);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []); // Re-fetch when user changes
+  }, [fetchAllCourses]); // Re-fetch when user changes
 
   function handleLogout() {
     resetCredentials();
@@ -67,6 +56,8 @@ function InstructorDashboardpage() {
         return <InstructorDashboard listOfCourses={filteredCourses} />;
       case "courses":
         return <InstructorCourses listOfCourses={filteredCourses} />;
+      case "revenue":
+        return <RevenueAnalysis listOfCourses={filteredCourses} />;
       default:
         return <InstructorDashboard listOfCourses={filteredCourses} />;
     }
@@ -141,6 +132,28 @@ function InstructorDashboardpage() {
                   )}
                 </button>
               </li>
+              <li>
+                <button
+                  onClick={() => setCurrentView("revenue")}
+                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 ${
+                    currentView === "revenue"
+                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200 shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    currentView === "revenue" ? 'bg-blue-100' : 'bg-gray-100'
+                  }`}>
+                    <TrendingUp className={`w-4 h-4 ${
+                      currentView === "revenue" ? 'text-blue-600' : 'text-gray-500'
+                    }`} />
+                  </div>
+                  <span className="font-medium">Revenue Analysis</span>
+                  {currentView === "revenue" && (
+                    <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full"></div>
+                  )}
+                </button>
+              </li>
             </ul>
           </nav>
 
@@ -174,12 +187,18 @@ function InstructorDashboardpage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
-                  {currentView === "dashboard" ? "Dashboard" : "My Courses"}
+                  {currentView === "dashboard" ? "Dashboard" : 
+                   currentView === "courses" ? "My Courses" : 
+                   currentView === "revenue" ? "Revenue Analysis" : "Dashboard"}
                 </h2>
                 <p className="text-sm text-gray-500">
                   {currentView === "dashboard" 
                     ? "Monitor your courses and student progress" 
-                    : "Manage your course portfolio"
+                    : currentView === "courses"
+                    ? "Manage your course portfolio"
+                    : currentView === "revenue"
+                    ? "Analyze revenue trends and performance metrics"
+                    : "Monitor your courses and student progress"
                   }
                 </p>
               </div>

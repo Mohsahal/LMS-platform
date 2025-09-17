@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import PropTypes from "prop-types";
 import ReactPlayer from "react-player";
 import { Slider } from "../ui/slider";
 import { Button } from "../ui/button";
@@ -117,12 +118,19 @@ function VideoPlayer({
 
   useEffect(() => {
     if (played === 1) {
-      onProgressUpdate({
-        ...progressData,
-        progressValue: played,
-      });
+      if (typeof onProgressUpdate === "function") {
+        onProgressUpdate({
+          ...progressData,
+          progressValue: played,
+        });
+      }
     }
-  }, [played]);
+    
+    // We intentionally exclude onProgressUpdate from deps to avoid frequent re-runs if parent recreates it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [played, progressData]);
+
+
 
   return (
     <div
@@ -224,7 +232,7 @@ function VideoPlayer({
                   <Minimize className="h-6 w-6" />
                 ) : (
                   <Maximize className="h-6 w-6" />
-                )}
+                   )}
               </Button>
             </div>
           </div>
@@ -234,4 +242,22 @@ function VideoPlayer({
   );
 }
 
+
 export default VideoPlayer;
+
+VideoPlayer.propTypes = {
+  width: PropTypes.string,
+  height: PropTypes.string,
+  url: PropTypes.string,
+  onProgressUpdate: PropTypes.func,
+  progressData: PropTypes.object,
+};
+
+VideoPlayer.defaultProps = {
+  width: "100%",
+  height: "100%",
+  url: "",
+  onProgressUpdate: undefined,
+  progressData: undefined,
+};
+

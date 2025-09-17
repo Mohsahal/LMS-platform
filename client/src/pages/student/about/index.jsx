@@ -90,14 +90,14 @@ function AboutPage() {
                   <div className="flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                     <span className="text-gray-700">Expert instructor guidance</span>
-                  </div>
+              </div>
                   <div className="flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                     <span className="text-gray-700">Career support and mentorship</span>
-                  </div>
-                </div>
+              </div>
               </div>
             </div>
+          </div>
 
             {/* Vision */}
             <div className="bg-blue-600 text-white rounded-lg p-8">

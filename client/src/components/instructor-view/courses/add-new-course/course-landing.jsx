@@ -3,9 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { courseLandingPageFormControls } from "@/config";
 import { InstructorContext } from "@/context/instructor-context";
 import { useContext } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { BookOpen, Eye, Award, Star } from "lucide-react";
+// Removed certificate settings; no need for Input/Label here
+import { BookOpen, Eye, Star } from "lucide-react";
 
 function CourseLanding() {
   const { courseLandingFormData, setCourseLandingFormData } =
@@ -86,32 +85,7 @@ function CourseLanding() {
                 </div>
               </div>
 
-              {/* Certificate Settings */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Award className="w-5 h-5 text-green-600" />
-                  Certificate Settings
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Certificate Title
-                    </Label>
-                    <Input
-                      placeholder="e.g., Certificate of Completion"
-                      value={courseLandingFormData?.certificateTitle || ""}
-                      onChange={(e) => setCourseLandingFormData({ 
-                        ...courseLandingFormData, 
-                        certificateTitle: e.target.value 
-                      })}
-                      className="w-full"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Leave empty to use default certificate
-                    </p>
-                  </div>
-                </div>
-              </div>
+              {/* Certificate Settings removed as requested */}
             </div>
           </div>
         </CardContent>

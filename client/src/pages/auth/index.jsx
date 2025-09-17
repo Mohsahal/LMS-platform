@@ -133,9 +133,9 @@ function AuthPage() {
                   <CardContent className="space-y-4 px-6 pb-6">
                     {registrationSuccess && (
                       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-blue-800 text-sm font-medium">
+                        {/* <p className="text-blue-800 text-sm font-medium">
                           🎉 Welcome! Your account has been created successfully. Please sign in below.
-                        </p>
+                        </p> */}
                       </div>
                     )}
 

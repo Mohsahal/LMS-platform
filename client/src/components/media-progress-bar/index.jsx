@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Upload, CheckCircle, AlertCircle, FileVideo } from "lucide-react";
+import { CheckCircle, AlertCircle, FileVideo } from "lucide-react";
 import PropTypes from "prop-types";
 
 function MediaProgressbar({ isMediaUploading, progress, error }) {
@@ -11,12 +11,14 @@ function MediaProgressbar({ isMediaUploading, progress, error }) {
     if (isMediaUploading) {
       setShowProgress(true);
       setAnimatedProgress(progress);
+      return;
+    }
+    // If not uploading anymore, hide immediately when complete, else hide quickly
+    if (progress >= 100) {
+      setShowProgress(false);
+      setAnimatedProgress(0);
     } else {
-      // Show completion state for longer when upload finishes
-      const timer = setTimeout(() => {
-        setShowProgress(false);
-      }, progress >= 100 ? 3000 : 1000);
-
+      const timer = setTimeout(() => setShowProgress(false), 500);
       return () => clearTimeout(timer);
     }
   }, [isMediaUploading, progress]);
@@ -152,5 +154,7 @@ MediaProgressbar.propTypes = {
   progress: PropTypes.number.isRequired,
   error: PropTypes.bool,
 };
+
+
 
 export default MediaProgressbar;

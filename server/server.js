@@ -51,17 +51,31 @@ app.use('/uploads', express.static('uploads'));
 // Sanitize MongoDB operators from payloads
 app.use(mongoSanitize());
 
-// Basic rate limiting for auth and api
+// More lenient rate limiting with better exclusions
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: 1000, // Increased limit
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for CSRF token and health checks
+    return req.path === "/csrf-token" || req.path === "/health";
+  },
 });
 const authLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 50,
+  windowMs: 15 * 60 * 1000, // Increased window
+  max: 100, // Increased limit
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip for CSRF token even on auth routes
+    return req.path === "/csrf-token";
+  },
 });
+
+// Apply rate limiters
 app.use("/auth", authLimiter);
-app.use("/", apiLimiter);
+app.use(apiLimiter);
 
 // Request logging middleware
 app.use((req, res, next) => {

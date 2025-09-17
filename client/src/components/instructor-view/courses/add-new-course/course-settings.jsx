@@ -1,4 +1,3 @@
-import MediaProgressbar from "@/components/media-progress-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,16 +65,15 @@ function CourseSettings() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <Image className="w-5 h-5 text-blue-600" />
                   Course Image
+                  {mediaUploadProgress && (
+                    <span className="ml-3 flex items-center gap-2 text-blue-600 text-sm">
+                      <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span>
+                      Uploading...
+                    </span>
+                  )}
                 </h3>
                 
-                {mediaUploadProgress && (
-                  <div className="mb-4">
-                    <MediaProgressbar
-                      isMediaUploading={mediaUploadProgress}
-                      progress={mediaUploadProgressPercentage}
-                    />
-                  </div>
-                )}
+                {/* Upload banner removed as requested */}
 
                 {courseLandingFormData?.image ? (
                   <div className="space-y-4">
@@ -87,7 +85,7 @@ function CourseSettings() {
                       />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <Label htmlFor="replace-image" className="cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-lg shadow-lg hover:bg-gray-50 transition-colors">
+                          <Label htmlFor="replace-image" className={`cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-lg shadow-lg hover:bg-gray-50 transition-colors ${mediaUploadProgress ? 'pointer-events-none opacity-60' : ''}`}>
                             <UploadIcon className="w-4 h-4 mr-2 inline" />
                             Replace Image
                           </Label>
@@ -107,7 +105,7 @@ function CourseSettings() {
                     <UploadIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <h4 className="text-lg font-medium text-gray-900 mb-2">Upload Course Image</h4>
                     <p className="text-gray-600 mb-4">Choose a high-quality image that represents your course</p>
-                    <Label htmlFor="course-image" className="cursor-pointer bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <Label htmlFor="course-image" className={`cursor-pointer bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors ${mediaUploadProgress ? 'pointer-events-none opacity-60' : ''}`}>
                       Select Image
                     </Label>
                     <Input

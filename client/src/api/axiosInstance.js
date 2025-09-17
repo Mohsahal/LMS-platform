@@ -6,17 +6,48 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-// Fetch CSRF token once and cache in memory
+// Fetch CSRF token with better caching and retry logic
 let csrfToken = null;
+let csrfFetchInFlight = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 async function ensureCsrfToken() {
-  if (csrfToken) return csrfToken;
-  try {
-    const res = await axios.get("http://localhost:5000/csrf-token", { withCredentials: true });
-    csrfToken = res?.data?.csrfToken || null;
-  } catch {
-    // ignore
+  const now = Date.now();
+  
+  // Return cached token if still valid
+  if (csrfToken && (now - lastFetchTime) < CACHE_DURATION) {
+    return csrfToken;
   }
-  return csrfToken;
+  
+  // If already fetching, wait for it
+  if (csrfFetchInFlight) {
+    return csrfFetchInFlight;
+  }
+  
+  // Start new fetch
+  csrfFetchInFlight = axios
+    .get("http://localhost:5000/csrf-token", { 
+      withCredentials: true,
+      timeout: 5000 // 5 second timeout
+    })
+    .then((res) => {
+      csrfToken = res?.data?.csrfToken || null;
+      lastFetchTime = now;
+      return csrfToken;
+    })
+    .catch((error) => {
+      console.warn("CSRF token fetch failed:", error.message);
+      return null;
+    })
+    .finally(() => {
+      // Allow refetch after 1 second
+      setTimeout(() => {
+        csrfFetchInFlight = null;
+      }, 1000);
+    });
+    
+  return csrfFetchInFlight;
 }
 
 axiosInstance.interceptors.request.use(

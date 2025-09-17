@@ -1,8 +1,6 @@
-import MediaProgressbar from "@/components/media-progress-bar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import VideoPlayer from "@/components/video-player";
@@ -13,7 +11,7 @@ import {
   mediaDeleteService,
   mediaUploadService,
 } from "@/services";
-import { Upload, Plus, Play, Trash2, Edit3, Clock, FileText, Eye, AlertCircle } from "lucide-react";
+import { Upload, Plus, Play, Trash2, Edit3, Eye, AlertCircle } from "lucide-react";
 import { useContext, useRef, useState } from "react";
 
 function CourseCurriculum() {
@@ -22,7 +20,6 @@ function CourseCurriculum() {
     setCourseCurriculumFormData,
     mediaUploadProgress,
     setMediaUploadProgress,
-    mediaUploadProgressPercentage,
     setMediaUploadProgressPercentage,
   } = useContext(InstructorContext);
 
@@ -49,17 +46,7 @@ function CourseCurriculum() {
     setCourseCurriculumFormData(cpyCourseCurriculumFormData);
   }
 
-  function handleLectureDurationChange(event, currentIndex) {
-    let cpy = [...courseCurriculumFormData];
-    cpy[currentIndex] = { ...cpy[currentIndex], duration: event.target.value };
-    setCourseCurriculumFormData(cpy);
-  }
-
-  function handleLectureResourcesChange(event, currentIndex) {
-    let cpy = [...courseCurriculumFormData];
-    cpy[currentIndex] = { ...cpy[currentIndex], resources: event.target.value };
-    setCourseCurriculumFormData(cpy);
-  }
+  // Removed duration/resources handlers
 
   function handleFreePreviewChange(currentValue, currentIndex) {
     let cpyCourseCurriculumFormData = [...courseCurriculumFormData];
@@ -124,10 +111,10 @@ function CourseCurriculum() {
         };
         setCourseCurriculumFormData(cpyCourseCurriculumFormData);
         
-        // Show completion for 2 seconds
-        setTimeout(() => {
-          setMediaUploadProgress(false);
-        }, 2000);
+        // Immediately complete and hide progress banner
+        setMediaUploadProgressPercentage(100);
+        setMediaUploadProgress(false);
+        setMediaUploadProgressPercentage(0);
       } else {
         throw new Error(response.message || "Upload failed");
       }
@@ -138,17 +125,16 @@ function CourseCurriculum() {
         [currentIndex]: error.message || "Upload failed"
       }));
     } finally {
-      // Remove from uploading set
+      // Remove from uploading set and ensure progress is hidden when nothing remaining
       setUploadingFiles(prev => {
         const newSet = new Set(prev);
         newSet.delete(currentIndex);
+        if (newSet.size === 0) {
+          setMediaUploadProgress(false);
+          setMediaUploadProgressPercentage(0);
+        }
         return newSet;
       });
-      
-      // Hide progress if no more uploads
-      if (uploadingFiles.size === 0) {
-        setMediaUploadProgress(false);
-      }
     }
   }
 
@@ -271,14 +257,10 @@ function CourseCurriculum() {
         cpyCourseCurriculumFormdata = [...cpyCourseCurriculumFormdata, ...newLectures];
         setCourseCurriculumFormData(cpyCourseCurriculumFormdata);
 
-        // Show success message
-        alert(`Successfully uploaded ${selectedFiles.length} video(s)!`);
-        
-        // Show completion for 3 seconds
-        setTimeout(() => {
-          setMediaUploadProgress(false);
-          setMediaUploadProgressPercentage(0);
-        }, 3000);
+        // Optional toast could go here. Immediately hide banner on completion
+        setMediaUploadProgressPercentage(100);
+        setMediaUploadProgress(false);
+        setMediaUploadProgressPercentage(0);
       } else {
         throw new Error(response.message || "Bulk upload failed");
       }
@@ -378,13 +360,7 @@ function CourseCurriculum() {
             </div>
           </div>
 
-          {/* Global Upload Progress */}
-          {mediaUploadProgress && (
-            <MediaProgressbar
-              isMediaUploading={mediaUploadProgress}
-              progress={mediaUploadProgressPercentage}
-            />
-          )}
+          {/* Global Upload Progress removed as requested */}
 
           <div className="space-y-6">
             {courseCurriculumFormData.map((curriculumItem, index) => (
@@ -420,8 +396,8 @@ function CourseCurriculum() {
                     </div>
                   </div>
 
-                  {/* Lecture Details Form */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                  {/* Lecture Details Form (Title only) */}
+                  <div className="grid grid-cols-1 gap-4 mb-6">
                     <div>
                       <Label className="text-sm font-medium text-gray-700 mb-2 block">Lecture Title</Label>
                       <Input
@@ -431,30 +407,6 @@ function CourseCurriculum() {
                         onChange={(event) => handleCourseTitleChange(event, index)}
                         value={curriculumItem?.title || ""}
                       />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700 mb-2 block">Duration</Label>
-                      <div className="relative">
-                        <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                          placeholder="08:30"
-                          value={curriculumItem?.duration || ""}
-                          onChange={(e) => handleLectureDurationChange(e, index)}
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700 mb-2 block">Resources</Label>
-                      <div className="relative">
-                        <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Textarea
-                          placeholder="Links, notes, downloads..."
-                          value={curriculumItem?.resources || ""}
-                          onChange={(e) => handleLectureResourcesChange(e, index)}
-                          className="pl-10 min-h-[40px]"
-                        />
-                      </div>
                     </div>
                   </div>
 
