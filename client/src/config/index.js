@@ -20,6 +20,20 @@ export const signUpFormControls = [
     type: "password",
     componentType: "input",
   },
+  {
+    name: "dob",
+    label: "Date of Birth",
+    placeholder: "Select your date of birth",
+    type: "date",
+    componentType: "input",
+  },
+  {
+    name: "guardianDetails",
+    label: "Guardian Details",
+    placeholder: "Enter guardian name and contact",
+    type: "text",
+    componentType: "input",
+  },
 ];
 
 export const signInFormControls = [
@@ -48,6 +62,8 @@ export const initialSignUpFormData = {
   userName: "",
   userEmail: "",
   password: "",
+  dob: "",
+  guardianDetails: "",
 };
 
 export const languageOptions = [

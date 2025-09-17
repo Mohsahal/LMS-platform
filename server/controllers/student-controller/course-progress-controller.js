@@ -276,12 +276,15 @@ const generateCompletionCertificate = async (req, res) => {
 
     // Ms./Mr. [Name] .......... Student ID [id]
     const displayName = `${user.userName || user.userEmail}`;
-    const sonOrDaughterOf = ""; // Placeholder for now
+    // Guardian details line (e.g., S/D/W of ...). We only print if available
+    const guardianLine = user.guardianDetails ? `${user.guardianDetails}` : "";
     doc.fontSize(14).fillColor("#3b0764");
     // Name on left underline after Ms./Mr.
-    doc.text(`${displayName}`, 190, 260, { width: 260, align: "left" });
-    // Son/Daughter of
-    doc.text(`${sonOrDaughterOf}`, 540, 230, { width: 140, align: "left" });
+    doc.text(`${displayName}`, 180, 258, { width: 260, align: "left" });
+    // Guardian details (son/daughter/ward of)
+    if (guardianLine) {
+      doc.text(`${guardianLine}`, 410, 258, { width: 240, align: "left" });
+    }
     // Student ID
     doc.text(`${userId}`, 610, 256, { width: 185, align: "left" });
 

@@ -9,7 +9,7 @@ const registerUser = async (req, res) => {
   console.log("Request body:", req.body);
   console.log("Request headers:", req.headers);
   
-  const { userName, userEmail, password } = req.body || {};
+  const { userName, userEmail, password, dob, guardianDetails } = req.body || {};
   
   console.log("Extracted fields:", { userName, userEmail, password: password ? "present" : "missing" });
 
@@ -26,7 +26,7 @@ const registerUser = async (req, res) => {
       missingFields: {
         userName: !userName,
         userEmail: !userEmail,
-        password: !password
+      password: !password
       }
     });
   }
@@ -42,6 +42,17 @@ const registerUser = async (req, res) => {
   if (!validator.isStrongPassword(password + "", { minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1 })) {
     return res.status(400).json({ success: false, message: "Weak password: include upper, lower, number, min 8" });
   }
+
+  // Optional validations
+  let parsedDob = undefined;
+  if (dob) {
+    const dateObj = new Date(dob);
+    if (isNaN(dateObj.getTime())) {
+      return res.status(400).json({ success: false, message: "Invalid date of birth" });
+    }
+    parsedDob = dateObj;
+  }
+  const safeGuardianDetails = guardianDetails ? validator.escape(guardianDetails + "") : undefined;
 
     try {
     const existingUser = await User.findOne({
@@ -61,6 +72,8 @@ const registerUser = async (req, res) => {
       userEmail: normalizedEmail,
       role: "user",
       password: hashPassword,
+      dob: parsedDob,
+      guardianDetails: safeGuardianDetails,
     });
 
     await newUser.save();
