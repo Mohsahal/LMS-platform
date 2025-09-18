@@ -12,13 +12,13 @@ function CourseLanding() {
   return (
     <div className="space-y-6">
       <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-2xl font-bold text-gray-900">Course Landing Page</CardTitle>
               <p className="text-gray-600 mt-1">Create an engaging landing page that converts visitors to students</p>
             </div>
-            <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+            <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-200 px-3 py-1 rounded-full">
               <Eye className="w-4 h-4" />
               Live Preview
             </div>

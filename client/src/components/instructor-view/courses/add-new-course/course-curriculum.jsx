@@ -315,7 +315,7 @@ function CourseCurriculum() {
   return (
     <div className="space-y-6">
       <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-gray-100">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100">
           <div className="flex flex-row justify-between items-center">
             <div>
               <CardTitle className="text-2xl font-bold text-gray-900">Course Curriculum</CardTitle>
@@ -335,22 +335,36 @@ function CourseCurriculum() {
                 as="label"
                 htmlFor="bulk-media-upload"
                 variant="outline"
-                className="cursor-pointer border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
+                className="cursor-pointer border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                 onClick={handleOpenBulkUploadDialog}
                 disabled={mediaUploadProgress}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Bulk Upload
               </Button>
+              {mediaUploadProgress && (
+                <div className="flex items-center gap-2 text-gray-600">
+                  <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm">Uploading...</span>
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-6">
+          {mediaUploadProgress && (
+            <div className="mb-6 p-3 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-gray-700">
+                <div className="w-4 h-4 border-2 border-gray-700 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm font-medium">Uploading videos... please keep this tab open</span>
+              </div>
+            </div>
+          )}
           <div className="flex items-center justify-between mb-6">
             <Button
               disabled={!isCourseCurriculumFormDataValid() || mediaUploadProgress}
               onClick={handleNewLecture}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              className="bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add New Lecture
@@ -369,7 +383,7 @@ function CourseCurriculum() {
                   {/* Lecture Header */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-700 rounded-lg flex items-center justify-center">
                         <Play className="w-5 h-5 text-white" />
                       </div>
                       <h3 className="text-lg font-semibold text-gray-900">Lecture {index + 1}</h3>
@@ -428,7 +442,7 @@ function CourseCurriculum() {
                             <Button 
                               onClick={() => handleReplaceVideo(index)}
                               variant="outline"
-                              className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
+                              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                               disabled={uploadingFiles.has(index)}
                             >
                               <Edit3 className="w-4 h-4 mr-2" />
@@ -437,7 +451,7 @@ function CourseCurriculum() {
                             <Button
                               onClick={() => handleDeleteLecture(index)}
                               variant="outline"
-                              className="w-full border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 transition-all duration-200"
+                              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                               disabled={uploadingFiles.has(index)}
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
@@ -469,7 +483,7 @@ function CourseCurriculum() {
                         )}
 
                         {/* Upload Area */}
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-colors duration-200">
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors duration-200">
                           <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                           <h4 className="text-lg font-medium text-gray-900 mb-2">Upload Lecture Video</h4>
                           <p className="text-gray-600 mb-4">Support MP4, MOV, AVI, WebM, MKV formats up to 500MB</p>

@@ -14,7 +14,7 @@ import {
 } from "@/config";
 import { InstructorContext } from "@/context/instructor-context";
 import { Delete, Edit, Plus, BookOpen, Users, DollarSign, AlertTriangle } from "lucide-react";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { deleteCourseService } from "@/services";
@@ -24,6 +24,11 @@ function InstructorCourses({ listOfCourses }) {
   const navigate = useNavigate();
   const [deletingCourseId, setDeletingCourseId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const INITIAL_ROWS = 5;
+  const ROWS_CHUNK = 5;
+  const [visibleRows, setVisibleRows] = useState(INITIAL_ROWS);
+  const canLoadMore = (listOfCourses?.length || 0) > visibleRows;
+  useEffect(() => { setVisibleRows(INITIAL_ROWS); }, [listOfCourses]);
   const {
     setCurrentEditedCourseId,
     setCourseLandingFormData,
@@ -89,7 +94,7 @@ function InstructorCourses({ listOfCourses }) {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100">
           <div className="flex justify-between flex-row items-center">
             <div>
               <CardTitle className="text-3xl font-bold text-gray-900 mb-2">Course Management</CardTitle>
@@ -103,7 +108,7 @@ function InstructorCourses({ listOfCourses }) {
                    setCourseCurriculumFormData(courseCurriculumInitialFormData);
                    navigate("/instructor/create-new-course");
                  }}
-                 className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                 className="p-6 bg-gradient-to-r from-gray-700 to-black hover:from-gray-800 hover:to-black text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                >
                  <Plus className="w-5 h-5 mr-2" />
                  Create New Course
@@ -130,11 +135,11 @@ function InstructorCourses({ listOfCourses }) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {listOfCourses.map((course) => (
+                  {listOfCourses.slice(0, visibleRows).map((course) => (
                     <TableRow key={course?._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
                       <TableCell className="text-left py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                          <div className="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-800 rounded-lg flex items-center justify-center">
                             <BookOpen className="w-6 h-6 text-white" />
                           </div>
                           <div>
@@ -145,14 +150,14 @@ function InstructorCourses({ listOfCourses }) {
                       </TableCell>
                       <TableCell className="text-center py-4">
                         <div className="flex items-center justify-center gap-2">
-                          <Users className="w-5 h-5 text-blue-600" />
+                          <Users className="w-5 h-5 text-gray-700" />
                           <span className="font-semibold text-gray-900 text-lg">{course?.students?.length || 0}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-center py-4">
                         <div className="flex items-center justify-center gap-2">
-                          <DollarSign className="w-5 h-5 text-green-600" />
-                          <span className="font-bold text-green-600 text-lg">
+                          <DollarSign className="w-5 h-5 text-gray-700" />
+                          <span className="font-bold text-gray-900 text-lg">
                             ${(course?.students?.length || 0) * (course?.pricing || 0)}
                           </span>
                         </div>
@@ -165,7 +170,7 @@ function InstructorCourses({ listOfCourses }) {
                             }}
                             variant="outline"
                             size="sm"
-                            className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
+                            className="border-gray-300 text-gray-800 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                           >
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
@@ -175,7 +180,7 @@ function InstructorCourses({ listOfCourses }) {
                                      variant="outline" 
                                      size="sm"
                                      disabled={deletingCourseId === course._id}
-                                     className="border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 transition-all duration-200"
+                                     className="border-gray-300 text-gray-800 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                                    >
                             {deletingCourseId === course._id ? (
                               <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin mr-1"></div>
@@ -190,6 +195,17 @@ function InstructorCourses({ listOfCourses }) {
                   ))}
                 </TableBody>
               </Table>
+              {canLoadMore ? (
+                <div className="flex justify-center mt-4 pb-4">
+                  <Button
+                    onClick={() => setVisibleRows((n) => n + ROWS_CHUNK)}
+                    variant="outline"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-8 py-3 transition-all duration-200"
+                  >
+                    Load more courses
+                  </Button>
+                </div>
+              ) : null}
             </div>
           ) : (
             <div className="text-center py-16">
@@ -205,7 +221,7 @@ function InstructorCourses({ listOfCourses }) {
                   setCourseCurriculumFormData(courseCurriculumInitialFormData);
                   navigate("/instructor/create-new-course");
                 }}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                className="bg-gradient-to-r from-gray-700 to-black hover:from-gray-800 hover:to-black text-white font-semibold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
               >
                 <Plus className="w-5 h-5 mr-2" />
                 Create Your First Course
@@ -214,6 +230,18 @@ function InstructorCourses({ listOfCourses }) {
           )}
         </CardContent>
       </Card>
+
+      {canLoadMore ? (
+        <div className="flex justify-center mt-6">
+          <Button
+            onClick={() => setVisibleRows((n) => n + ROWS_CHUNK)}
+            variant="outline"
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-8 py-3 transition-all duration-200"
+          >
+            Load more courses
+          </Button>
+        </div>
+      ) : null}
 
       {/* Delete Confirmation Dialog */}
       {showDeleteConfirm && (

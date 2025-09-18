@@ -33,6 +33,7 @@
     "paypal-rest-sdk": "^1.8.1",
     "pdfkit": "^0.13.0",
     "qrcode": "^1.5.4",
+    "razorpay": "^2.9.6",
     "validator": "^13.15.15"
   }
 }

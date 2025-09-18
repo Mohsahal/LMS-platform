@@ -5,6 +5,8 @@ export const signUpFormControls = [
     placeholder: "Enter your user name",
     type: "text",
     componentType: "input",
+    minLength: 4,
+    maxLength: 13,
   },
   {
     name: "userEmail",
@@ -28,11 +30,13 @@ export const signUpFormControls = [
     componentType: "input",
   },
   {
-    name: "guardianDetails",
-    label: "Guardian Details",
-    placeholder: "Enter guardian name and contact",
+    name: "guardianName",
+    label: "Guardian Name",
+    placeholder: "Enter guardian name",
     type: "text",
     componentType: "input",
+    minLength: 4,
+    maxLength: 13,
   },
 ];
 
@@ -63,7 +67,7 @@ export const initialSignUpFormData = {
   userEmail: "",
   password: "",
   dob: "",
-  guardianDetails: "",
+  guardianName: "",
 };
 
 export const languageOptions = [
@@ -88,15 +92,32 @@ export const courseLevelOptions = [
 export const courseCategories = [
   { id: "web-development", label: "Web Development" },
   { id: "backend-development", label: "Backend Development" },
+  { id: "frontend-development", label: "Frontend Development" },
+  { id: "fullstack-development", label: "Full Stack Development" },
   { id: "data-science", label: "Data Science" },
   { id: "machine-learning", label: "Machine Learning" },
   { id: "artificial-intelligence", label: "Artificial Intelligence" },
   { id: "cloud-computing", label: "Cloud Computing" },
   { id: "cyber-security", label: "Cyber Security" },
+  { id: "network-security", label: "Network Security" },
+  { id: "devops", label: "DevOps" },
+  { id: "database-management", label: "Database Management" },
+  { id: "blockchain", label: "Blockchain" },
   { id: "mobile-development", label: "Mobile Development" },
+  { id: "ios-development", label: "iOS Development" },
+  { id: "android-development", label: "Android Development" },
   { id: "game-development", label: "Game Development" },
   { id: "software-engineering", label: "Software Engineering" },
+  { id: "digital-marketing", label: "Digital Marketing" },
+  { id: "seo", label: "SEO" },
+  { id: "graphic-design", label: "Graphic Design" },
+  { id: "ui-ux-design", label: "UI/UX Design" },
+  { id: "product-management", label: "Product Management" },
+  { id: "project-management", label: "Project Management" },
+ 
+ 
 ];
+
 
 export const courseLandingPageFormControls = [
   {

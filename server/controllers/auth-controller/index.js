@@ -9,7 +9,7 @@ const registerUser = async (req, res) => {
   console.log("Request body:", req.body);
   console.log("Request headers:", req.headers);
   
-  const { userName, userEmail, password, dob, guardianDetails } = req.body || {};
+  const { userName, userEmail, password, dob, guardianName } = req.body || {};
   
   console.log("Extracted fields:", { userName, userEmail, password: password ? "present" : "missing" });
 
@@ -39,8 +39,8 @@ const registerUser = async (req, res) => {
   if (!validator.isLength(userName + "", { min: 3, max: 60 })) {
     return res.status(400).json({ success: false, message: "Invalid name length" });
   }
-  if (!validator.isStrongPassword(password + "", { minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1 })) {
-    return res.status(400).json({ success: false, message: "Weak password: include upper, lower, number, min 8" });
+  if (!validator.isStrongPassword(password + "", { minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1 })) {
+    return res.status(400).json({ success: false, message: "Weak password: include upper, lower, number, special symbol, min 8" });
   }
 
   // Optional validations
@@ -52,7 +52,9 @@ const registerUser = async (req, res) => {
     }
     parsedDob = dateObj;
   }
-  const safeGuardianDetails = guardianDetails ? validator.escape(guardianDetails + "") : undefined;
+  const safeGuardianDetails = guardianName
+    ? validator.escape(guardianName + "")
+    : undefined;
 
     try {
     const existingUser = await User.findOne({

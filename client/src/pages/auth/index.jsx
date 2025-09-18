@@ -25,6 +25,7 @@ function AuthPage() {
     handleTabChange,
     registrationSuccess,
     isRegistering,
+    isLoggingIn,
   } = useContext(AuthContext);
 
   function checkIfSignInFormIsValid() {
@@ -39,8 +40,13 @@ function AuthPage() {
     return (
       signUpFormData &&
       signUpFormData.userName !== "" &&
+      signUpFormData.userName.length >= 4 &&
+      signUpFormData.userName.length <= 13 &&
       signUpFormData.userEmail !== "" &&
-      signUpFormData.password !== ""
+      signUpFormData.password !== "" &&
+      signUpFormData.guardianName !== "" &&
+      signUpFormData.guardianName.length >= 4 &&
+      signUpFormData.guardianName.length <= 13
     );
   }
 
@@ -52,9 +58,9 @@ function AuthPage() {
           <div className="max-w-xl w-full px-8">
             {/* Learning Card */}
             <div className="bg-white border border-gray-200 rounded-2xl p-10 shadow-sm flex items-center gap-8">
-              <div className="w-48 h-48 rounded-2xl border border-blue-200 flex items-center justify-center shrink-0">
-                <div className="w-28 h-28 rounded-full border-2 border-blue-200 flex items-center justify-center">
-                  <Users className="w-12 h-12 text-blue-500" />
+              <div className="w-48 h-48 rounded-2xl border border-gray-300 flex items-center justify-center shrink-0">
+                <div className="w-28 h-28 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                  <Users className="w-12 h-12 text-gray-700" />
                 </div>
               </div>
               <div className="flex-1">
@@ -63,7 +69,7 @@ function AuthPage() {
                   Learning Time
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: "65%" }}></div>
+                  <div className="bg-gray-700 h-2 rounded-full" style={{ width: "65%" }}></div>
                 </div>
               </div>
             </div>
@@ -77,15 +83,15 @@ function AuthPage() {
 
               <div className="grid grid-cols-3 gap-8 mt-8">
                 <div>
-                  <div className="text-2xl font-bold text-blue-600">50K+</div>
+                  <div className="text-2xl font-bold text-gray-700">50K+</div>
                   <div className="text-sm text-gray-500">Students</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-blue-600">500+</div>
+                  <div className="text-2xl font-bold text-gray-700">500+</div>
                   <div className="text-sm text-gray-500">Courses</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-blue-600">4.8</div>
+                  <div className="text-2xl font-bold text-gray-700">4.8</div>
                   <div className="text-sm text-gray-500">Rating</div>
                 </div>
               </div>
@@ -97,7 +103,7 @@ function AuthPage() {
         <div className="w-full flex items-start justify-center pt-10 pb-14">
           <div className="w-full max-w-lg px-6">
             <div className="flex items-center justify-center mb-6">
-              <img src="/ashiwin_lap_logo.png" alt="BRAVYNEX ENGINEERING" className="h-10" />
+              <img src="/images/logo.png" alt="BRAVYNEX ENGINEERING" className="h-10 w-auto" />
             </div>
 
             <Tabs
@@ -109,13 +115,13 @@ function AuthPage() {
               <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-lg">
                 <TabsTrigger
                   value="signin"
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                  className="data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
                 >
                   Sign In
                 </TabsTrigger>
                 <TabsTrigger
                   value="signup"
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                  className="data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
                 >
                   Sign Up
                 </TabsTrigger>
@@ -131,20 +137,20 @@ function AuthPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4 px-6 pb-6">
-                    {registrationSuccess && (
+                    {/* {registrationSuccess && (
                       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        {/* <p className="text-blue-800 text-sm font-medium">
+                        <p className="text-blue-800 text-sm font-medium">
                           🎉 Welcome! Your account has been created successfully. Please sign in below.
-                        </p> */}
+                        </p>
                       </div>
-                    )}
+                    )} */}
 
                     <CommonForm
                       formControls={signInFormControls}
-                      buttonText="Sign In"
+                      buttonText={isLoggingIn ? "Signing in..." : "Sign In"}
                       formData={signInFormData}
                       setFormData={setSignInFormData}
-                      isButtonDisabled={!checkIfSignInFormIsValid()}
+                      isButtonDisabled={!checkIfSignInFormIsValid() || isLoggingIn}
                       handleSubmit={handleLoginUser}
                     />
 
@@ -153,7 +159,7 @@ function AuthPage() {
                         <input type="checkbox" className="mr-2 rounded border-gray-300" />
                         Having trouble in sign in?
                       </label>
-                      <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                      <Link to="/forgot-password" className="text-sm text-gray-700 hover:text-gray-900 font-medium">
                         Forgot password?
                       </Link>
                     </div>
@@ -182,7 +188,7 @@ function AuthPage() {
                       <span className="text-sm text-gray-600">Don&apos;t have an account? </span>
                       <button
                         onClick={() => handleTabChange("signup")}
-                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        className="text-sm text-gray-700 hover:text-gray-900 font-medium"
                       >
                         Sign up here
                       </button>
@@ -221,11 +227,11 @@ function AuthPage() {
                     <div className="text-center pt-2">
                       <p className="text-xs text-gray-500">
                         By signing up, you agree to our{" "}
-                        <Link to="/terms" className="text-blue-600 hover:text-blue-700">
+                        <Link to="/terms" className="text-gray-700 hover:text-gray-900">
                           Terms of Service
                         </Link>{" "}
                         and{" "}
-                        <Link to="/privacy" className="text-blue-600 hover:text-blue-700">
+                        <Link to="/privacy" className="text-gray-700 hover:text-gray-900">
                           Privacy Policy
                         </Link>
                       </p>
@@ -235,7 +241,7 @@ function AuthPage() {
                       <span className="text-sm text-gray-600">Already have an account? </span>
                       <button
                         onClick={() => handleTabChange("signin")}
-                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        className="text-sm text-gray-700 hover:text-gray-900 font-medium"
                       >
                         Sign in here
                       </button>

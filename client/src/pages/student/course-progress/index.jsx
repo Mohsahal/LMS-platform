@@ -20,7 +20,7 @@ import {
   downloadCertificateService,
 } from "@/services";
 import { Check, ChevronLeft, ChevronRight, Play, BookOpen, Download, Award, Lock } from "lucide-react";
-import { useContext, useEffect, useState, useCallback } from "react";
+import { useContext, useEffect, useState, useCallback, useRef } from "react";
 import Confetti from "react-confetti";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +37,8 @@ function StudentViewCourseProgressPage() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [isSideBarOpen, setIsSideBarOpen] = useState(true);
   const [isCourseCompleted, setIsCourseCompleted] = useState(false);
+  const isMarkingRef = useRef(false);
+  const markedLectureIdsRef = useRef(new Set());
   const { toast } = useToast();
   const { id } = useParams();
 
@@ -82,16 +84,23 @@ function StudentViewCourseProgressPage() {
   }, [auth?.user?._id, id, setStudentCurrentCourseProgress]);
 
   const updateCourseProgress = useCallback(async () => {
-    if (currentLecture) {
+    if (!currentLecture || !currentLecture._id) return;
+    const lectureId = currentLecture._id;
+    if (isMarkingRef.current) return;
+    if (markedLectureIdsRef.current.has(lectureId)) return;
+    isMarkingRef.current = true;
+    try {
       const response = await markLectureAsViewedService(
         auth?.user?._id,
         studentCurrentCourseProgress?.courseDetails?._id,
-        currentLecture._id
+        lectureId
       );
-
       if (response?.success) {
+        markedLectureIdsRef.current.add(lectureId);
         fetchCurrentCourseProgress();
       }
+    } finally {
+      isMarkingRef.current = false;
     }
   }, [currentLecture, auth?.user?._id, studentCurrentCourseProgress?.courseDetails?._id, fetchCurrentCourseProgress]);
 
@@ -149,7 +158,10 @@ function StudentViewCourseProgressPage() {
   }, [id, fetchCurrentCourseProgress]);
 
   useEffect(() => {
-    if (currentLecture?.progressValue === 1) updateCourseProgress();
+    const progress = Number(currentLecture?.progressValue || 0);
+    if (progress >= 0.98 && currentLecture?._id && !markedLectureIdsRef.current.has(currentLecture._id)) {
+      updateCourseProgress();
+    }
   }, [currentLecture, updateCourseProgress]);
 
   useEffect(() => {
@@ -164,11 +176,12 @@ function StudentViewCourseProgressPage() {
       <div className="flex items-center justify-between p-6 bg-white border-b border-gray-200 shadow-sm">
         <div className="flex items-center space-x-4">
           <Button
+            variant="outline"
             onClick={() => navigate("/student-courses")}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-            size="sm"
+            className=""
+            size="lg"
           >
-            <ChevronLeft className="h-4 w-4 mr-2" />
+            <ChevronLeft className="h-7 w-4 mr-2" />
             Back to My Courses
           </Button>
           <div className="flex items-center gap-3">
@@ -365,7 +378,7 @@ function StudentViewCourseProgressPage() {
                           }`}
                         >
                           <img 
-                            src="/certificate_bg.png" 
+                            src="/images/certificate_bg.png" 
                             alt="Course Certificate" 
                             className="w-full h-auto object-contain"
                             onError={(e) => {

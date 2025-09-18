@@ -131,26 +131,26 @@ function AddNewCoursePage() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between">
-        <h1 className="text-3xl font-extrabold mb-5">Create a new course</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-extrabold text-gray-900">Create a new course</h1>
         <Button
           disabled={!validateFormData()}
-          className="text-sm tracking-wider font-bold px-8"
+          className="text-sm tracking-wider font-bold px-8 bg-gray-800 hover:bg-black text-white"
           onClick={handleCreateCourse}
         >
           SUBMIT
         </Button>
       </div>
-      <Card>
+      <Card className="border-gray-200">
         <CardContent>
           <div className="container mx-auto p-4">
             <Tabs defaultValue="curriculum" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-                <TabsTrigger value="course-landing-page">
+              <TabsList className="bg-gray-100">
+                <TabsTrigger value="curriculum" className="data-[state=active]:bg-gray-800 data-[state=active]:text-white">Curriculum</TabsTrigger>
+                <TabsTrigger value="course-landing-page" className="data-[state=active]:bg-gray-800 data-[state=active]:text-white">
                   Course Landing Page
                 </TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
+                <TabsTrigger value="settings" className="data-[state=active]:bg-gray-800 data-[state=active]:text-white">Settings</TabsTrigger>
               </TabsList>
               <TabsContent value="curriculum">
                 <CourseCurriculum />

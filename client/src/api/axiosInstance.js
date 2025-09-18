@@ -2,7 +2,7 @@ import axios from "axios";
 import { toast } from "@/hooks/use-toast";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000",
   withCredentials: true,
 });
 
@@ -26,8 +26,9 @@ async function ensureCsrfToken() {
   }
   
   // Start new fetch
+  const base = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
   csrfFetchInFlight = axios
-    .get("http://localhost:5000/csrf-token", { 
+    .get(`${base}/csrf-token`, { 
       withCredentials: true,
       timeout: 5000 // 5 second timeout
     })
@@ -59,9 +60,14 @@ axiosInstance.interceptors.request.use(
       if (token) config.headers["X-CSRF-Token"] = token;
     }
 
-    const accessToken = JSON.parse(localStorage.getItem("accessToken")) || "";
-
-    if (accessToken) {
+    let accessToken = null;
+    try {
+      const raw = localStorage.getItem("accessToken");
+      accessToken = raw ? JSON.parse(raw) : null;
+    } catch (_) {
+      accessToken = null;
+    }
+    if (typeof accessToken === "string" && accessToken.trim().length > 0) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
@@ -75,21 +81,35 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status;
+    const url = (error?.config?.url || "").toString();
+    const isAuthLogin = /\/auth\/login($|\?)/.test(url);
+    const isAuthRegister = /\/auth\/register($|\?)/.test(url);
+    const isAuthEndpoint = isAuthLogin || isAuthRegister;
     if (status === 401 || status === 403) {
-      try {
-        localStorage.removeItem("accessToken");
-      } catch {
-        // ignore
-      }
       const message = error?.response?.data?.message || (status === 401 ? "Unauthorized" : "Forbidden");
-      toast({ title: "Session issue", description: message });
-      if (typeof window !== "undefined") {
-        window.location.href = "/auth";
+      if (!isAuthEndpoint) {
+        // Only clear token and redirect for protected, non-auth endpoints
+        try {
+          localStorage.removeItem("accessToken");
+        } catch {
+          // ignore
+        }
+        toast({ title: "Session issue", description: message });
+        if (typeof window !== "undefined") {
+          window.location.href = "/auth";
+        }
+      } else if (isAuthLogin) {
+        // For login failures, do not redirect or clear input; allow caller to handle toast
+        // Optionally still surface a toast here if caller doesn't
+        // toast({ title: "Login failed", description: message });
       }
     }
     // CSRF errors
     if (status === 419 || error?.response?.data?.message === "invalid csrf token") {
       toast({ title: "Security error", description: "Please refresh the page and try again" });
+    }
+    if (!status) {
+      toast({ title: "Network error", description: error?.message || "Request failed" });
     }
     return Promise.reject(error);
   }

@@ -14,6 +14,7 @@ const getAllStudentViewCourses = async (req, res) => {
       level = [],
       primaryLanguage = [],
       sortBy = "price-lowtohigh",
+      search = "",
     } = req.query;
 
     console.log(req.query, "req.query");
@@ -27,6 +28,18 @@ const getAllStudentViewCourses = async (req, res) => {
     }
     if (primaryLanguage.length) {
       filters.primaryLanguage = { $in: primaryLanguage.split(",") };
+    }
+    if (typeof search === "string" && search.trim()) {
+      const term = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const rx = new RegExp(term, "i");
+      filters.$or = [
+        { title: rx },
+        { subtitle: rx },
+        { description: rx },
+        { instructorName: rx },
+        { category: rx },
+        { primaryLanguage: rx },
+      ];
     }
 
     let sortParam = {};

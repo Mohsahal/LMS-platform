@@ -69,13 +69,13 @@ function InstructorDashboardpage() {
       <aside className="w-64 bg-white shadow-xl hidden lg:block">
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-700">
+          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 bg-gradient-to-r from-gray-700 ">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-xs text-blue-100">Instructor Portal</p>
+                <p className="text-xs text-black">Instructor Portal</p>
               </div>
             </div>
           </div>
@@ -93,15 +93,15 @@ function InstructorDashboardpage() {
                   onClick={() => setCurrentView("dashboard")}
                   className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 ${
                     currentView === "dashboard"
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200 shadow-sm'
+                      ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300 shadow-sm'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
                   }`}
                 >
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    currentView === "dashboard" ? 'bg-blue-100' : 'bg-gray-100'
+                    currentView === "dashboard" ? 'bg-gray-200' : 'bg-gray-100'
                   }`}>
                     <BarChart3 className={`w-4 h-4 ${
-                      currentView === "dashboard" ? 'text-blue-600' : 'text-gray-500'
+                      currentView === "dashboard" ? 'text-gray-700' : 'text-gray-500'
                     }`} />
                   </div>
                   <span className="font-medium">Dashboard</span>
@@ -115,15 +115,15 @@ function InstructorDashboardpage() {
                   onClick={() => setCurrentView("courses")}
                   className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 ${
                     currentView === "courses"
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200 shadow-sm'
+                      ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300 shadow-sm'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
                   }`}
                 >
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    currentView === "courses" ? 'bg-blue-100' : 'bg-gray-100'
+                    currentView === "courses" ? 'bg-gray-200' : 'bg-gray-100'
                   }`}>
                     <BookOpen className={`w-4 h-4 ${
-                      currentView === "courses" ? 'text-blue-600' : 'text-gray-500'
+                      currentView === "courses" ? 'text-gray-700' : 'text-gray-500'
                     }`} />
                   </div>
                   <span className="font-medium">My Courses</span>
@@ -137,15 +137,15 @@ function InstructorDashboardpage() {
                   onClick={() => setCurrentView("revenue")}
                   className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 ${
                     currentView === "revenue"
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200 shadow-sm'
+                      ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300 shadow-sm'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
                   }`}
                 >
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    currentView === "revenue" ? 'bg-blue-100' : 'bg-gray-100'
+                    currentView === "revenue" ? 'bg-gray-200' : 'bg-gray-100'
                   }`}>
                     <TrendingUp className={`w-4 h-4 ${
-                      currentView === "revenue" ? 'text-blue-600' : 'text-gray-500'
+                      currentView === "revenue" ? 'text-gray-700' : 'text-gray-500'
                     }`} />
                   </div>
                   <span className="font-medium">Revenue Analysis</span>

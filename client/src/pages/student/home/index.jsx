@@ -97,6 +97,14 @@ function StudentHomePage() {
 
   const [current, setCurrent] = useState(0);
   const timeoutRef = useRef(null);
+  // Featured Courses: show 3 rows initially (approx 12 items), then load more in chunks
+  const INITIAL_FEATURED_COUNT = 12;
+  const LOAD_MORE_CHUNK = 12;
+  const [visibleFeaturedCount, setVisibleFeaturedCount] = useState(INITIAL_FEATURED_COUNT);
+  const canLoadMoreFeatured = (studentViewCoursesList?.length || 0) > visibleFeaturedCount;
+  function handleLoadMoreFeatured() {
+    setVisibleFeaturedCount((c) => c + LOAD_MORE_CHUNK);
+  }
 
   function resetAutoplay() {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -131,7 +139,7 @@ function StudentHomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center p-6 lg:p-10">
             {/* Left: Copy */}
             <div>
-              <span className="inline-flex items-center text-sm px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold shadow-lg">
+              <span className="inline-flex items-center text-sm px-4 py-2 rounded-full bg-gradient-to-r from-gray-700 to-gray-600 text-white font-semibold shadow-lg">
                 {slides[current].badge}
               </span>
               <h1 className="mt-6 text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight whitespace-pre-line">
@@ -142,22 +150,22 @@ function StudentHomePage() {
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-6 text-sm text-gray-700">
                 <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-gray-700 rounded-full"></div>
                   <span className="font-medium">{slides[current].statLeft.label}</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
                   <span className="font-medium">{slides[current].statMid.label}</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                   <span className="font-medium">{slides[current].statRight.label}</span>
                 </div>
               </div>
               <div className="mt-10 flex gap-4">
                 <Button 
                   onClick={() => navigate("/courses")}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                  className="bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-800 hover:to-black text-white font-semibold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                 >
                   Explore Programming
                 </Button>
@@ -183,14 +191,14 @@ function StudentHomePage() {
               <button
                 onClick={prev}
                 aria-label="Previous slide"
-                className="hidden lg:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                className="hidden lg:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200"
               >
                 ‹
               </button>
               <button
                 onClick={next}
                 aria-label="Next slide"
-                className="hidden lg:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                className="hidden lg:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200"
               >
                 ›
               </button>
@@ -203,7 +211,7 @@ function StudentHomePage() {
               <button
                 key={`dot-${s.id}`}
                 onClick={() => goTo(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${i === current ? "w-8 bg-gradient-to-r from-blue-600 to-indigo-600" : "w-2 bg-gray-300 hover:bg-gray-400"}`}
+                className={`h-2 rounded-full transition-all duration-300 ${i === current ? "w-8 bg-gradient-to-r from-gray-700 to-black" : "w-2 bg-gray-300 hover:bg-gray-400"}`}
                 aria-label={`Go to slide ${i + 1}`}
               />
             ))}
@@ -219,7 +227,7 @@ function StudentHomePage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {courseCategories.map((categoryItem) => (
             <Button
-                className="justify-start h-16 bg-white border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-700 hover:text-blue-700 font-semibold transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg"
+                className="justify-start h-16 bg-white border-2 border-gray-200 hover:border-gray-400 hover:bg-gray-50 text-gray-700 hover:text-gray-900 font-semibold transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg"
               variant="outline"
               key={categoryItem.id}
               onClick={() => handleNavigateToCoursesPage(categoryItem.id)}
@@ -238,7 +246,7 @@ function StudentHomePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {studentViewCoursesList && studentViewCoursesList.length > 0 ? (
-            studentViewCoursesList.map((courseItem) => (
+            studentViewCoursesList.slice(0, visibleFeaturedCount).map((courseItem) => (
               <div
                 key={courseItem?._id}
                 onClick={() => handleCourseNavigate(courseItem?._id)}
@@ -259,11 +267,11 @@ function StudentHomePage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   <div className="p-6">
-                    <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
+                    <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-gray-700 transition-colors duration-200">
                       {courseItem?.title}
                     </h3>
                     <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                      <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+                      <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center">
                         <span className="text-xs text-white font-bold">
                           {courseItem?.instructorName?.charAt(0)}
                         </span>
@@ -272,12 +280,12 @@ function StudentHomePage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-xs text-green-600 font-medium">Available</span>
+                        <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                        <span className="text-xs text-gray-600 font-medium">Available</span>
                       </div>
                       <p className="font-bold text-xl text-gray-900">
-                    ${courseItem?.pricing}
-                  </p>
+                        ₹{Number(courseItem?.pricing || 0).toLocaleString("en-IN")}
+                      </p>
                     </div>
                 </div>
               </div>
@@ -292,6 +300,17 @@ function StudentHomePage() {
               </div>
             )}
           </div>
+          {canLoadMoreFeatured ? (
+            <div className="flex justify-center mt-10">
+              <Button
+                onClick={handleLoadMoreFeatured}
+                variant="outline"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-8 py-3 transition-all duration-200"
+              >
+                Load more
+              </Button>
+            </div>
+          ) : null}
         </div>
       </section>
     </div>
@@ -299,3 +318,4 @@ function StudentHomePage() {
 }
 
 export default StudentHomePage;
+

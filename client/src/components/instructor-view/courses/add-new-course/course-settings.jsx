@@ -13,8 +13,8 @@ function CourseSettings() {
     setCourseLandingFormData,
     mediaUploadProgress,
     setMediaUploadProgress,
-    mediaUploadProgressPercentage,
-    setMediaUploadProgressPercentage,
+    // mediaUploadProgressPercentage,
+    // setMediaUploadProgressPercentage,
   } = useContext(InstructorContext);
 
   async function handleImageUploadChange(event) {
@@ -28,7 +28,7 @@ function CourseSettings() {
         setMediaUploadProgress(true);
         const response = await mediaUploadService(
           imageFormData,
-          setMediaUploadProgressPercentage
+          () => {}
         );
         if (response.success) {
           setCourseLandingFormData({
@@ -46,9 +46,9 @@ function CourseSettings() {
   return (
     <div className="space-y-6">
       <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-100">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-gray-800 rounded-lg flex items-center justify-center">
               <Settings className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -105,7 +105,7 @@ function CourseSettings() {
                     <UploadIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <h4 className="text-lg font-medium text-gray-900 mb-2">Upload Course Image</h4>
                     <p className="text-gray-600 mb-4">Choose a high-quality image that represents your course</p>
-                    <Label htmlFor="course-image" className={`cursor-pointer bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors ${mediaUploadProgress ? 'pointer-events-none opacity-60' : ''}`}>
+                    <Label htmlFor="course-image" className={`cursor-pointer bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-black transition-colors ${mediaUploadProgress ? 'pointer-events-none opacity-60' : ''}`}>
                       Select Image
                     </Label>
                     <Input
@@ -124,13 +124,13 @@ function CourseSettings() {
             <div className="space-y-6">
               <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Award className="w-5 h-5 text-green-600" />
+                  <Award className="w-5 h-5 text-gray-700" />
                   Certificate Settings
                 </h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <Award className="w-5 h-5 text-green-600" />
+                      <Award className="w-5 h-5 text-gray-700" />
                       <div>
                         <Label className="text-sm font-medium text-gray-900">Issue certificate on completion</Label>
                         <p className="text-xs text-gray-500">Students receive a certificate when they finish the course</p>
@@ -228,7 +228,7 @@ function CourseSettings() {
 
               <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Target className="w-5 h-5 text-purple-600" />
+                  <Target className="w-5 h-5 text-gray-700" />
                   Completion Requirements
                 </h3>
                 <div className="space-y-4">

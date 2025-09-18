@@ -30,11 +30,11 @@ function StudentCoursesPage() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-800 rounded-xl flex items-center justify-center">
               <Watch className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-gray-900">My Courses</h1>
+              <h1 className="text-4xl font-bold text-gray-600">My Courses</h1>
               <p className="text-gray-600 text-lg">Continue your learning journey</p>
             </div>
           </div>
@@ -67,22 +67,22 @@ function StudentCoursesPage() {
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
                 <CardContent className="p-5">
-                  <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-gray-700 transition-colors">
                     {course?.title}
                   </h3>
                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 text-white flex items-center justify-center text-xs font-bold">
                       {course?.instructorName?.charAt(0)}
                     </div>
                     <span className="font-medium">{course?.instructorName}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-xs font-medium border border-green-100">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-xs font-medium border border-gray-200">
+                      <span className="w-2 h-2 bg-gray-500 rounded-full"></span>
                       Available
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-xs font-medium border border-gray-200">
+                      <span className="w-2 h-2 bg-gray-500 rounded-full"></span>
                       Self-paced
                     </span>
                   </div>
@@ -92,7 +92,7 @@ function StudentCoursesPage() {
                   onClick={() =>
                     navigate(`/course-progress/${course?.courseId}`)
                   }
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-md hover:shadow-lg transition-transform duration-200 hover:-translate-y-0.5"
+                    className="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-800 hover:to-black text-white font-semibold shadow-md hover:shadow-lg transition-transform duration-200 hover:-translate-y-0.5"
                 >
                   <Watch className="mr-2 h-4 w-4" />
                     Continue Learning
@@ -112,7 +112,7 @@ function StudentCoursesPage() {
             </p>
             <Button
               onClick={() => navigate("/courses")}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              className="bg-gradient-to-r from-gray-700 to-black hover:from-gray-800 hover:to-black text-white font-semibold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
             >
               Browse Courses
             </Button>

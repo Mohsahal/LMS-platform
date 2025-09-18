@@ -20,6 +20,7 @@ export default function AuthProvider({ children }) {
   const [activeTab, setActiveTab] = useState("signin");
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   async function handleRegisterUser(event) {
     event.preventDefault();
@@ -33,8 +34,8 @@ export default function AuthProvider({ children }) {
       toast({ title: "Invalid email", description: "Please enter a valid email address" });
       return;
     }
-    if (!validator.isStrongPassword(password || "", { minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1 })) {
-      toast({ title: "Weak password", description: "Include upper, lower, number, min length 8" });
+    if (!validator.isStrongPassword(password || "", { minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1 })) {
+      toast({ title: "Weak password", description: "Include upper, lower, number, special symbol, min length 8" });
       return;
     }
     setIsRegistering(true);
@@ -83,6 +84,7 @@ export default function AuthProvider({ children }) {
       toast({ title: "Invalid password", description: "Please enter your password" });
       return;
     }
+    setIsLoggingIn(true);
     try {
       const data = await loginService(signInFormData);
       console.log("Login response:", data);
@@ -104,13 +106,16 @@ export default function AuthProvider({ children }) {
         setSignInFormData(initialSignInFormData);
         
         console.log("✅ Login successful! User:", data.data.user);
+        toast({ title: "Login successful", description: `Welcome back, ${data.data.user.userName || "student"}!` });
         
-        // Redirect based on user role
-        if (data.data.user.role === "instructor") {
-          window.location.href = "/instructor";
-        } else {
-          window.location.href = "/";
-        }
+        // Redirect based on user role (slight delay to allow toast to show)
+        setTimeout(() => {
+          if (data.data.user.role === "instructor") {
+            window.location.href = "/instructor";
+          } else {
+            window.location.href = "/";
+          }
+        }, 600);
       } else {
         console.error("❌ Login failed:", data.message);
         toast({ title: "Login failed", description: data.message || "Check your credentials" });
@@ -127,6 +132,8 @@ export default function AuthProvider({ children }) {
         authenticate: false,
         user: null,
       });
+    } finally {
+      setIsLoggingIn(false);
     }
   }
 
@@ -238,6 +245,7 @@ export default function AuthProvider({ children }) {
         handleTabChange,
         registrationSuccess,
         isRegistering,
+        isLoggingIn,
         logout,
         loading,
       }}

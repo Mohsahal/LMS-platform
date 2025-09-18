@@ -25,9 +25,7 @@ const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mohammedsahal1243:saha
 app.use(
   cors({
     origin: [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:3000'
+      'http://localhost:5173'
     ],
     methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
@@ -45,8 +43,7 @@ app.use(cookieParser());
 
 app.use(express.json());
 
-// Serve static files from uploads directory
-app.use('/uploads', express.static('uploads'));
+// No local uploads serving needed when using Cloudinary-only
 
 // Sanitize MongoDB operators from payloads
 app.use(mongoSanitize());

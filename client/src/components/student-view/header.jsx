@@ -11,7 +11,7 @@ import {
 } from "../ui/dropdown-menu";
 import { useContext, useState } from "react";
 import { AuthContext } from "@/context/auth-context";
-import logoImage from "/ashiwin_lap_logo.png";
+import logoImage from "/images/logo.png";
 
 
 function StudentViewCommonHeader() {
@@ -54,7 +54,7 @@ function StudentViewCommonHeader() {
               <div className="w-10 h-10 bg-gray-700 rounded-lg items-center justify-center hidden">
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-xl text-gray-900">BRAVYNEX</span>
+              {/* <span className="font-bold text-xl text-gray-900">BRAVYNEX</span> */}
             </Link>
           </div>
 
@@ -68,13 +68,7 @@ function StudentViewCommonHeader() {
               >
                 Home
               </Button>
-              <Button 
-                variant="ghost" 
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors duration-200" 
-                onClick={() => navigate("/about")}
-              >
-                About
-              </Button>
+             
               <Button
                 variant="ghost"
                 className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors duration-200"
@@ -83,6 +77,14 @@ function StudentViewCommonHeader() {
                 }}
               >
                 Explore
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors duration-200" 
+                onClick={() => navigate("/about")}
+              >
+                About
               </Button>
             </nav>
             <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 w-full max-w-md">
@@ -141,13 +143,13 @@ function StudentViewCommonHeader() {
                   <TvMinimalPlay className="w-4 h-4 text-gray-600" />
                   <span>My Courses</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                {/* <DropdownMenuItem 
                   onClick={() => navigate("/profile")}
                   className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer"
                 >
                   <Settings className="w-4 h-4 text-gray-600" />
                   <span>Account Settings</span>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={handleLogout}

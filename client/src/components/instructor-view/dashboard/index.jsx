@@ -4,8 +4,21 @@ import {
   DollarSign, Users, BookOpen, Award, TrendingUp, Eye
 } from "lucide-react";
 import PropTypes from "prop-types";
+import { useEffect, useState } from "react";
 
 function InstructorDashboard({ listOfCourses = [] }) {
+  // Separate pagination for courses and students
+  const INITIAL_ROWS_COURSES = 5;
+  const INITIAL_ROWS_STUDENTS = 5;
+  const ROWS_CHUNK = 5;
+  const [visibleCourses, setVisibleCourses] = useState(INITIAL_ROWS_COURSES);
+  const [visibleStudents, setVisibleStudents] = useState(INITIAL_ROWS_STUDENTS);
+  const canLoadMoreCourses = (listOfCourses?.length || 0) > visibleCourses;
+  // Reset counts when data changes
+  useEffect(() => { 
+    setVisibleCourses(INITIAL_ROWS_COURSES);
+    setVisibleStudents(INITIAL_ROWS_STUDENTS);
+  }, [listOfCourses]);
   function calculateTotalStudentsAndProfit() {
     const { totalStudents, totalProfit, studentList } = listOfCourses.reduce(
       (acc, course) => {
@@ -43,9 +56,9 @@ function InstructorDashboard({ listOfCourses = [] }) {
       icon: Users, 
       label: "Total Students", 
       value: totals.totalStudents,
-      color: "from-blue-500 to-blue-600",
-      bgColor: "bg-blue-50",
-      iconColor: "text-blue-600",
+      color: "from-gray-600 to-gray-800",
+      bgColor: "bg-gray-100",
+      iconColor: "text-gray-700",
       trend: "+12%",
       description: "Active enrollments"
     },
@@ -53,9 +66,9 @@ function InstructorDashboard({ listOfCourses = [] }) {
       icon: BookOpen, 
       label: "Total Courses", 
       value: listOfCourses.length,
-      color: "from-green-500 to-green-600",
-      bgColor: "bg-green-50",
-      iconColor: "text-green-600",
+      color: "from-gray-600 to-gray-800",
+      bgColor: "bg-gray-100",
+      iconColor: "text-gray-700",
       trend: "+5%",
       description: "Published courses"
     },
@@ -63,9 +76,9 @@ function InstructorDashboard({ listOfCourses = [] }) {
       icon: DollarSign, 
       label: "Total Revenue", 
       value: `$${totals.totalProfit.toLocaleString()}`,
-      color: "from-purple-500 to-purple-600",
-      bgColor: "bg-purple-50",
-      iconColor: "text-purple-600",
+      color: "from-gray-600 to-gray-800",
+      bgColor: "bg-gray-100",
+      iconColor: "text-gray-700",
       trend: "+18%",
       description: "This month"
     },
@@ -73,9 +86,9 @@ function InstructorDashboard({ listOfCourses = [] }) {
       icon: Award, 
       label: "Avg. Revenue / Course", 
       value: `$${listOfCourses.length ? Math.round(totals.totalProfit / listOfCourses.length).toLocaleString() : 0}`,
-      color: "from-orange-500 to-orange-600",
-      bgColor: "bg-orange-50",
-      iconColor: "text-orange-600",
+      color: "from-gray-600 to-gray-800",
+      bgColor: "bg-gray-100",
+      iconColor: "text-gray-700",
       trend: "+8%",
       description: "Per course"
     },
@@ -132,8 +145,8 @@ function InstructorDashboard({ listOfCourses = [] }) {
           <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-gray-700" />
                 </div>
                 <div>
                   <CardTitle className="text-xl font-semibold text-gray-900">Your Courses Performance</CardTitle>
@@ -141,7 +154,7 @@ function InstructorDashboard({ listOfCourses = [] }) {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">{listOfCourses.length}</div>
+                <div className="text-2xl font-bold text-gray-700">{listOfCourses.length}</div>
                 <div className="text-sm text-gray-500">Total Courses</div>
               </div>
             </div>
@@ -157,11 +170,11 @@ function InstructorDashboard({ listOfCourses = [] }) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {listOfCourses.map((c) => (
+                  {listOfCourses.slice(0, visibleCourses).map((c) => (
                     <TableRow key={c._id} className="hover:bg-gray-50 transition-colors">
                       <TableCell className="font-medium text-gray-900">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                          <div className="w-8 h-8 bg-gradient-to-br from-gray-600 to-gray-800 rounded-lg flex items-center justify-center">
                             <BookOpen className="w-4 h-4 text-white" />
                           </div>
                           <span>{c.title}</span>
@@ -169,7 +182,7 @@ function InstructorDashboard({ listOfCourses = [] }) {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <Users className="h-4 w-4 text-blue-600" />
+                          <Users className="h-4 w-4 text-gray-700" />
                           <span className="font-semibold text-gray-900">{c.students?.length || 0}</span>
                         </div>
                       </TableCell>
@@ -181,6 +194,16 @@ function InstructorDashboard({ listOfCourses = [] }) {
                 </TableBody>
               </Table>
             </div>
+            {canLoadMoreCourses ? (
+              <div className="flex justify-center mt-4 pb-4">
+                <button
+                  onClick={() => setVisibleCourses((n) => n + ROWS_CHUNK)}
+                  className="px-6 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Load more courses
+                </button>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -189,8 +212,8 @@ function InstructorDashboard({ listOfCourses = [] }) {
           <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <Users className="w-5 h-5 text-gray-700" />
                 </div>
                 <div>
                   <CardTitle className="text-xl font-semibold text-gray-900">Recent Students</CardTitle>
@@ -198,7 +221,7 @@ function InstructorDashboard({ listOfCourses = [] }) {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-green-600">{Math.min(10, totals.studentList.length)}</div>
+                <div className="text-2xl font-bold text-gray-700">{Math.min(10, totals.studentList.length)}</div>
                 <div className="text-sm text-gray-500">New Students</div>
               </div>
             </div>
@@ -214,11 +237,11 @@ function InstructorDashboard({ listOfCourses = [] }) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {totals.studentList.slice(0, 10).map((s, i) => (
+                  {totals.studentList.slice(0, visibleStudents).map((s, i) => (
                     <TableRow key={`${s.studentEmail}-${i}`} className="hover:bg-gray-50 transition-colors">
                       <TableCell className="font-medium text-gray-900">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                          <div className="w-8 h-8 bg-gradient-to-br from-gray-600 to-gray-800 rounded-lg flex items-center justify-center">
                             <BookOpen className="w-4 h-4 text-white" />
                           </div>
                           <span className="truncate max-w-32">{s.courseTitle}</span>
@@ -226,7 +249,7 @@ function InstructorDashboard({ listOfCourses = [] }) {
                       </TableCell>
                       <TableCell className="font-medium text-gray-800">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+                          <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
@@ -235,7 +258,7 @@ function InstructorDashboard({ listOfCourses = [] }) {
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <button className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                        <button className="p-2 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors">
                           <Eye className="h-4 w-4 text-gray-500" />
                         </button>
                       </TableCell>
@@ -244,6 +267,16 @@ function InstructorDashboard({ listOfCourses = [] }) {
                 </TableBody>
               </Table>
             </div>
+            {totals.studentList.length > visibleStudents ? (
+              <div className="flex justify-center mt-4 pb-4">
+                <button
+                  onClick={() => setVisibleStudents((n) => n + ROWS_CHUNK)}
+                  className="px-6 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Load more students
+                </button>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </div>

@@ -15,10 +15,24 @@ import { StudentContext } from "@/context/student-context";
 import {
   createPaymentService,
   fetchStudentViewCourseDetailsService,
+  captureAndFinalizePaymentService,
+  checkCoursePurchaseInfoService,
 } from "@/services";
-import { CheckCircle, Globe, Lock, PlayCircle, BookOpen, Users, Calendar } from "lucide-react";
+import { CheckCircle, Lock, PlayCircle, BookOpen } from "lucide-react";
+
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (document.getElementById("razorpay-sdk")) return resolve(true);
+    const script = document.createElement("script");
+    script.id = "razorpay-sdk";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 import { useContext, useEffect, useState, useCallback } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 
 function StudentViewCourseDetailsPage() {
   const {
@@ -31,13 +45,15 @@ function StudentViewCourseDetailsPage() {
   } = useContext(StudentContext);
 
   const { auth } = useContext(AuthContext);
+  const [isPurchased, setIsPurchased] = useState(false);
 
   const [displayCurrentVideoFreePreview, setDisplayCurrentVideoFreePreview] =
     useState(null);
   const [showFreePreviewDialog, setShowFreePreviewDialog] = useState(false);
-  const [approvalUrl, setApprovalUrl] = useState("");
+  const [approvalUrl] = useState("");
   const { id } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const fetchStudentViewCourseDetails = useCallback(async () => {
     const response = await fetchStudentViewCourseDetailsService(
@@ -59,12 +75,13 @@ function StudentViewCourseDetailsPage() {
   }
 
   async function handleCreatePayment() {
+    if (isPurchased) return navigate(`/course-progress/${studentViewCourseDetails?._id}`);
     const paymentPayload = {
       userId: auth?.user?._id,
       userName: auth?.user?.userName,
       userEmail: auth?.user?.userEmail,
       orderStatus: "pending",
-      paymentMethod: "paypal",
+      paymentMethod: "razorpay",
       paymentStatus: "initiated",
       orderDate: new Date(),
       paymentId: "",
@@ -78,15 +95,37 @@ function StudentViewCourseDetailsPage() {
     };
 
     console.log(paymentPayload, "paymentPayload");
+    const sdkLoaded = await loadRazorpayScript();
+    if (!sdkLoaded) return alert("Failed to load Razorpay SDK");
     const response = await createPaymentService(paymentPayload);
+    if (!response?.success) return alert(response?.message || "Failed to create order");
 
-    if (response.success) {
-      sessionStorage.setItem(
-        "currentOrderId",
-        JSON.stringify(response?.data?.orderId)
-      );
-      setApprovalUrl(response?.data?.approveUrl);
-    }
+    const { razorpayOrderId, amount, currency, keyId, orderId } = response.data;
+    const options = {
+      key: keyId,
+      amount,
+      currency: currency || "INR",
+      name: "Course Purchase",
+      description: studentViewCourseDetails?.title,
+      order_id: razorpayOrderId,
+      prefill: { name: auth?.user?.userName, email: auth?.user?.userEmail },
+      theme: { color: "#111827" },
+      handler: async function (rzpRes) {
+        const finalize = await captureAndFinalizePaymentService(
+          rzpRes.razorpay_payment_id,
+          rzpRes.razorpay_signature || "",
+          orderId
+        );
+        if (finalize?.success) {
+          setIsPurchased(true);
+          navigate(`/course-progress/${studentViewCourseDetails?._id}`);
+        } else {
+          alert("Payment captured but order finalize failed");
+        }
+      },
+    };
+    const rzp = new window.Razorpay(options);
+    rzp.open();
   }
 
   useEffect(() => {
@@ -100,6 +139,16 @@ function StudentViewCourseDetailsPage() {
   useEffect(() => {
     if (id) setCurrentCourseDetailsId(id);
   }, [id, setCurrentCourseDetailsId]);
+
+  // Check purchase status to toggle CTA
+  useEffect(() => {
+    async function checkPurchased() {
+      if (!auth?.user?._id || !id) return;
+      const resp = await checkCoursePurchaseInfoService(id, auth?.user?._id);
+      if (resp?.success) setIsPurchased(Boolean(resp?.data));
+    }
+    checkPurchased();
+  }, [auth?.user?._id, id]);
 
   useEffect(() => {
     if (!location.pathname.includes("course/details")) {
@@ -329,7 +378,7 @@ function StudentViewCourseDetailsPage() {
                     <div className="space-y-6">
                       <div className="text-center">
                         <div className="text-3xl font-bold text-gray-900 mb-2">
-                          ${studentViewCourseDetails?.pricing}
+                          ₹{Number(studentViewCourseDetails?.pricing || 0).toLocaleString("en-IN")}
                         </div>
                         <p className="text-gray-600">One-time payment • Lifetime access</p>
                       </div>
@@ -355,9 +404,9 @@ function StudentViewCourseDetailsPage() {
                       
                       <Button 
                         onClick={handleCreatePayment} 
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 text-lg transition-colors duration-200"
+                        className="w-full bg-gray-800 hover:bg-black text-white font-semibold py-3 text-lg transition-colors duration-200"
                       >
-                        Enroll Now - ${studentViewCourseDetails?.pricing}
+                        {isPurchased ? "Go to Course" : `Enroll Now - ₹${Number(studentViewCourseDetails?.pricing || 0).toLocaleString("en-IN")}`}
                       </Button>
                       
                       <p className="text-center text-sm text-gray-500">

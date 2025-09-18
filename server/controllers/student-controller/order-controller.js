@@ -1,4 +1,5 @@
-const paypal = require("../../helpers/paypal");
+// PayPal helper removed; using Razorpay flow only unless explicitly requested
+const { getRazorpayInstance } = require("../../helpers/razorpay");
 const Order = require("../../models/Order");
 const Course = require("../../models/Course");
 const StudentCourses = require("../../models/StudentCourses");
@@ -24,55 +25,29 @@ const createOrder = async (req, res) => {
       coursePricing,
     } = req.body;
 
-    const create_payment_json = {
-      intent: "sale",
-      payer: {
-        payment_method: "paypal",
-      },
-      redirect_urls: {
-        return_url: `${process.env.CLIENT_URL}/payment-return`,
-        cancel_url: `${process.env.CLIENT_URL}/payment-cancel`,
-      },
-      transactions: [
-        {
-          item_list: {
-            items: [
-              {
-                name: courseTitle,
-                sku: courseId,
-                price: coursePricing,
-                currency: "USD",
-                quantity: 1,
-              },
-            ],
-          },
-          amount: {
-            currency: "USD",
-            total: coursePricing.toFixed(2),
-          },
-          description: courseTitle,
-        },
-      ],
-    };
-
-    paypal.payment.create(create_payment_json, async (error, paymentInfo) => {
-      if (error) {
-        console.log(error);
-        return res.status(500).json({
-          success: false,
-          message: "Error while creating paypal payment!",
+    // If Razorpay requested, create INR order
+    if (paymentMethod === "razorpay") {
+      try {
+        const instance = getRazorpayInstance();
+        // amount in paise
+        const amountInPaise = Math.round(Number(coursePricing) * 100);
+        const rzpOrder = await instance.orders.create({
+          amount: amountInPaise,
+          currency: "INR",
+          receipt: `rcpt_${Date.now()}`,
+          notes: { courseId, courseTitle, userEmail },
         });
-      } else {
-        const newlyCreatedCourseOrder = new Order({
+
+        const newOrder = new Order({
           userId,
           userName,
           userEmail,
-          orderStatus,
-          paymentMethod,
-          paymentStatus,
+          orderStatus: "pending",
+          paymentMethod: "razorpay",
+          paymentStatus: "initiated",
           orderDate,
-          paymentId,
-          payerId,
+          paymentId: rzpOrder.id,
+          payerId: "",
           instructorId,
           instructorName,
           courseImage,
@@ -80,22 +55,26 @@ const createOrder = async (req, res) => {
           courseId,
           coursePricing,
         });
+        await newOrder.save();
 
-        await newlyCreatedCourseOrder.save();
-
-        const approveUrl = paymentInfo.links.find(
-          (link) => link.rel == "approval_url"
-        ).href;
-
-        res.status(201).json({
+        return res.status(201).json({
           success: true,
           data: {
-            approveUrl,
-            orderId: newlyCreatedCourseOrder._id,
+            razorpayOrderId: rzpOrder.id,
+            amount: rzpOrder.amount,
+            currency: rzpOrder.currency,
+            orderId: newOrder._id,
+            keyId: process.env.RAZORPAY_KEY_ID,
           },
         });
+      } catch (e) {
+        console.log(e);
+        return res.status(500).json({ success: false, message: "Failed to create Razorpay order" });
       }
-    });
+    }
+
+    // If not Razorpay and no other gateway specified
+    return res.status(400).json({ success: false, message: "Unsupported payment method" });
   } catch (err) {
     console.log(err);
     res.status(500).json({
