@@ -1,25 +1,27 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { AuthContext } from "@/context/auth-context";
+import { fetchInstructorAnalyticsService } from "@/services";
 
 function TestChart({ listOfCourses = [] }) {
   const [chartData, setChartData] = useState([]);
+  const { auth } = useContext(AuthContext);
 
   useEffect(() => {
-    console.log("TestChart - listOfCourses:", listOfCourses);
-    
-    // Create simple test data
-    const testData = [
-      { name: "Jan", revenue: 4000, students: 24 },
-      { name: "Feb", revenue: 3000, students: 13 },
-      { name: "Mar", revenue: 5000, students: 20 },
-      { name: "Apr", revenue: 4500, students: 18 },
-      { name: "May", revenue: 6000, students: 28 },
-      { name: "Jun", revenue: 5500, students: 25 }
-    ];
-    
-    setChartData(testData);
-  }, [listOfCourses]);
+    let mounted = true;
+    async function load() {
+      if (!auth?.user?._id) return;
+      const res = await fetchInstructorAnalyticsService(auth.user._id);
+      if (mounted && res?.success) {
+        const monthly = res.data?.monthlyData || [];
+        setChartData(monthly.map(m => ({ name: m.month, revenue: m.revenue, students: m.students })));
+      }
+    }
+    load();
+    const id = setInterval(load, 15000);
+    return () => { mounted = false; clearInterval(id); };
+  }, [auth?.user?._id]);
 
   return (
     <div className="p-6 space-y-8">

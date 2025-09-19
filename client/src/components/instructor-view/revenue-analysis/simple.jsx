@@ -1,18 +1,45 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Users, BookOpen, TrendingUp } from "lucide-react";
 import PropTypes from "prop-types";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { AuthContext } from "@/context/auth-context";
+import { fetchInstructorAnalyticsService } from "@/services";
 
 function SimpleRevenueAnalysis({ listOfCourses = [] }) {
-  console.log("SimpleRevenueAnalysis - listOfCourses:", listOfCourses);
-  
-  // Simple calculations
-  const totalCourses = Array.isArray(listOfCourses) ? listOfCourses.length : 0;
-  const totalStudents = Array.isArray(listOfCourses) 
-    ? listOfCourses.reduce((sum, course) => sum + (course.students?.length || 0), 0)
-    : 0;
-  const totalRevenue = Array.isArray(listOfCourses)
-    ? listOfCourses.reduce((sum, course) => sum + ((course.students?.length || 0) * (course.pricing || 0)), 0)
-    : 0;
+  const { auth } = useContext(AuthContext);
+  const [analytics, setAnalytics] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      if (!auth?.user?._id) return;
+      const res = await fetchInstructorAnalyticsService(auth.user._id);
+      if (mounted && res?.success) setAnalytics(res.data);
+    }
+    load();
+    const id = setInterval(load, 15000);
+    return () => { mounted = false; clearInterval(id); };
+  }, [auth?.user?._id]);
+
+  const { totalCourses, totalStudents, totalRevenue } = useMemo(() => {
+    if (analytics) {
+      const totals = analytics.totals || {};
+      return {
+        totalCourses: Number(totals.activeCourses || 0),
+        totalStudents: Number(totals.totalStudents || 0),
+        totalRevenue: Number(totals.totalRevenue || 0),
+      };
+    }
+    // fallback based on provided courses
+    const coursesCount = Array.isArray(listOfCourses) ? listOfCourses.length : 0;
+    const students = Array.isArray(listOfCourses) 
+      ? listOfCourses.reduce((sum, course) => sum + (course.students?.length || 0), 0)
+      : 0;
+    const revenue = Array.isArray(listOfCourses)
+      ? listOfCourses.reduce((sum, course) => sum + ((course.students?.length || 0) * (course.pricing || 0)), 0)
+      : 0;
+    return { totalCourses: coursesCount, totalStudents: students, totalRevenue: revenue };
+  }, [analytics, listOfCourses]);
 
   return (
     <div className="p-6 space-y-8">

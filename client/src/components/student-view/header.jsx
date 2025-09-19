@@ -1,4 +1,4 @@
-import { TvMinimalPlay, BookOpen, Search, User, LogOut, Settings } from "lucide-react";
+import { TvMinimalPlay, BookOpen, Search, User, LogOut, BarChart3 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import {
@@ -86,6 +86,13 @@ function StudentViewCommonHeader() {
               >
                 About
               </Button>
+              <Button
+                variant="ghost"
+                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors duration-200"
+                onClick={() => navigate("/analytics")}
+              >
+                Analytics
+              </Button>
             </nav>
             <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 w-full max-w-md">
               <div className="relative flex-1">
@@ -143,6 +150,13 @@ function StudentViewCommonHeader() {
                   <TvMinimalPlay className="w-4 h-4 text-gray-600" />
                   <span>My Courses</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => navigate("/analytics")}
+                  className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  <BarChart3 className="w-4 h-4 text-gray-600" />
+                  <span>Analytics</span>
+                </DropdownMenuItem>
                 {/* <DropdownMenuItem 
                   onClick={() => navigate("/profile")}
                   className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer"
@@ -193,6 +207,13 @@ function StudentViewCommonHeader() {
               onClick={() => navigate("/student-courses")}
             >
               My Courses
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors duration-200" 
+              onClick={() => navigate("/analytics")}
+            >
+              Analytics
             </Button>
           </div>
           <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">

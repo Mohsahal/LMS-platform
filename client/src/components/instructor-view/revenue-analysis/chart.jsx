@@ -14,7 +14,7 @@ import {
   ArrowDownRight
 } from "lucide-react";
 import PropTypes from "prop-types";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useContext } from "react";
 import {
   LineChart,
   Line,
@@ -32,19 +32,48 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts";
+import { AuthContext } from "@/context/auth-context";
+import { fetchInstructorAnalyticsService } from "@/services";
 
 function ChartRevenueAnalysis({ listOfCourses = [] }) {
   const [selectedPeriod, setSelectedPeriod] = useState("monthly");
+  const { auth } = useContext(AuthContext);
+  const [analytics, setAnalytics] = useState(null);
 
-  // Debug logging
-  console.log("ChartRevenueAnalysis - listOfCourses:", listOfCourses);
-  console.log("ChartRevenueAnalysis - Recharts imported:", typeof RechartsPieChart);
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      if (!auth?.user?._id) return;
+      const res = await fetchInstructorAnalyticsService(auth.user._id);
+      if (active && res?.success) setAnalytics(res.data);
+    }
+    load();
+    const id = setInterval(load, 5000);
+    return () => { active = false; clearInterval(id); };
+  }, [auth?.user?._id]);
 
   // Calculate revenue data
   const revenueData = useMemo(() => {
-    // Ensure listOfCourses is an array
+    if (analytics) {
+      const totals = analytics.totals || {};
+      const categoryRevenue = (analytics.categoryData || []).reduce((acc, item) => {
+        acc[item.name] = { revenue: item.value, students: item.students || 0, courses: item.courses || 0 };
+        return acc;
+      }, {});
+      return {
+        totalRevenue: Number(totals.totalRevenue || 0),
+        totalStudents: Number(totals.totalStudents || 0),
+        averageRevenuePerStudent: Number(totals.averageRevenuePerStudent || 0),
+        courseRevenue: analytics.coursePerformance || [],
+        monthlyData: analytics.monthlyData || [],
+        coursePerformance: analytics.coursePerformance || [],
+        categoryData: analytics.categoryData || [],
+        categoryRevenue,
+      };
+    }
+
+    // Fallback to current listOfCourses until analytics loads
     const safeCourses = Array.isArray(listOfCourses) ? listOfCourses : [];
-    
     const courseRevenue = safeCourses.map(course => ({
       id: course._id || `course-${Math.random()}`,
       title: course.title || "Untitled Course",
@@ -54,72 +83,32 @@ function ChartRevenueAnalysis({ listOfCourses = [] }) {
       createdAt: course.createdAt ? new Date(course.createdAt) : new Date(),
       category: course.category || "General"
     }));
-
     const totalRevenue = courseRevenue.reduce((sum, course) => sum + course.revenue, 0);
     const totalStudents = courseRevenue.reduce((sum, course) => sum + course.students, 0);
     const averageRevenuePerStudent = totalStudents > 0 ? totalRevenue / totalStudents : 0;
-
-    // Monthly revenue breakdown with realistic data
-    const monthlyData = [
-      { month: "Jan", revenue: Math.max(1200, Math.floor(totalRevenue * 0.15)), students: Math.max(8, Math.floor(totalStudents * 0.12)), courses: Math.max(1, Math.floor(safeCourses.length * 0.1)) },
-      { month: "Feb", revenue: Math.max(1500, Math.floor(totalRevenue * 0.18)), students: Math.max(12, Math.floor(totalStudents * 0.15)), courses: Math.max(1, Math.floor(safeCourses.length * 0.15)) },
-      { month: "Mar", revenue: Math.max(1800, Math.floor(totalRevenue * 0.22)), students: Math.max(15, Math.floor(totalStudents * 0.18)), courses: Math.max(1, Math.floor(safeCourses.length * 0.2)) },
-      { month: "Apr", revenue: Math.max(1600, Math.floor(totalRevenue * 0.20)), students: Math.max(13, Math.floor(totalStudents * 0.16)), courses: Math.max(1, Math.floor(safeCourses.length * 0.18)) },
-      { month: "May", revenue: Math.max(2200, Math.floor(totalRevenue * 0.25)), students: Math.max(18, Math.floor(totalStudents * 0.20)), courses: Math.max(1, Math.floor(safeCourses.length * 0.25)) },
-      { month: "Jun", revenue: Math.max(2800, Math.floor(totalRevenue * 0.30)), students: Math.max(22, Math.floor(totalStudents * 0.25)), courses: Math.max(1, Math.floor(safeCourses.length * 0.3)) },
-      { month: "Jul", revenue: Math.max(2600, Math.floor(totalRevenue * 0.28)), students: Math.max(20, Math.floor(totalStudents * 0.23)), courses: Math.max(1, Math.floor(safeCourses.length * 0.28)) },
-      { month: "Aug", revenue: Math.max(3200, Math.floor(totalRevenue * 0.32)), students: Math.max(25, Math.floor(totalStudents * 0.28)), courses: Math.max(1, Math.floor(safeCourses.length * 0.32)) },
-      { month: "Sep", revenue: Math.max(3500, Math.floor(totalRevenue * 0.35)), students: Math.max(28, Math.floor(totalStudents * 0.30)), courses: Math.max(1, Math.floor(safeCourses.length * 0.35)) },
-      { month: "Oct", revenue: Math.max(3800, Math.floor(totalRevenue * 0.38)), students: Math.max(30, Math.floor(totalStudents * 0.32)), courses: Math.max(1, Math.floor(safeCourses.length * 0.38)) },
-      { month: "Nov", revenue: Math.max(4200, Math.floor(totalRevenue * 0.40)), students: Math.max(35, Math.floor(totalStudents * 0.35)), courses: Math.max(1, Math.floor(safeCourses.length * 0.4)) },
-      { month: "Dec", revenue: Math.max(4500, Math.floor(totalRevenue * 0.42)), students: Math.max(38, Math.floor(totalStudents * 0.38)), courses: Math.max(1, Math.floor(safeCourses.length * 0.42)) }
-    ];
-
-    // Course performance data
-    const coursePerformance = courseRevenue
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 10);
-
-    // Revenue by category
-    const categoryRevenue = courseRevenue.reduce((acc, course) => {
-      const category = course.category || "General";
-      if (!acc[category]) {
-        acc[category] = { revenue: 0, students: 0, courses: 0 };
-      }
-      acc[category].revenue += course.revenue || 0;
-      acc[category].students += course.students || 0;
-      acc[category].courses += 1;
-      return acc;
-    }, {});
-
-    // Convert category data to array for pie chart
-    const categoryData = Object.entries(categoryRevenue).map(([name, value]) => ({
-      name,
-      value: value.revenue,
-      students: value.students,
-      courses: value.courses
-    }));
 
     return {
       totalRevenue,
       totalStudents,
       averageRevenuePerStudent,
       courseRevenue,
-      monthlyData,
-      coursePerformance,
-      categoryData
+      monthlyData: [],
+      coursePerformance: courseRevenue.sort((a, b) => b.revenue - a.revenue).slice(0, 10),
+      categoryData: [],
+      categoryRevenue: {},
     };
-  }, [listOfCourses]);
+  }, [analytics, listOfCourses]);
+  
 
   // Calculate growth rates
-  const currentMonthRevenue = revenueData.monthlyData[revenueData.monthlyData.length - 1].revenue;
-  const previousMonthRevenue = revenueData.monthlyData[revenueData.monthlyData.length - 2].revenue;
+  const currentMonthRevenue = revenueData.monthlyData?.[revenueData.monthlyData.length - 1]?.revenue || 0;
+  const previousMonthRevenue = revenueData.monthlyData?.[revenueData.monthlyData.length - 2]?.revenue || 0;
   const revenueGrowth = previousMonthRevenue > 0 
     ? ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100 
     : 0;
 
-  const currentMonthStudents = revenueData.monthlyData[revenueData.monthlyData.length - 1].students;
-  const previousMonthStudents = revenueData.monthlyData[revenueData.monthlyData.length - 2].students;
+  const currentMonthStudents = revenueData.monthlyData?.[revenueData.monthlyData.length - 1]?.students || 0;
+  const previousMonthStudents = revenueData.monthlyData?.[revenueData.monthlyData.length - 2]?.students || 0;
   const studentGrowth = previousMonthStudents > 0 
     ? ((currentMonthStudents - previousMonthStudents) / previousMonthStudents) * 100 
     : 0;
@@ -256,7 +245,7 @@ function ChartRevenueAnalysis({ listOfCourses = [] }) {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value, name) => [`$${value.toLocaleString()}`, name === 'revenue' ? 'Revenue' : 'Students']}
+                      formatter={(value, name) => [`$${Number(value).toLocaleString()}`, name === 'revenue' ? 'Revenue' : 'Students']}
                       labelFormatter={(label) => `Month: ${label}`}
                     />
                     <Legend />
@@ -288,7 +277,7 @@ function ChartRevenueAnalysis({ listOfCourses = [] }) {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value, name) => [value, name === 'students' ? 'Students' : 'Courses']}
+                      formatter={(value, name) => [Number(value), name === 'students' ? 'Students' : 'Courses']}
                       labelFormatter={(label) => `Month: ${label}`}
                     />
                     <Legend />
@@ -317,7 +306,7 @@ function ChartRevenueAnalysis({ listOfCourses = [] }) {
                   <YAxis yAxisId="right" orientation="right" />
                   <Tooltip 
                     formatter={(value, name) => [
-                      name === 'revenue' ? `$${value.toLocaleString()}` : value,
+                      name === 'revenue' ? `$${Number(value).toLocaleString()}` : Number(value),
                       name === 'revenue' ? 'Revenue' : 'Students'
                     ]}
                     labelFormatter={(label) => `Month: ${label}`}
@@ -365,7 +354,7 @@ function ChartRevenueAnalysis({ listOfCourses = [] }) {
                           <XAxis type="number" />
                           <YAxis dataKey="title" type="category" width={120} />
                           <Tooltip 
-                            formatter={(value, name) => [`$${value.toLocaleString()}`, 'Revenue']}
+                            formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
                             labelFormatter={(label) => `Course: ${label}`}
                           />
                           <Bar dataKey="revenue" fill="#8B5CF6" />
@@ -434,7 +423,7 @@ function ChartRevenueAnalysis({ listOfCourses = [] }) {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
+                      <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Revenue']} />
                     </RechartsPieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -465,7 +454,7 @@ function ChartRevenueAnalysis({ listOfCourses = [] }) {
                       <XAxis dataKey="name" />
                       <YAxis />
                       <Tooltip 
-                        formatter={(value, name) => [`$${value.toLocaleString()}`, 'Revenue']}
+                        formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
                         labelFormatter={(label) => `Category: ${label}`}
                       />
                       <Bar dataKey="value" fill="#10B981" />
@@ -556,7 +545,7 @@ function ChartRevenueAnalysis({ listOfCourses = [] }) {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip 
-                    formatter={(value, name) => [value, name === 'students' ? 'Students' : 'Courses']}
+                    formatter={(value, name) => [Number(value), name === 'students' ? 'Students' : 'Courses']}
                     labelFormatter={(label) => `Month: ${label}`}
                   />
                   <Legend />

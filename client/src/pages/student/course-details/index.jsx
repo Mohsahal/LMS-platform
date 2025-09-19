@@ -236,9 +236,9 @@ function StudentViewCourseDetailsPage() {
             </div>
           </div>
         </div>
-        <div className="px-4 lg:px-8 py-12">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col lg:flex-row gap-8">
+        <div className="px-4 lg:px-4 py-12">
+          <div className="max-w-10xl mx-auto">
+            <div className="flex flex-col lg:flex-row gap-6">
               <main className="flex-grow space-y-8">
                 <Card className="border border-gray-200 bg-white">
                   <CardHeader className="bg-gray-50 border-b border-gray-200">
@@ -427,7 +427,7 @@ function StudentViewCourseDetailsPage() {
           setDisplayCurrentVideoFreePreview(null);
         }}
       >
-        <DialogContent className="w-[800px]">
+        <DialogContent className="w-[900px]">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-gray-900">Course Preview</DialogTitle>
           </DialogHeader>

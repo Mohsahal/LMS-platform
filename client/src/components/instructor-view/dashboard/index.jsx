@@ -5,6 +5,13 @@ import {
 } from "lucide-react";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
+import { getCurrentCourseProgressService } from "@/services";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 
 function InstructorDashboard({ listOfCourses = [] }) {
   // Separate pagination for courses and students
@@ -29,8 +36,10 @@ function InstructorDashboard({ listOfCourses = [] }) {
         course.students.forEach((student) => {
           acc.studentList.push({
             courseTitle: course.title,
+            courseId: course._id,
             studentName: student.studentName,
             studentEmail: student.studentEmail,
+            studentId: student.studentId,
           });
         });
 
@@ -51,6 +60,44 @@ function InstructorDashboard({ listOfCourses = [] }) {
   }
 
   const totals = calculateTotalStudentsAndProfit();
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [actionsLoading, setActionsLoading] = useState(false);
+  const [recentActions, setRecentActions] = useState([]);
+  const [actionsContext, setActionsContext] = useState({ studentName: "", courseTitle: "" });
+
+  async function handleShowRecentActions(student) {
+    if (!student?.studentId || !student?.courseId) return;
+    setActionsOpen(true);
+    setActionsLoading(true);
+    setActionsContext({ studentName: student.studentName, courseTitle: student.courseTitle });
+    try {
+      const resp = await getCurrentCourseProgressService(student.studentId, student.courseId);
+      if (resp?.success && resp?.data) {
+        const curriculum = resp.data.courseDetails?.curriculum || [];
+        const progress = resp.data.progress || [];
+        const byLectureId = new Map(progress.map(p => [p.lectureId, p]));
+        const actions = curriculum
+          .map((lec, idx) => {
+            const prog = byLectureId.get(lec._id || lec.lectureId || lec.title);
+            if (!prog || !prog.viewed || !prog.dateViewed) return null;
+            return {
+              title: lec.title || `Lecture ${idx + 1}`,
+              dateViewed: new Date(prog.dateViewed)
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => b.dateViewed - a.dateViewed)
+          .slice(0, 10);
+        setRecentActions(actions);
+      } else {
+        setRecentActions([]);
+      }
+    } catch (_) {
+      setRecentActions([]);
+    } finally {
+      setActionsLoading(false);
+    }
+  }
   const kpis = [
     { 
       icon: Users, 
@@ -258,7 +305,11 @@ function InstructorDashboard({ listOfCourses = [] }) {
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <button className="p-2 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors">
+                        <button 
+                          className="p-2 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors"
+                          onClick={() => handleShowRecentActions(s)}
+                          title="View recent actions"
+                        >
                           <Eye className="h-4 w-4 text-gray-500" />
                         </button>
                       </TableCell>
@@ -280,6 +331,35 @@ function InstructorDashboard({ listOfCourses = [] }) {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={actionsOpen} onOpenChange={setActionsOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Recent actions</DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 text-sm text-gray-600">
+            <div className="mb-3">
+              <span className="font-semibold text-gray-900">{actionsContext.studentName}</span>
+              <span className="mx-2">•</span>
+              <span className="text-gray-700">{actionsContext.courseTitle}</span>
+            </div>
+            {actionsLoading ? (
+              <div className="py-6 text-center">Loading...</div>
+            ) : recentActions.length > 0 ? (
+              <ul className="space-y-2">
+                {recentActions.map((a, idx) => (
+                  <li key={idx} className="flex items-center justify-between p-2 rounded-md bg-gray-50">
+                    <span className="text-gray-900">{a.title}</span>
+                    <span className="text-xs text-gray-500">{a.dateViewed.toLocaleString()}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="py-6 text-center text-gray-500">No recent actions found</div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

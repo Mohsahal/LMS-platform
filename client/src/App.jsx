@@ -12,6 +12,7 @@ import PaypalPaymentReturnPage from "./pages/student/payment-return/index.jsx";
 import StudentCoursesPage from "./pages/student/student-courses";
 import StudentViewCourseProgressPage from "./pages/student/course-progress";
 import AboutPage from "./pages/student/about";
+import StudentAnalyticsPage from "./pages/student/analytics";
 
 function App() {
   return (
@@ -71,6 +72,7 @@ function App() {
         />
         <Route path="payment-return" element={<PaypalPaymentReturnPage />} />
         <Route path="student-courses" element={<StudentCoursesPage />} />
+        <Route path="analytics" element={<StudentAnalyticsPage />} />
         <Route
           path="course-progress/:id"
           element={<StudentViewCourseProgressPage />}

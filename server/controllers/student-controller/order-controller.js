@@ -45,7 +45,7 @@ const createOrder = async (req, res) => {
           orderStatus: "pending",
           paymentMethod: "razorpay",
           paymentStatus: "initiated",
-          orderDate,
+          orderDate: orderDate || new Date(),
           paymentId: rzpOrder.id,
           payerId: "",
           instructorId,
@@ -101,6 +101,9 @@ const capturePaymentAndFinalizeOrder = async (req, res) => {
     order.orderStatus = "confirmed";
     order.paymentId = paymentId;
     order.payerId = payerId;
+    if (!order.orderDate) {
+      order.orderDate = new Date();
+    }
 
     await order.save();
 
@@ -115,7 +118,7 @@ const capturePaymentAndFinalizeOrder = async (req, res) => {
         title: order.courseTitle,
         instructorId: order.instructorId,
         instructorName: order.instructorName,
-        dateOfPurchase: order.orderDate,
+        dateOfPurchase: order.orderDate || new Date(),
         courseImage: order.courseImage,
       });
 
@@ -129,7 +132,7 @@ const capturePaymentAndFinalizeOrder = async (req, res) => {
             title: order.courseTitle,
             instructorId: order.instructorId,
             instructorName: order.instructorName,
-            dateOfPurchase: order.orderDate,
+            dateOfPurchase: order.orderDate || new Date(),
             courseImage: order.courseImage,
           },
         ],

@@ -13,89 +13,65 @@ import {
   ArrowDownRight
 } from "lucide-react";
 import PropTypes from "prop-types";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useContext } from "react";
+import { AuthContext } from "@/context/auth-context";
+import { fetchInstructorAnalyticsService } from "@/services";
 
 function RevenueAnalysis({ listOfCourses = [] }) {
   const [selectedPeriod, setSelectedPeriod] = useState("monthly");
+  const { auth } = useContext(AuthContext);
+  const [analytics, setAnalytics] = useState(null);
 
-  // Debug logging
-  console.log("RevenueAnalysis - listOfCourses:", listOfCourses);
-  console.log("RevenueAnalysis - listOfCourses type:", typeof listOfCourses);
-  console.log("RevenueAnalysis - listOfCourses length:", listOfCourses?.length);
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      if (!auth?.user?._id) return;
+      const res = await fetchInstructorAnalyticsService(auth.user._id);
+      if (mounted && res?.success) setAnalytics(res.data);
+    }
+    load();
+    const id = setInterval(load, 5000);
+    return () => { mounted = false; clearInterval(id); };
+  }, [auth?.user?._id]);
 
-  // Calculate revenue data
   const revenueData = useMemo(() => {
-    // Ensure listOfCourses is an array
-    const safeCourses = Array.isArray(listOfCourses) ? listOfCourses : [];
-    console.log("RevenueAnalysis - safeCourses:", safeCourses);
-    
-    const courseRevenue = safeCourses.map(course => ({
-      id: course._id || `course-${Math.random()}`,
-      title: course.title || "Untitled Course",
-      students: course.students?.length || 0,
-      price: course.pricing || 0,
-      revenue: (course.students?.length || 0) * (course.pricing || 0),
-      createdAt: course.createdAt ? new Date(course.createdAt) : new Date(),
-      category: course.category || "General"
-    }));
-
-    const totalRevenue = courseRevenue.reduce((sum, course) => sum + course.revenue, 0);
-    const totalStudents = courseRevenue.reduce((sum, course) => sum + course.students, 0);
-    const averageRevenuePerStudent = totalStudents > 0 ? totalRevenue / totalStudents : 0;
-
-    // Monthly revenue breakdown (mock data for demonstration)
-    const monthlyData = [
-      { month: "Jan", revenue: Math.max(1200, Math.floor(totalRevenue * 0.15)), students: Math.max(8, Math.floor(totalStudents * 0.12)) },
-      { month: "Feb", revenue: Math.max(1500, Math.floor(totalRevenue * 0.18)), students: Math.max(12, Math.floor(totalStudents * 0.15)) },
-      { month: "Mar", revenue: Math.max(1800, Math.floor(totalRevenue * 0.22)), students: Math.max(15, Math.floor(totalStudents * 0.18)) },
-      { month: "Apr", revenue: Math.max(1600, Math.floor(totalRevenue * 0.20)), students: Math.max(13, Math.floor(totalStudents * 0.16)) },
-      { month: "May", revenue: Math.max(2200, Math.floor(totalRevenue * 0.25)), students: Math.max(18, Math.floor(totalStudents * 0.20)) },
-      { month: "Jun", revenue: Math.max(2800, Math.floor(totalRevenue * 0.30)), students: Math.max(22, Math.floor(totalStudents * 0.25)) },
-      { month: "Jul", revenue: Math.max(2600, Math.floor(totalRevenue * 0.28)), students: Math.max(20, Math.floor(totalStudents * 0.23)) },
-      { month: "Aug", revenue: Math.max(3200, Math.floor(totalRevenue * 0.32)), students: Math.max(25, Math.floor(totalStudents * 0.28)) },
-      { month: "Sep", revenue: Math.max(3500, Math.floor(totalRevenue * 0.35)), students: Math.max(28, Math.floor(totalStudents * 0.30)) },
-      { month: "Oct", revenue: Math.max(3800, Math.floor(totalRevenue * 0.38)), students: Math.max(30, Math.floor(totalStudents * 0.32)) },
-      { month: "Nov", revenue: Math.max(4200, Math.floor(totalRevenue * 0.40)), students: Math.max(35, Math.floor(totalStudents * 0.35)) },
-      { month: "Dec", revenue: Math.max(4500, Math.floor(totalRevenue * 0.42)), students: Math.max(38, Math.floor(totalStudents * 0.38)) }
-    ];
-
-    // Course performance data
-    const coursePerformance = courseRevenue
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5);
-
-    // Revenue by category
-    const categoryRevenue = courseRevenue.reduce((acc, course) => {
-      const category = course.category || "General";
-      if (!acc[category]) {
-        acc[category] = { revenue: 0, students: 0, courses: 0 };
-      }
-      acc[category].revenue += course.revenue || 0;
-      acc[category].students += course.students || 0;
-      acc[category].courses += 1;
-      return acc;
-    }, {});
-
+    if (analytics) {
+      const totals = analytics.totals || {};
+      const categoryRevenue = (analytics.categoryData || []).reduce((acc, item) => {
+        acc[item.name] = { revenue: item.value, students: item.students || 0, courses: item.courses || 0 };
+        return acc;
+      }, {});
+      return {
+        totalRevenue: Number(totals.totalRevenue || 0),
+        totalStudents: Number(totals.totalStudents || 0),
+        averageRevenuePerStudent: Number(totals.averageRevenuePerStudent || 0),
+        courseRevenue: analytics.coursePerformance?.slice(0, 5) || [],
+        monthlyData: analytics.monthlyData || [],
+        coursePerformance: analytics.coursePerformance?.slice(0, 5) || [],
+        categoryRevenue,
+      };
+    }
+    // fallback
     return {
-      totalRevenue,
-      totalStudents,
-      averageRevenuePerStudent,
-      courseRevenue,
-      monthlyData,
-      coursePerformance,
-      categoryRevenue
+      totalRevenue: 0,
+      totalStudents: 0,
+      averageRevenuePerStudent: 0,
+      courseRevenue: [],
+      monthlyData: [],
+      coursePerformance: [],
+      categoryRevenue: {},
     };
-  }, [listOfCourses]);
+  }, [analytics]);
 
   // Calculate growth rates
-  const currentMonthRevenue = revenueData.monthlyData[revenueData.monthlyData.length - 1].revenue;
-  const previousMonthRevenue = revenueData.monthlyData[revenueData.monthlyData.length - 2].revenue;
+  const currentMonthRevenue = revenueData.monthlyData?.[revenueData.monthlyData.length - 1]?.revenue || 0;
+  const previousMonthRevenue = revenueData.monthlyData?.[revenueData.monthlyData.length - 2]?.revenue || 0;
   const revenueGrowth = previousMonthRevenue > 0 
     ? ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100 
     : 0;
 
-  const currentMonthStudents = revenueData.monthlyData[revenueData.monthlyData.length - 1].students;
-  const previousMonthStudents = revenueData.monthlyData[revenueData.monthlyData.length - 2].students;
+  const currentMonthStudents = revenueData.monthlyData?.[revenueData.monthlyData.length - 1]?.students || 0;
+  const previousMonthStudents = revenueData.monthlyData?.[revenueData.monthlyData.length - 2]?.students || 0;
   const studentGrowth = previousMonthStudents > 0 
     ? ((currentMonthStudents - previousMonthStudents) / previousMonthStudents) * 100 
     : 0;

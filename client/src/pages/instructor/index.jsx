@@ -75,7 +75,7 @@ function InstructorDashboardpage() {
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-xs text-black">Instructor Portal</p>
+                <p className="text-lg text-black">Instructor Portal</p>
               </div>
             </div>
           </div>

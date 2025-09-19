@@ -191,4 +191,14 @@ export async function contactAdminService({ fromEmail, fromName, subject, messag
   return data;
 }
 
+export async function fetchStudentAnalyticsService(userId) {
+  const { data } = await axiosInstance.get(`/student/analytics/get/${userId}`);
+  return data;
+}
+
+export async function fetchInstructorAnalyticsService(instructorId) {
+  const { data } = await axiosInstance.get(`/instructor/analytics/get/${instructorId}`);
+  return data;
+}
+
 

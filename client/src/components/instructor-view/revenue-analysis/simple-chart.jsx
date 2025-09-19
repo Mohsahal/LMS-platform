@@ -1,16 +1,27 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "@/context/auth-context";
+import { fetchInstructorAnalyticsService } from "@/services";
 
 function SimpleChart({ listOfCourses = [] }) {
-  // Simple test data
-  const data = [
-    { name: "Jan", revenue: 4000 },
-    { name: "Feb", revenue: 3000 },
-    { name: "Mar", revenue: 5000 },
-    { name: "Apr", revenue: 4500 },
-    { name: "May", revenue: 6000 },
-    { name: "Jun", revenue: 5500 }
-  ];
+  const { auth } = useContext(AuthContext);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      if (!auth?.user?._id) return;
+      const res = await fetchInstructorAnalyticsService(auth.user._id);
+      if (active && res?.success) {
+        const monthly = res.data?.monthlyData || [];
+        setData(monthly.map(m => ({ name: m.month, revenue: m.revenue })));
+      }
+    }
+    load();
+    const id = setInterval(load, 15000);
+    return () => { active = false; clearInterval(id); };
+  }, [auth?.user?._id]);
 
   return (
     <div className="p-6 space-y-8">

@@ -2,7 +2,7 @@ import axios from "axios";
 import { toast } from "@/hooks/use-toast";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://192.168.149.1:5000",
   withCredentials: true,
 });
 
@@ -26,7 +26,7 @@ async function ensureCsrfToken() {
   }
   
   // Start new fetch
-  const base = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+  const base = import.meta.env.VITE_API_BASE_URL || "http://192.168.149.1:5000";
   csrfFetchInFlight = axios
     .get(`${base}/csrf-token`, { 
       withCredentials: true,

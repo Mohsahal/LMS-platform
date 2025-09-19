@@ -231,17 +231,7 @@ function InstructorCourses({ listOfCourses }) {
         </CardContent>
       </Card>
 
-      {canLoadMore ? (
-        <div className="flex justify-center mt-6">
-          <Button
-            onClick={() => setVisibleRows((n) => n + ROWS_CHUNK)}
-            variant="outline"
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-8 py-3 transition-all duration-200"
-          >
-            Load more courses
-          </Button>
-        </div>
-      ) : null}
+      {/* Duplicate bottom pager removed to avoid rendering two "Load more courses" buttons */}
 
       {/* Delete Confirmation Dialog */}
       {showDeleteConfirm && (

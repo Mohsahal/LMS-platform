@@ -287,7 +287,8 @@ const generateCompletionCertificate = async (req, res) => {
       doc.text(`${guardianLine}`, 400, 258, { width: 240, align: "left" });
     }
     // Student ID
-    doc.text(`${userId}`, 610, 256, { width: 185, align: "left" });
+    // doc.text(`${userId}`, 605, 256, { width: 175, align: "left" });
+    doc.text(`${userId}`, 605, 256, { width: 190, align: "left" });
 
     // has successfully completed the [Course]  Course
     const courseNameToPrint = course.certificateCourseName || course.title;

@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const { generalApiLimiter } = require("./middleware/rate-limiters");
 const cookieParser = require("cookie-parser");
 const csrf = require("csurf");
 const mongoSanitize = require("express-mongo-sanitize");
@@ -10,10 +11,12 @@ const mongoose = require("mongoose");
 const authRoutes = require("./routes/auth-routes/index");
 const mediaRoutes = require("./routes/instructor-routes/media-routes");
 const instructorCourseRoutes = require("./routes/instructor-routes/course-routes");
+const instructorAnalyticsRoutes = require("./routes/instructor-routes/analytics-routes");
 const studentViewCourseRoutes = require("./routes/student-routes/course-routes");
 const studentViewOrderRoutes = require("./routes/student-routes/order-routes");
 const studentCoursesRoutes = require("./routes/student-routes/student-courses-routes");
 const studentCourseProgressRoutes = require("./routes/student-routes/course-progress-routes");
+const studentAnalyticsRoutes = require("./routes/student-routes/analytics-routes");
 const notifyRoutes = require("./routes/notify-routes");
 
 
@@ -21,11 +24,10 @@ const app = express();
 app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mohammedsahal1243:sahal124867@cluster0.1eaz3.mongodb.net/e-learn";
-
 app.use(
   cors({
     origin: [
-      'http://localhost:5173'
+      'http://192.168.149.1:5173'
     ],
     methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
@@ -48,17 +50,8 @@ app.use(express.json());
 // Sanitize MongoDB operators from payloads
 app.use(mongoSanitize());
 
-// More lenient rate limiting with better exclusions
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 1000, // Increased limit
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    // Skip rate limiting for CSRF token and health checks
-    return req.path === "/csrf-token" || req.path === "/health";
-  },
-});
+// General API limiter (skip CSRF token & health)
+const apiLimiter = generalApiLimiter;
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // Increased window
   max: 100, // Increased limit
@@ -71,8 +64,12 @@ const authLimiter = rateLimit({
 });
 
 // Apply rate limiters
-app.use("/auth", authLimiter);
-app.use(apiLimiter);
+app.use("/auth", authLimiter); // route-level strict/moderate also applied within router
+app.use((req, res, next) => {
+  // Skip CSRF token and health for general limiter
+  if (req.path === "/csrf-token" || req.path === "/health") return next();
+  return apiLimiter(req, res, next);
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -129,10 +126,12 @@ mongoose
 app.use("/auth", authRoutes);
 app.use("/media", mediaRoutes);
 app.use("/instructor/course", instructorCourseRoutes);
+app.use("/instructor/analytics", instructorAnalyticsRoutes);
 app.use("/student/course", studentViewCourseRoutes);
 app.use("/student/order", studentViewOrderRoutes);
 app.use("/student/courses-bought", studentCoursesRoutes);
 app.use("/student/course-progress", studentCourseProgressRoutes);
+app.use("/student/analytics", studentAnalyticsRoutes);
 app.use("/notify", notifyRoutes);
 
 

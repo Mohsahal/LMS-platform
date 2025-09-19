@@ -287,10 +287,10 @@ function StudentViewCoursesPage() {
                       <div className="p-4">
                         <h3 className="font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-gray-700 transition-colors">{courseItem?.title}</h3>
                         <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                          <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center">
+                          {/* <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center">
                             <span className="text-[10px] text-white font-bold">{courseItem?.instructorName?.charAt(0)}</span>
                           </div>
-                          <span className="font-medium truncate">{courseItem?.instructorName}</span>
+                          <span className="font-medium truncate">{courseItem?.instructorName}</span> */}
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 text-xs text-gray-600">
