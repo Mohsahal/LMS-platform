@@ -45,7 +45,7 @@ function StudentViewCommonHeader() {
               <img 
                 src={logoImage} 
                 alt="BRAVYNEX Engineering Logo" 
-                className="h-10 w-auto object-contain"
+                className="h-14  object-contain"
                 onError={(e) => {
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'flex';
@@ -79,19 +79,21 @@ function StudentViewCommonHeader() {
                 Explore
               </Button>
 
-              <Button 
-                variant="ghost" 
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors duration-200" 
-                onClick={() => navigate("/about")}
-              >
-                About
-              </Button>
+             
               <Button
                 variant="ghost"
                 className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors duration-200"
                 onClick={() => navigate("/analytics")}
               >
                 Analytics
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors duration-200" 
+                onClick={() => navigate("/about")}
+              >
+                About
               </Button>
             </nav>
             <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 w-full max-w-md">

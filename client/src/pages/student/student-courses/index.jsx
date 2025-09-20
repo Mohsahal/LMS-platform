@@ -37,9 +37,9 @@ function StudentCoursesPage() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-black rounded-xl flex items-center justify-center">
+            {/* <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-black rounded-xl flex items-center justify-center">
               <Watch className="w-6 h-6 text-white" />
-            </div>
+            </div> */}
             <div>
               <h1 className="text-4xl font-bold text-gray-900">My Courses</h1>
               <p className="text-gray-600 text-lg">Continue your learning journey</p>
@@ -82,7 +82,7 @@ function StudentCoursesPage() {
         ) : studentBoughtCoursesList && studentBoughtCoursesList.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {studentBoughtCoursesList.map((course) => (
-              <Card key={course?.courseId || course?.id} className="group bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-transform duration-300 hover:-translate-y-1">
+              <Card key={course?.courseId || course?.id} className="group bg-white border border-gray-200 rounded overflow-hidden shadow-sm hover:shadow-md transition-transform duration-300 hover:-translate-y-1">
                 <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
                   <img
                     src={course?.courseImage}

@@ -25,6 +25,21 @@ const createOrder = async (req, res) => {
       coursePricing,
     } = req.body;
 
+    // Validate required fields
+    if (!userId || !userName || !userEmail || !courseId || !courseTitle || !coursePricing) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: userId, userName, userEmail, courseId, courseTitle, coursePricing"
+      });
+    }
+
+    if (!paymentMethod) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment method is required"
+      });
+    }
+
     // If Razorpay requested, create INR order
     if (paymentMethod === "razorpay") {
       try {
@@ -68,8 +83,11 @@ const createOrder = async (req, res) => {
           },
         });
       } catch (e) {
-        console.log(e);
-        return res.status(500).json({ success: false, message: "Failed to create Razorpay order" });
+        console.error("Razorpay order creation error:", e);
+        if (e.message && e.message.includes("not configured")) {
+          return res.status(500).json({ success: false, message: "Payment gateway not configured. Please contact administrator." });
+        }
+        return res.status(500).json({ success: false, message: "Failed to create payment order. Please try again." });
       }
     }
 

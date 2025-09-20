@@ -93,7 +93,8 @@ export async function mediaBulkUploadService(formData, onProgressCallback) {
 }
 
 export async function fetchStudentViewCourseListService(query) {
-  const { data } = await axiosInstance.get(`/student/course/get?${query}`);
+  const url = query ? `/student/course/get?${query}` : `/student/course/get`;
+  const { data } = await axiosInstance.get(url);
   return data;
 }
 
@@ -181,10 +182,23 @@ export async function downloadCertificateService(userId, courseId) {
   return response;
 }
 
-export async function contactAdminService({ fromEmail, fromName, subject, message }) {
+export async function contactAdminService({ 
+  fromEmail, 
+  fromName, 
+  phoneNumber,
+  course,
+  segment,
+  institution,
+  subject, 
+  message 
+}) {
   const { data } = await axiosInstance.post(`/notify/contact-admin`, {
     fromEmail,
     fromName,
+    phoneNumber,
+    course,
+    segment,
+    institution,
     subject,
     message,
   });

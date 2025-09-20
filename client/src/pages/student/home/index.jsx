@@ -10,12 +10,30 @@ import {
 } from "@/services";
 import { AuthContext } from "@/context/auth-context";
 import { useNavigate } from "react-router-dom";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { 
+  useScrollAnimation, 
+  useStaggerAnimation, 
+  useCardAnimation, 
+  useButtonAnimation,
+  usePageTransition
+} from "@/hooks/use-gsap";
+
+// Register ScrollTrigger
+gsap.registerPlugin(ScrollTrigger);
 
 function StudentHomePage() {
   const { studentViewCoursesList, setStudentViewCoursesList } =
     useContext(StudentContext);
   const { auth } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // Animation refs
+  const heroRef = useScrollAnimation('fadeInUp');
+  const categoriesRef = useStaggerAnimation('staggerFadeInScale');
+  const coursesRef = useStaggerAnimation('staggerFadeInUp');
+  const pageRef = usePageTransition();
 
   function handleNavigateToCoursesPage(getCurrentId) {
     console.log(getCurrentId);
@@ -49,9 +67,119 @@ function StudentHomePage() {
     }
   }
 
+  // Separate useEffect for data fetching (runs only once)
   useEffect(() => {
     fetchAllStudentViewCourses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Separate useEffect for animations (runs only once)
+  useEffect(() => {
+    // Page enter animation
+    pageRef.enter('fade');
+    
+    // Hero section animations
+    const heroTimeline = gsap.timeline({ delay: 0.3 });
+    heroTimeline
+      .fromTo('.hero-title', 
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }
+      )
+      .fromTo('.hero-subtitle', 
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
+        "-=0.4"
+      )
+      .fromTo('.hero-button', 
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.7)" },
+        "-=0.3"
+      );
+
+    // Floating background animations
+    gsap.to('.floating-bg-1', {
+      y: -20,
+      duration: 4,
+      ease: "power1.inOut",
+      yoyo: true,
+      repeat: -1
+    });
+
+    gsap.to('.floating-bg-2', {
+      y: 20,
+      duration: 5,
+      ease: "power1.inOut",
+      yoyo: true,
+      repeat: -1
+    });
+
+    // Category card animations
+    const categoryCards = document.querySelectorAll('.category-card');
+    categoryCards.forEach((card, index) => {
+      const hoverIn = gsap.timeline({ paused: true });
+      const hoverOut = gsap.timeline({ paused: true });
+      
+      hoverIn
+        .to(card, { y: -10, scale: 1.05, duration: 0.3, ease: "power2.out" })
+        .to(card.querySelector('.category-icon'), { 
+          rotation: 360, 
+          duration: 0.6, 
+          ease: "power2.out" 
+        }, 0);
+      
+      hoverOut
+        .to(card, { y: 0, scale: 1, duration: 0.3, ease: "power2.out" })
+        .to(card.querySelector('.category-icon'), { 
+          rotation: 0, 
+          duration: 0.3, 
+          ease: "power2.out" 
+        }, 0);
+      
+      card.addEventListener('mouseenter', () => hoverIn.play());
+      card.addEventListener('mouseleave', () => hoverOut.play());
+    });
+
+    // Course card animations
+    const courseCards = document.querySelectorAll('.course-card');
+    courseCards.forEach((card, index) => {
+      const hoverIn = gsap.timeline({ paused: true });
+      const hoverOut = gsap.timeline({ paused: true });
+      
+      hoverIn
+        .to(card, { y: -15, scale: 1.02, duration: 0.3, ease: "power2.out" })
+        .to(card.querySelector('.course-image'), { 
+          scale: 1.1, 
+          duration: 0.3, 
+          ease: "power2.out" 
+        }, 0);
+      
+      hoverOut
+        .to(card, { y: 0, scale: 1, duration: 0.3, ease: "power2.out" })
+        .to(card.querySelector('.course-image'), { 
+          scale: 1, 
+          duration: 0.3, 
+          ease: "power2.out" 
+        }, 0);
+      
+      card.addEventListener('mouseenter', () => hoverIn.play());
+      card.addEventListener('mouseleave', () => hoverOut.play());
+    });
+
+    // Button animations
+    const buttons = document.querySelectorAll('.animated-button');
+    buttons.forEach(button => {
+      const clickAnimation = gsap.timeline({ paused: true });
+      
+      clickAnimation
+        .to(button, { scale: 0.95, duration: 0.1 })
+        .to(button, { scale: 1, duration: 0.1 });
+      
+      button.addEventListener('click', () => clickAnimation.play());
+    });
+
+    // Cleanup function
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
   }, []);
 
   // High-quality hero images (royalty-free Unsplash)
@@ -250,7 +378,7 @@ function StudentHomePage() {
               <div
                 key={courseItem?._id}
                 onClick={() => handleCourseNavigate(courseItem?._id)}
-                  className="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border-0"
+                  className="group bg-white rounded overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border-0"
               >
                   <div className="relative">
                 <img

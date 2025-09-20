@@ -11,6 +11,8 @@ let csrfToken = null;
 let csrfFetchInFlight = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const MAX_RETRIES = 3; // 最大重试次数
+let retryCount = 0;
 
 async function ensureCsrfToken() {
   const now = Date.now();
@@ -24,6 +26,13 @@ async function ensureCsrfToken() {
   if (csrfFetchInFlight) {
     return csrfFetchInFlight;
   }
+
+  // 如果已达到最大重试次数，等待更长时间后重置计数
+  if (retryCount >= MAX_RETRIES) {
+    await new Promise(resolve => setTimeout(resolve, 30000)); // 等待30秒
+    retryCount = 0;
+    return null;
+  }
   
   // Start new fetch
   const base = import.meta.env.VITE_API_BASE_URL || "http://192.168.149.1:5000";
@@ -35,17 +44,20 @@ async function ensureCsrfToken() {
     .then((res) => {
       csrfToken = res?.data?.csrfToken || null;
       lastFetchTime = now;
+      retryCount = 0; // 成功后重置重试计数
       return csrfToken;
     })
     .catch((error) => {
       console.warn("CSRF token fetch failed:", error.message);
+      retryCount++; // 失败时增加重试计数
       return null;
     })
     .finally(() => {
-      // Allow refetch after 1 second
+      // 根据重试次数增加重试间隔
+      const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 30000); // 指数退避，最大30秒
       setTimeout(() => {
         csrfFetchInFlight = null;
-      }, 1000);
+      }, retryDelay);
     });
     
   return csrfFetchInFlight;

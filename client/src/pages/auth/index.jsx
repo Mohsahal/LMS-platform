@@ -12,6 +12,8 @@ import { AuthContext } from "@/context/auth-context";
 import { Clock, Users } from "lucide-react";
 import { useContext } from "react";
 import { Link } from "react-router-dom";
+import ForgotPassword from "@/components/auth/forgot-password";
+import ResetPassword from "@/components/auth/reset-password";
 
 function AuthPage() {
   const {
@@ -26,6 +28,7 @@ function AuthPage() {
     registrationSuccess,
     isRegistering,
     isLoggingIn,
+    forgotPasswordEmail,
   } = useContext(AuthContext);
 
   function checkIfSignInFormIsValid() {
@@ -99,11 +102,11 @@ function AuthPage() {
           </div>
         </div>
 
-        {/* Right Panel (unchanged) */}
+        {/* Right Panel */}
         <div className="w-full flex items-start justify-center pt-10 pb-14">
           <div className="w-full max-w-lg px-6">
             <div className="flex items-center justify-center mb-6">
-              <img src="/images/logo.png" alt="BRAVYNEX ENGINEERING" className="h-10 w-auto" />
+              <img src="/images/logo.png" alt="BRAVYNEX ENGINEERING" className="h-16" />
             </div>
 
             <Tabs
@@ -159,9 +162,12 @@ function AuthPage() {
                         <input type="checkbox" className="mr-2 rounded border-gray-300" />
                         Having trouble in sign in?
                       </label>
-                      <Link to="/forgot-password" className="text-sm text-gray-700 hover:text-gray-900 font-medium">
+                      <button
+                        onClick={() => handleTabChange("forgot")}
+                        className="text-sm text-gray-700 hover:text-gray-900 font-medium"
+                      >
                         Forgot password?
-                      </Link>
+                      </button>
                     </div>
 
                     <div className="relative pt-4">
@@ -172,7 +178,7 @@ function AuthPage() {
                         <span className="px-2 bg-white text-gray-500">Or sign in with</span>
                       </div>
                     </div>
-
+{/* 
                     <div className="grid grid-cols-2 gap-3 pt-4">
                       <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                         <span className="mr-2">G</span>
@@ -182,7 +188,7 @@ function AuthPage() {
                         <span className="mr-2">f</span>
                         Facebook
                       </button>
-                    </div>
+                    </div> */}
 
                     <div className="text-center pt-4">
                       <span className="text-sm text-gray-600">Don&apos;t have an account? </span>
@@ -246,6 +252,36 @@ function AuthPage() {
                         Sign in here
                       </button>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Add Forgot Password Tab */}
+              <TabsContent value="forgot" className="mt-6">
+                <Card className="border border-gray-200 shadow-sm bg-white">
+                  <CardHeader className="text-center pb-2">
+                    <CardTitle className="text-2xl font-bold text-gray-900">Forgot Password</CardTitle>
+                    <CardDescription className="text-gray-600">
+                      Enter your email to receive a password reset OTP
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ForgotPassword onBack={handleTabChange} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Add Reset Password Tab */}
+              <TabsContent value="reset" className="mt-6">
+                <Card className="border border-gray-200 shadow-sm bg-white">
+                  <CardHeader className="text-center pb-2">
+                    <CardTitle className="text-2xl font-bold text-gray-900">Reset Password</CardTitle>
+                    <CardDescription className="text-gray-600">
+                      Enter the OTP sent to your email and your new password
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResetPassword onBack={handleTabChange} />
                   </CardContent>
                 </Card>
               </TabsContent>

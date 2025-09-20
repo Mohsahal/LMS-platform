@@ -1,5 +1,6 @@
 const express = require("express");
 const { registerUser, loginUser } = require("../../controllers/auth-controller/index");
+const { initiatePasswordReset, verifyOTPAndResetPassword } = require("../../controllers/auth-controller/forgot-password-controller");
 const { strictAuthLimiter, moderateActionLimiter } = require("../../middleware/rate-limiters");
 const authenticateMiddleware = require("../../middleware/auth-middleware");
 const router = express.Router();
@@ -17,5 +18,9 @@ router.get("/check-auth", authenticateMiddleware, (req, res) => {
     },
   });
 });
+
+// Add new forgot password routes
+router.post("/forgot-password", moderateActionLimiter, initiatePasswordReset);
+router.post("/reset-password", moderateActionLimiter, verifyOTPAndResetPassword);
 
 module.exports = router;

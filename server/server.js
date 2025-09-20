@@ -78,7 +78,15 @@ app.use((req, res, next) => {
     console.log('Request params:', req.params);
   }
   if (req.query && Object.keys(req.query).length > 0) {
-    console.log('Request query:', req.query);
+    // Filter out undefined values and empty strings
+    const cleanQuery = Object.fromEntries(
+      Object.entries(req.query).filter(([key, value]) => 
+        value !== undefined && value !== '' && key !== 'undefined'
+      )
+    );
+    if (Object.keys(cleanQuery).length > 0) {
+      console.log('Request query:', cleanQuery);
+    }
   }
   next();
 });

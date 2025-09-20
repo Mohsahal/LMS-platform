@@ -28,6 +28,11 @@ function InstructorCourses({ listOfCourses }) {
   const ROWS_CHUNK = 5;
   const [visibleRows, setVisibleRows] = useState(INITIAL_ROWS);
   const canLoadMore = (listOfCourses?.length || 0) > visibleRows;
+
+  console.log("InstructorCourses - listOfCourses:", listOfCourses); // Add this line
+  console.log("InstructorCourses - visibleRows:", visibleRows); // Add this line
+  console.log("InstructorCourses - canLoadMore:", canLoadMore); // Add this line
+
   useEffect(() => { setVisibleRows(INITIAL_ROWS); }, [listOfCourses]);
   const {
     setCurrentEditedCourseId,

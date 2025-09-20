@@ -5,6 +5,7 @@ import { createContext, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import validator from "validator";
 import { useToast } from "@/hooks/use-toast";
+import axiosInstance from "@/api/axiosInstance"; // 使用配置好的axiosInstance
 
 export const AuthContext = createContext(null);
 
@@ -21,6 +22,9 @@ export default function AuthProvider({ children }) {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [isRequestingOTP, setIsRequestingOTP] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   async function handleRegisterUser(event) {
     event.preventDefault();
@@ -216,12 +220,8 @@ export default function AuthProvider({ children }) {
     console.log("✅ Logout successful");
   }
 
-  function handleTabChange(value) {
-    setActiveTab(value);
-    // Clear success message when manually switching tabs
-    if (registrationSuccess) {
-      setRegistrationSuccess(false);
-    }
+  function handleTabChange(tab) {
+    setActiveTab(tab);
   }
 
   useEffect(() => {
@@ -229,6 +229,63 @@ export default function AuthProvider({ children }) {
   }, []);
 
   console.log(auth, "gf");
+
+  async function handleForgotPassword(email) {
+    try {
+      setIsRequestingOTP(true);
+      const response = await axiosInstance.post("/auth/forgot-password", { email }); // 使用axiosInstance
+      
+      if (response.data.success) {
+        toast({
+          title: "OTP Sent",
+          description: "Please check your email for the OTP code",
+        });
+        setForgotPasswordEmail(email);
+        return true;
+      }
+    } catch (error) {
+      const message = error?.response?.data?.message || "Failed to send OTP";
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsRequestingOTP(false);
+    }
+  }
+
+  async function handleResetPassword(otp, newPassword) {
+    try {
+      setIsResettingPassword(true);
+      const response = await axiosInstance.post("/auth/reset-password", { // 使用axiosInstance
+        email: forgotPasswordEmail,
+        otp,
+        newPassword,
+      });
+
+      if (response.data.success) {
+        toast({
+          title: "Success",
+          description: "Password reset successful. Please login with your new password.",
+        });
+        setForgotPasswordEmail("");
+        setActiveTab("signin");
+        return true;
+      }
+    } catch (error) {
+      const message = error?.response?.data?.message || "Failed to reset password";
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsResettingPassword(false);
+    }
+  }
 
   return (
     <AuthContext.Provider
@@ -248,6 +305,11 @@ export default function AuthProvider({ children }) {
         isLoggingIn,
         logout,
         loading,
+        forgotPasswordEmail,
+        isRequestingOTP,
+        isResettingPassword,
+        handleForgotPassword,
+        handleResetPassword,
       }}
     >
       {loading ? <Skeleton /> : children}
