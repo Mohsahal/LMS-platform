@@ -43,33 +43,76 @@ function RealTimeRevenueAnalysis({ listOfCourses = [] }) {
     totalStudents: 0,
     todayRevenue: 0,
     todayStudents: 0,
-    lastEnrollment: null
+    lastEnrollment: null,
+    lastUpdated: null
   });
 
   // Load instructor analytics and poll periodically
   useEffect(() => {
     let isMounted = true;
+    let retryCount = 0;
+    
     async function load() {
       if (!auth?.user?._id) return;
-      const res = await fetchInstructorAnalyticsService(auth.user._id);
-      if (isMounted && res?.success) {
-        setAnalytics(res.data);
-        // Derive today's stats from dailyData last item if available
-        const today = res.data?.dailyData?.[res.data.dailyData.length - 1];
-        const totals = res.data?.totals || {};
-        setLiveStats((prev) => ({
-          ...prev,
-          totalRevenue: Number(totals.totalRevenue || 0),
-          totalStudents: Number(totals.totalStudents || 0),
-          todayRevenue: Number(today?.revenue || 0),
-          todayStudents: Number(today?.students || 0),
-        }));
+      
+      try {
+        console.log("Fetching instructor analytics...", { retryCount });
+        const res = await fetchInstructorAnalyticsService(auth.user._id);
+        
+        if (isMounted && res?.success) {
+          console.log("Received analytics data:", res.data);
+          console.log("Daily data:", res.data?.dailyData);
+          console.log("Hourly data:", res.data?.hourlyData);
+          console.log("Monthly data:", res.data?.monthlyData);
+          setAnalytics(res.data);
+          
+          // Derive today's stats from dailyData last item if available
+          const today = res.data?.dailyData?.[res.data.dailyData.length - 1];
+          const totals = res.data?.totals || {};
+          
+          setLiveStats((prev) => {
+            const newLiveStats = {
+              ...prev,
+              totalRevenue: Number(totals.totalRevenue || 0),
+              totalStudents: Number(totals.totalStudents || 0),
+              todayRevenue: Number(today?.revenue || 0),
+              todayStudents: Number(today?.students || 0),
+              lastEnrollment: res.data?.lastEnrollment || null,
+              lastUpdated: new Date().toLocaleTimeString(),
+            };
+            console.log("Updated liveStats:", newLiveStats);
+            return newLiveStats;
+          });
+          
+          // Reset retry count on successful fetch
+          retryCount = 0;
+        } else if (res && !res.success) {
+          console.error("Failed to fetch analytics:", res.message);
+          retryCount++;
+        }
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+        retryCount++;
       }
     }
+    
+    // Initial load
     load();
-    const id = setInterval(load, 5000);
-    return () => { isMounted = false; clearInterval(id); };
+    
+    // Set up polling with exponential backoff on errors
+    const pollInterval = retryCount > 0 ? Math.min(5000 * Math.pow(2, retryCount), 30000) : 3000;
+    const id = setInterval(load, pollInterval);
+    
+    return () => { 
+      isMounted = false; 
+      clearInterval(id); 
+    };
   }, [auth?.user?._id]);
+
+  // Add a log for analytics state after it's updated
+  useEffect(() => {
+    console.log("Analytics state updated:", analytics); // Log 3
+  }, [analytics]);
 
   // Calculate revenue data
   const revenueData = useMemo(() => {
@@ -171,7 +214,14 @@ function RealTimeRevenueAnalysis({ listOfCourses = [] }) {
               <span className="text-sm font-normal text-green-600">LIVE</span>
             </div>
           </h1>
-          <p className="text-gray-600 mt-2">Live revenue tracking and student enrollment analytics</p>
+          <p className="text-gray-600 mt-2">
+            Live revenue tracking and student enrollment analytics
+            {liveStats.lastUpdated && (
+              <span className="ml-2 text-sm text-green-600">
+                • Last updated: {liveStats.lastUpdated}
+              </span>
+            )}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Calendar className="w-5 h-5 text-gray-500" />
@@ -205,7 +255,7 @@ function RealTimeRevenueAnalysis({ listOfCourses = [] }) {
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-500">
-                  {liveStats.lastEnrollment.timestamp.toLocaleTimeString()}
+                  {liveStats.lastEnrollment.timestamp ? new Date(liveStats.lastEnrollment.timestamp).toLocaleTimeString() : ''}
                 </p>
               </div>
             </div>

@@ -4,12 +4,16 @@ import RevenueAnalysis from "@/components/instructor-view/revenue-analysis/real-
 import { AuthContext } from "@/context/auth-context";
 import { InstructorContext } from "@/context/instructor-context";
 import { fetchInstructorCourseListService } from "@/services";
-import { useContext, useEffect, useState, useCallback } from "react";
+import { useContext, useEffect, useState, useCallback, useRef } from "react"; // Added useRef
 import { Search, Calendar, LogOut, BarChart3, BookOpen, TrendingUp } from "lucide-react";
+import { gsap } from "gsap"; // Import GSAP
 
 function InstructorDashboardpage() {
   const [currentView, setCurrentView] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const sidebarRef = useRef(null); // Ref for the sidebar
+  const mainContentRef = useRef(null); // Ref for the main content
 
   const { resetCredentials } = useContext(AuthContext);
   const { instructorCoursesList, setInstructorCoursesList } =
@@ -21,14 +25,21 @@ function InstructorDashboardpage() {
   }, [setInstructorCoursesList]);
 
 
-  
-
-
-
-
   useEffect(() => {
     fetchAllCourses();
   }, [fetchAllCourses]); // Re-fetch when user changes
+
+  // GSAP Animations
+  useEffect(() => {
+    gsap.fromTo(sidebarRef.current, 
+      { x: -100, opacity: 0 }, 
+      { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
+    );
+    gsap.fromTo(mainContentRef.current, 
+      { opacity: 0, y: 20 }, 
+      { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: 0.2 }
+    );
+  }, []); // Run animations once on component mount
 
   function handleLogout() {
     resetCredentials();
@@ -66,7 +77,7 @@ function InstructorDashboardpage() {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-xl hidden lg:block">
+      <aside ref={sidebarRef} className="w-64 bg-white shadow-xl hidden lg:block"> {/* Added ref */}
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 bg-gradient-to-r from-gray-700 ">
@@ -113,7 +124,7 @@ function InstructorDashboardpage() {
               <li>
                 <button
                   onClick={() => setCurrentView("courses")}
-                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 ${
+                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-all duration-200 ${
                     currentView === "courses"
                       ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300 shadow-sm'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
@@ -173,7 +184,7 @@ function InstructorDashboardpage() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div ref={mainContentRef} className="flex-1 flex flex-col overflow-hidden"> {/* Added ref */}
         {/* Top Header */}
         <header className="bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between h-16 px-6">

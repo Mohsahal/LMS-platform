@@ -172,6 +172,19 @@ export async function resetCourseProgressService(userId, courseId) {
   return data;
 }
 
+export async function updateVideoProgressService(userId, courseId, lectureId, progressPercentage) {
+  const { data } = await axiosInstance.post(
+    `/student/course-progress/update-video-progress`,
+    {
+      userId,
+      courseId,
+      lectureId,
+      progressPercentage,
+    }
+  );
+  return data;
+}
+
 export async function downloadCertificateService(userId, courseId) {
   const response = await axiosInstance.get(
     `/student/course-progress/certificate/${userId}/${courseId}`,
@@ -211,8 +224,15 @@ export async function fetchStudentAnalyticsService(userId) {
 }
 
 export async function fetchInstructorAnalyticsService(instructorId) {
-  const { data } = await axiosInstance.get(`/instructor/analytics/get/${instructorId}`);
-  return data;
+  try {
+    console.log('Fetching analytics for instructor:', instructorId);
+    const { data } = await axiosInstance.get(`/instructor/analytics/get/${instructorId}`);
+    console.log('Analytics service response:', data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching instructor analytics:', error);
+    return { success: false, message: error.message };
+  }
 }
 
 

@@ -1,17 +1,30 @@
 const Order = require("../../models/Order");
 const Course = require("../../models/Course");
+const User = require("../../models/User"); // Assuming User model is needed for instructor details
+
+// Helper function to parse amounts
+const parseAmount = (val) => {
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') {
+    const cleaned = val.replace(/[^0-9.\\-]/g, "");
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? 0 : n;
+  }
+  return 0;
+};
 
 // GET /instructor/analytics/get/:instructorId
 const getInstructorAnalytics = async (req, res) => {
   try {
     const { instructorId } = req.params;
+    console.log("Instructor ID from params:", instructorId);
     if (!instructorId) {
       return res.status(400).json({ success: false, message: "Instructor ID is required" });
     }
 
     // Fetch instructor courses
     const courses = await Course.find({ instructorId }).lean();
-    const courseIdSet = new Set(courses.map((c) => String(c._id)));
+    console.log("Courses found for instructor:", courses.length);
 
     // Orders for these courses
     const orders = await Order.find({
@@ -20,19 +33,17 @@ const getInstructorAnalytics = async (req, res) => {
       orderStatus: "confirmed",
     }).lean();
 
+    console.log("Fetched orders:", orders.length);
+    orders.forEach(o => {
+      console.log(`Order ID: ${o._id}, Payment Status: ${o.paymentStatus}, Order Status: ${o.orderStatus}, Raw coursePricing: ${o.coursePricing}, Parsed: ${parseAmount(o.coursePricing)}`);
+    });
+
     // Totals
-    const parseAmount = (val) => {
-      if (typeof val === 'number') return val;
-      if (typeof val === 'string') {
-        const cleaned = val.replace(/[^0-9.\-]/g, "");
-        const n = parseFloat(cleaned);
-        return isNaN(n) ? 0 : n;
-      }
-      return 0;
-    };
     const totalRevenue = orders.reduce((sum, o) => sum + parseAmount(o.coursePricing), 0);
     const totalStudents = courses.reduce((sum, c) => sum + (Array.isArray(c.students) ? c.students.length : 0), 0);
     const avgRevenuePerStudent = totalStudents > 0 ? totalRevenue / totalStudents : 0;
+
+    console.log("Calculated Totals: Total Revenue =", totalRevenue, "Total Students =", totalStudents);
 
     // Monthly breakdown last 12 months
     const now = new Date();
@@ -53,6 +64,7 @@ const getInstructorAnalytics = async (req, res) => {
         monthly[idx].students += 1;
       }
     });
+    console.log("Monthly Data:", monthly);
 
     // Daily breakdown last 30 days
     const daily = [];
@@ -72,6 +84,8 @@ const getInstructorAnalytics = async (req, res) => {
         daily[idx].students += 1;
       }
     });
+    console.log("Daily Data:", daily);
+
     // Hourly breakdown last 24 hours
     const hourly = [];
     const hourKeyIndex = new Map();
@@ -90,6 +104,7 @@ const getInstructorAnalytics = async (req, res) => {
         hourly[idx].students += 1;
       }
     });
+    console.log("Hourly Data:", hourly);
 
     // Course performance
     const revenueByCourse = new Map();
@@ -123,21 +138,47 @@ const getInstructorAnalytics = async (req, res) => {
     });
     const categoryData = Object.entries(categoryMap).map(([name, v]) => ({ name, value: v.revenue, students: v.students, courses: v.courses }));
 
+    // Fetch the most recent order for last enrollment
+    const lastEnrollmentOrder = await Order.findOne({
+      instructorId,
+      paymentStatus: "paid",
+      orderStatus: "confirmed",
+    })
+      .sort({ createdAt: -1 }) // Sort by creation date descending to get the latest
+      .populate("courseId", "title") // Populate course title
+      .populate("userId", "userName userEmail") // Populate user details
+      .lean();
+
+    let lastEnrollment = null;
+    if (lastEnrollmentOrder) {
+      lastEnrollment = {
+        studentName: lastEnrollmentOrder.userId?.userName || lastEnrollmentOrder.userName || "Unknown Student",
+        courseTitle: lastEnrollmentOrder.courseId?.title || lastEnrollmentOrder.courseTitle || "Unknown Course",
+        revenue: parseAmount(lastEnrollmentOrder.coursePricing),
+        timestamp: lastEnrollmentOrder.createdAt || lastEnrollmentOrder.orderDate,
+      };
+    }
+
+    const responseData = {
+      totals: {
+        totalRevenue,
+        totalStudents,
+        averageRevenuePerStudent: avgRevenuePerStudent,
+        activeCourses: courses.length,
+      },
+      hourlyData: hourly,
+      dailyData: daily,
+      monthlyData: monthly.map((m) => ({ month: m.label, revenue: m.revenue, students: m.students })),
+      coursePerformance,
+      categoryData,
+      lastEnrollment,
+    };
+
+    console.log("Sending analytics response:", JSON.stringify(responseData, null, 2));
+
     return res.status(200).json({
       success: true,
-      data: {
-        totals: {
-          totalRevenue,
-          totalStudents,
-          averageRevenuePerStudent: avgRevenuePerStudent,
-          activeCourses: courses.length,
-        },
-        hourlyData: hourly,
-        dailyData: daily,
-        monthlyData: monthly.map((m) => ({ month: m.label, revenue: m.revenue, students: m.students })),
-        coursePerformance,
-        categoryData,
-      },
+      data: responseData,
     });
   } catch (e) {
     console.error(e);

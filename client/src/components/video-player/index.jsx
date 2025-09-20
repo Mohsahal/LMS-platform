@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import { Slider } from "../ui/slider";
@@ -13,14 +12,14 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { gsap } from "gsap";
-import { useVideoAnimation } from "@/hooks/use-gsap";
+import gsap from "gsap";
 
 function VideoPlayer({
   width = "100%",
   height = "100%",
   url,
-  onProgressUpdate,
+  onProgressUpdate = () => {},
+  onVideoEnded = () => {},
   progressData,
 }) {
   const [playing, setPlaying] = useState(false);
@@ -30,30 +29,51 @@ function VideoPlayer({
   const [seeking, setSeeking] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [duration, setDuration] = useState(0);
 
   const playerRef = useRef(null);
   const playerContainerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
-  
-  // GSAP animations
-  const { controlsRef, progressRef, showControls: showControlsAnim, hideControls: hideControlsAnim, updateProgress } = useVideoAnimation();
+  const controlsRef = useRef(null); // Ref for controls div
 
   function handlePlayAndPause() {
     setPlaying(!playing);
   }
 
   function handleProgress(state) {
+    console.log("VideoPlayer handleProgress - state.played:", state.played); // Added log
     if (!seeking) {
       setPlayed(state.played);
     }
   }
 
+  function handleDuration(newDuration) {
+    setDuration(newDuration);
+  }
+
+  function handleVideoEnded() {
+    console.log("Video ended - calling onVideoEnded callback");
+    setPlayed(1); // Ensure progress is set to 100%
+    if (onVideoEnded && typeof onVideoEnded === 'function') {
+      onVideoEnded({
+        ...progressData,
+        progressValue: 1,
+      });
+    }
+  }
+
   function handleRewind() {
-    playerRef?.current?.seekTo(playerRef?.current?.getCurrentTime() - 5);
+    const currentTime = playerRef?.current?.getCurrentTime();
+    if (currentTime && isFinite(currentTime)) {
+      playerRef?.current?.seekTo(currentTime - 5);
+    }
   }
 
   function handleForward() {
-    playerRef?.current?.seekTo(playerRef?.current?.getCurrentTime() + 5);
+    const currentTime = playerRef?.current?.getCurrentTime();
+    if (currentTime && isFinite(currentTime)) {
+      playerRef?.current?.seekTo(currentTime + 5);
+    }
   }
 
   function handleToggleMute() {
@@ -61,17 +81,25 @@ function VideoPlayer({
   }
 
   function handleSeekChange(newValue) {
-    setPlayed(newValue[0]);
+    const seekValue = newValue[0];
+    if (isFinite(seekValue)) {
+      setPlayed(seekValue);
+    }
     setSeeking(true);
   }
 
   function handleSeekMouseUp() {
     setSeeking(false);
-    playerRef.current?.seekTo(played);
+    if (isFinite(played)) {
+      playerRef.current?.seekTo(played);
+    }
   }
 
   function handleVolumeChange(newValue) {
-    setVolume(newValue[0]);
+    const volumeValue = newValue[0];
+    if (isFinite(volumeValue)) {
+      setVolume(volumeValue);
+    }
   }
 
   function pad(string) {
@@ -79,12 +107,16 @@ function VideoPlayer({
   }
 
   function formatTime(seconds) {
-    // Handle invalid values
-    if (!seconds || isNaN(seconds) || seconds === 0 || !isFinite(seconds)) {
+    if (!seconds || isNaN(seconds) || !isFinite(seconds) || seconds < 0) {
       return "0:00";
     }
     
-    const date = new Date(seconds * 1000);
+    const numSeconds = Number(seconds);
+    if (isNaN(numSeconds) || !isFinite(numSeconds)) {
+      return "0:00";
+    }
+    
+    const date = new Date(numSeconds * 1000);
     const hh = date.getUTCHours();
     const mm = date.getUTCMinutes();
     const ss = pad(date.getUTCSeconds());
@@ -98,8 +130,8 @@ function VideoPlayer({
 
   const handleFullScreen = useCallback(() => {
     if (!isFullScreen) {
-      if (playerContainerRef?.current.requestFullscreen) {
-        playerContainerRef?.current?.requestFullscreen();
+      if (playerContainerRef?.current?.requestFullscreen) {
+        playerContainerRef.current.requestFullscreen();
       }
     } else {
       if (document.exitFullscreen) {
@@ -110,12 +142,8 @@ function VideoPlayer({
 
   function handleMouseMove() {
     setShowControls(true);
-    showControlsAnim();
     clearTimeout(controlsTimeoutRef.current);
-    controlsTimeoutRef.current = setTimeout(() => {
-      setShowControls(false);
-      hideControlsAnim();
-    }, 3000);
+    controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
   }
 
   useEffect(() => {
@@ -131,64 +159,40 @@ function VideoPlayer({
   }, []);
 
   useEffect(() => {
-    if (played === 1) {
+    // Animate controls visibility with a more pronounced effect
+    if (controlsRef.current) {
+      gsap.to(controlsRef.current, {
+        opacity: showControls ? 1 : 0,
+        y: showControls ? 0 : 30, // Slide up/down effect
+        scale: showControls ? 1 : 0.95, // Slight scale effect
+        duration: 0.4,
+        ease: "power3.out",
+        pointerEvents: showControls ? "auto" : "none",
+      });
+    }
+  }, [showControls]);
+
+  useEffect(() => {
+    if (onProgressUpdate && typeof onProgressUpdate === 'function') {
       onProgressUpdate({
         ...progressData,
         progressValue: played,
       });
     }
-    
-    // Update progress bar animation
-    updateProgress(played * 100);
-  }, [played, updateProgress, onProgressUpdate, progressData]);
+  }, [played, onProgressUpdate, progressData]);
 
-  // GSAP animations for video player
+  // Reset progress when URL changes (new lecture)
   useEffect(() => {
-    // Initial animation for video player container
-    gsap.fromTo(playerContainerRef.current,
-      { opacity: 0, scale: 0.95 },
-      { opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" }
-    );
-
-    // Button hover animations
-    const buttons = playerContainerRef.current?.querySelectorAll('button');
-    buttons?.forEach(button => {
-      const hoverIn = gsap.to(button, { 
-        scale: 1.1, 
-        duration: 0.2, 
-        ease: "power2.out",
-        paused: true
-      });
-      const hoverOut = gsap.to(button, { 
-        scale: 1, 
-        duration: 0.2, 
-        ease: "power2.out",
-        paused: true
-      });
-      
-      button.addEventListener('mouseenter', () => hoverIn.play());
-      button.addEventListener('mouseleave', () => hoverOut.play());
-    });
-
-    // Progress bar animation
-    const progressBar = playerContainerRef.current?.querySelector('.progress-bar');
-    if (progressBar) {
-      gsap.fromTo(progressBar,
-        { scaleX: 0 },
-        { scaleX: 1, duration: 0.5, ease: "power2.out", delay: 0.3 }
-      );
-    }
-
-    return () => {
-      // Cleanup animations
-      gsap.killTweensOf(playerContainerRef.current);
-    };
+    setPlayed(0);
+    console.log("Video URL changed, resetting progress to 0");
   }, [url]);
+
+  const currentTime = played * duration;
 
   return (
     <div
       ref={playerContainerRef}
-      className={`relative bg-gray-900 rounded-lg overflow-hidden shadow-2xl transition-all duration-300 ease-in-out 
+      className={`relative bg-black rounded-lg overflow-hidden shadow-2xl transition-all duration-300 ease-in-out 
       ${isFullScreen ? "w-screen h-screen" : ""}
       `}
       style={{ width, height }}
@@ -205,102 +209,93 @@ function VideoPlayer({
         volume={volume}
         muted={muted}
         onProgress={handleProgress}
+        onDuration={handleDuration}
+        onEnded={handleVideoEnded}
       />
-      {showControls && (
-        <div
-          ref={controlsRef}
-          className={`absolute bottom-0 left-0 right-0 bg-gray-800 bg-opacity-75 p-4 transition-opacity duration-300 ${
-            showControls ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <Slider
-            ref={progressRef}
-            value={[played * 100]}
-            max={100}
-            step={0.1}
-            onValueChange={(value) => handleSeekChange([value[0] / 100])}
-            onValueCommit={handleSeekMouseUp}
-            className="w-full mb-4 progress-bar"
-          />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handlePlayAndPause}
-                className="text-white bg-transparent hover:text-white hover:bg-gray-700"
-              >
-                {playing ? (
-                  <Pause className="h-6 w-6" />
-                ) : (
-                  <Play className="h-6 w-6" />
-                )}
-              </Button>
-              <Button
-                onClick={handleRewind}
-                className="text-white bg-transparent hover:text-white hover:bg-gray-700"
-                variant="ghost"
-                size="icon"
-              >
-                <RotateCcw className="h-6 w-6" />
-              </Button>
-              <Button
-                onClick={handleForward}
-                className="text-white bg-transparent hover:text-white hover:bg-gray-700"
-                variant="ghost"
-                size="icon"
-              >
-                <RotateCw className="h-6 w-6" />
-              </Button>
-              <Button
-                onClick={handleToggleMute}
-                className="text-white bg-transparent hover:text-white hover:bg-gray-700"
-                variant="ghost"
-                size="icon"
-              >
-                {muted ? (
-                  <VolumeX className="h-6 w-6" />
-                ) : (
-                  <Volume2 className="h-6 w-6" />
-                )}
-              </Button>
-              <Slider
-                value={[volume * 100]}
-                max={100}
-                step={1}
-                onValueChange={(value) => handleVolumeChange([value[0] / 100])}
-                className="w-24 "
-              />
+      <div
+        ref={controlsRef}
+        className={`absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent`} // Modern gradient background
+        style={{ opacity: 0, pointerEvents: "none" }}
+      >
+        <Slider
+          value={[played * 100]}
+          max={100}
+          step={0.1}
+          onValueChange={(value) => handleSeekChange([value[0] / 100])}
+          onValueCommit={handleSeekMouseUp}
+          className="w-full mb-3 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600" // Custom slider styling
+        />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handlePlayAndPause}
+              className="text-white hover:bg-white/20 transition-colors duration-200" // Sleeker button style
+            >
+              {playing ? (
+                <Pause className="h-6 w-6" />
+              ) : (
+                <Play className="h-6 w-6" />
+              )}
+            </Button>
+            <Button
+              onClick={handleRewind}
+              className="text-white hover:bg-white/20 transition-colors duration-200"
+              variant="ghost"
+              size="icon"
+            >
+              <RotateCcw className="h-6 w-6" />
+            </Button>
+            <Button
+              onClick={handleForward}
+              className="text-white hover:bg-white/20 transition-colors duration-200"
+              variant="ghost"
+              size="icon"
+            >
+              <RotateCw className="h-6 w-6" />
+            </Button>
+            <Button
+              onClick={handleToggleMute}
+              className="text-white hover:bg-white/20 transition-colors duration-200"
+              variant="ghost"
+              size="icon"
+            >
+              {muted ? (
+                <VolumeX className="h-6 w-6" />
+              ) : (
+                <Volume2 className="h-6 w-6" />
+              )}
+            </Button>
+            <Slider
+              value={[volume * 100]}
+              max={100}
+              step={1}
+              onValueChange={(value) => handleVolumeChange([value[0] / 100])}
+              className="w-24 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600" // Custom slider styling
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="text-white text-sm font-mono">
+              {formatTime(currentTime)} / {formatTime(duration)}
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="text-white">
-                {(() => {
-                  const currentDuration = playerRef?.current?.getDuration();
-                  if (!currentDuration || isNaN(currentDuration) || currentDuration === 0) {
-                    return "0:00 / Loading...";
-                  }
-                  return `${formatTime(played * currentDuration)} / ${formatTime(currentDuration)}`;
-                })()}
-              </div>
-              <Button
-                className="text-white bg-transparent hover:text-white hover:bg-gray-700"
-                variant="ghost"
-                size="icon"
-                onClick={handleFullScreen}
-              >
-                {isFullScreen ? (
-                  <Minimize className="h-6 w-6" />
-                ) : (
-                  <Maximize className="h-6 w-6" />
-                )}
-              </Button>
-            </div>
+            <Button
+              className="text-white hover:bg-white/20 transition-colors duration-200"
+              variant="ghost"
+              size="icon"
+              onClick={handleFullScreen}
+            >
+              {isFullScreen ? (
+                <Minimize className="h-6 w-6" />
+              ) : (
+                <Maximize className="h-6 w-6" />
+              )}
+            </Button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
 export default VideoPlayer;
-

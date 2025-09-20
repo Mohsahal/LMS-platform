@@ -38,17 +38,26 @@ const markCurrentLectureAsViewed = async (req, res) => {
         (item) => item.lectureId === lectureId
       );
 
-      if (lectureProgress) {
+      // Only update if not already viewed to prevent unnecessary database writes
+      if (lectureProgress && !lectureProgress.viewed) {
         lectureProgress.viewed = true;
         lectureProgress.dateViewed = new Date();
-      } else {
+        await progress.save();
+      } else if (!lectureProgress) {
         progress.lecturesProgress.push({
           lectureId,
           viewed: true,
           dateViewed: new Date(),
         });
+        await progress.save();
+      } else {
+        // Lecture already viewed, return existing progress without modification
+        return res.status(200).json({
+          success: true,
+          message: "Lecture already marked as viewed",
+          data: progress,
+        });
       }
-      await progress.save();
     }
 
     const course = await Course.findById(courseId);
@@ -60,26 +69,28 @@ const markCurrentLectureAsViewed = async (req, res) => {
       });
     }
 
-    //check all the lectures are viewed or not
-    const allLecturesViewed =
-      progress.lecturesProgress.length === course.curriculum.length &&
-      progress.lecturesProgress.every((item) => item.viewed);
+    //check all the lectures are viewed or not based on course completion percentage
+    const completionThreshold = (course.completionPercentage || 95) / 100; // Convert percentage to decimal
+    const allLecturesViewed = course.curriculum.every(courseLecture => {
+      const progressEntry = progress.lecturesProgress.find(p => p.lectureId.toString() === courseLecture._id.toString());
+      return progressEntry && progressEntry.viewed;
+    });
 
     if (allLecturesViewed && !progress.completed) {
       progress.completed = true;
       progress.completionDate = new Date();
 
       await progress.save();
-
-
     }
-
-
 
     res.status(200).json({
       success: true,
       message: "Lecture marked as viewed",
-      data: progress,
+      data: {
+        lecturesProgress: progress.lecturesProgress,
+        completed: progress.completed,
+        completionDate: progress.completionDate
+      },
     });
   } catch (error) {
     console.log(error);
@@ -201,17 +212,31 @@ const generateCompletionCertificate = async (req, res) => {
   try {
     const { userId, courseId } = req.params;
 
+    console.log(`Certificate generation requested for userId: ${userId}, courseId: ${courseId}`);
+
     const progress = await CourseProgress.findOne({ userId, courseId });
+    console.log(`Progress found:`, progress ? { completed: progress.completed, lecturesCount: progress.lecturesProgress?.length } : 'No progress found');
+    
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
+    
     if (!progress || !progress.completed) {
+      console.log(`Certificate not generated: progress.completed is ${progress?.completed}`);
       return res.status(400).json({
         success: false,
         message: "Certificate available only after course completion",
       });
     }
 
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return res.status(404).json({ success: false, message: "Course not found" });
+    // Check if course has certificate enabled
+    if (!course.certificateEnabled) {
+      console.log(`Certificate not generated: certificateEnabled is ${course.certificateEnabled}`);
+      return res.status(400).json({
+        success: false,
+        message: "Certificate generation is disabled for this course",
+      });
     }
 
     const user = await User.findById(userId);
@@ -353,9 +378,93 @@ const generateCompletionCertificate = async (req, res) => {
   }
 };
 
+//update video progress percentage
+const updateVideoProgress = async (req, res) => {
+  try {
+    const { userId, courseId, lectureId, progressPercentage } = req.body;
+
+    let progress = await CourseProgress.findOne({ userId, courseId });
+    
+    if (!progress) {
+      progress = new CourseProgress({
+        userId,
+        courseId,
+        lecturesProgress: [
+          {
+            lectureId,
+            viewed: false,
+            dateViewed: null,
+            progressPercentage: progressPercentage || 0,
+          },
+        ],
+      });
+      await progress.save();
+    } else {
+      const lectureProgress = progress.lecturesProgress.find(
+        (item) => item.lectureId === lectureId
+      );
+
+      if (lectureProgress) {
+        lectureProgress.progressPercentage = progressPercentage || 0;
+        
+        // Check if this lecture meets the completion threshold
+        const course = await Course.findById(courseId);
+        const completionThreshold = (course?.completionPercentage || 95);
+        
+        if (lectureProgress.progressPercentage >= completionThreshold && !lectureProgress.viewed) {
+          lectureProgress.viewed = true;
+          lectureProgress.dateViewed = new Date();
+        }
+        
+        await progress.save();
+      } else {
+        progress.lecturesProgress.push({
+          lectureId,
+          viewed: false,
+          dateViewed: null,
+          progressPercentage: progressPercentage || 0,
+        });
+        await progress.save();
+      }
+    }
+
+    // Check if course is completed
+    const course = await Course.findById(courseId);
+    if (course) {
+      const allLecturesViewed = course.curriculum.every(courseLecture => {
+        const progressEntry = progress.lecturesProgress.find(p => p.lectureId.toString() === courseLecture._id.toString());
+        return progressEntry && progressEntry.viewed;
+      });
+
+      if (allLecturesViewed && !progress.completed) {
+        progress.completed = true;
+        progress.completionDate = new Date();
+        await progress.save();
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Video progress updated",
+      data: {
+        lecturesProgress: progress.lecturesProgress,
+        completed: progress.completed,
+        completionDate: progress.completionDate
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Some error occurred!",
+    });
+  }
+};
+
 module.exports = {
   markCurrentLectureAsViewed,
   getCurrentCourseProgress,
   resetCurrentCourseProgress,
   generateCompletionCertificate,
+  updateVideoProgress,
 };

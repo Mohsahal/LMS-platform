@@ -233,6 +233,49 @@ function CourseSettings() {
                 </h3>
                 <div className="space-y-4">
                   <div>
+                    <Label htmlFor="completionPercentage" className="text-sm font-medium text-gray-700 mb-2 block">
+                      Video Completion Percentage (%)
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="completionPercentage"
+                        type="number"
+                        placeholder="e.g., 70"
+                        value={courseLandingFormData?.completionPercentage || 95}
+                        onChange={(e) => setCourseLandingFormData({ 
+                          ...courseLandingFormData, 
+                          completionPercentage: parseInt(e.target.value) || 95
+                        })}
+                        className="w-full pl-10"
+                        min="1"
+                        max="100"
+                      />
+                      <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Percentage of each video that must be watched to mark as complete (1-100%)
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Target className="w-5 h-5 text-gray-700" />
+                      <div>
+                        <Label className="text-sm font-medium text-gray-900">Sequential Access</Label>
+                        <p className="text-xs text-gray-500">Students must complete videos in order</p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="sequentialAccess"
+                      checked={courseLandingFormData?.sequentialAccess !== false}
+                      onCheckedChange={(v) => setCourseLandingFormData({ 
+                        ...courseLandingFormData, 
+                        sequentialAccess: v 
+                      })}
+                    />
+                  </div>
+
+                  <div>
                     <Label htmlFor="passingScore" className="text-sm font-medium text-gray-700 mb-2 block">
                       Passing Score (%)
                     </Label>
