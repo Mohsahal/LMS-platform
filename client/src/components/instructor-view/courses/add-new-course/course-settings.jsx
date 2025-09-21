@@ -3,9 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InstructorContext } from "@/context/instructor-context";
 import { mediaUploadService } from "@/services";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Settings, Image, Award, Target, Upload as UploadIcon } from "lucide-react";
+import { SecureInstructorInput, SecureInstructorFileUpload } from "@/components/security/SecureInstructorForm";
 
 function CourseSettings() {
   const {
@@ -17,8 +18,13 @@ function CourseSettings() {
     // setMediaUploadProgressPercentage,
   } = useContext(InstructorContext);
 
-  async function handleImageUploadChange(event) {
-    const selectedImage = event.target.files[0];
+  const [uploadError, setUploadError] = useState('');
+
+  async function handleImageUploadChange(files) {
+    if (!files || files.length === 0) return;
+    
+    const selectedImage = files[0];
+    setUploadError('');
 
     if (selectedImage) {
       const imageFormData = new FormData();
@@ -36,9 +42,14 @@ function CourseSettings() {
             image: response.data.url,
           });
           setMediaUploadProgress(false);
+        } else {
+          setUploadError('Failed to upload image');
         }
       } catch (e) {
         console.log(e);
+        setUploadError('Upload failed. Please try again.');
+      } finally {
+        setMediaUploadProgress(false);
       }
     }
   }
@@ -85,37 +96,31 @@ function CourseSettings() {
                       />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <Label htmlFor="replace-image" className={`cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-lg shadow-lg hover:bg-gray-50 transition-colors ${mediaUploadProgress ? 'pointer-events-none opacity-60' : ''}`}>
-                            <UploadIcon className="w-4 h-4 mr-2 inline" />
-                            Replace Image
-                          </Label>
+                          <SecureInstructorFileUpload
+                            onChange={handleImageUploadChange}
+                            accept="image/*"
+                            maxSize={10 * 1024 * 1024} // 10MB
+                            label="Replace Image"
+                            description="Click to replace the current image"
+                            className="bg-white text-gray-900 px-4 py-2 rounded-lg shadow-lg hover:bg-gray-50 transition-colors"
+                          />
                         </div>
                       </div>
                     </div>
-                    <Input
-                      id="replace-image"
-                      onChange={handleImageUploadChange}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                    />
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors duration-200">
-                    <UploadIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">Upload Course Image</h4>
-                    <p className="text-gray-600 mb-4">Choose a high-quality image that represents your course</p>
-                    <Label htmlFor="course-image" className={`cursor-pointer bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-black transition-colors ${mediaUploadProgress ? 'pointer-events-none opacity-60' : ''}`}>
-                      Select Image
-                    </Label>
-                    <Input
-                      id="course-image"
-                      onChange={handleImageUploadChange}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                    />
-                  </div>
+                  <SecureInstructorFileUpload
+                    onChange={handleImageUploadChange}
+                    accept="image/*"
+                    maxSize={10 * 1024 * 1024} // 10MB
+                    label="Upload Course Image"
+                    description="Choose a high-quality image that represents your course (Max 10MB)"
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors duration-200"
+                  />
+                )}
+                
+                {uploadError && (
+                  <p className="text-red-500 text-sm mt-2">{uploadError}</p>
                 )}
               </div>
             </div>
@@ -148,78 +153,80 @@ function CourseSettings() {
                   {Boolean(courseLandingFormData?.certificateEnabled) && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="certificateCourseName" className="text-sm font-medium text-gray-700 mb-2 block">Certificate Course Name</Label>
-                        <Input
-                          id="certificateCourseName"
+                        <SecureInstructorInput
+                          label="Certificate Course Name"
                           placeholder="Name to print on certificate"
                           value={courseLandingFormData?.certificateCourseName || ""}
                           onChange={(e) => setCourseLandingFormData({
                             ...courseLandingFormData,
                             certificateCourseName: e.target.value,
                           })}
+                          maxLength={100}
+                          required
                         />
                       </div>
                       <div>
-                        <Label htmlFor="certificateTemplateUrl" className="text-sm font-medium text-gray-700 mb-2 block">Template Image URL</Label>
-                        <Input
-                          id="certificateTemplateUrl"
+                        <SecureInstructorInput
+                          label="Template Image URL"
+                          type="url"
                           placeholder="https://.../certificate.png"
                           value={courseLandingFormData?.certificateTemplateUrl || ""}
                           onChange={(e) => setCourseLandingFormData({
                             ...courseLandingFormData,
                             certificateTemplateUrl: e.target.value,
                           })}
+                          maxLength={500}
+                          description="Provide the exact template background image URL. We will overlay text precisely."
                         />
-                        <p className="text-xs text-gray-500 mt-1">Provide the exact template background image URL. We will overlay text precisely.</p>
                       </div>
                       <div>
-                        <Label htmlFor="certificateIssuer" className="text-sm font-medium text-gray-700 mb-2 block">Issuer Title</Label>
-                        <Input
-                          id="certificateIssuer"
+                        <SecureInstructorInput
+                          label="Issuer Title"
                           placeholder="Chief Executive Officer"
                           value={courseLandingFormData?.certificateIssuer || ""}
                           onChange={(e) => setCourseLandingFormData({
                             ...courseLandingFormData,
                             certificateIssuer: e.target.value,
                           })}
+                          maxLength={100}
                         />
                       </div>
                       <div>
-                        <Label htmlFor="certificateOrganization" className="text-sm font-medium text-gray-700 mb-2 block">Issuer Organization</Label>
-                        <Input
-                          id="certificateOrganization"
+                        <SecureInstructorInput
+                          label="Issuer Organization"
                           placeholder="BRAVYNEX ENGINEERING"
                           value={courseLandingFormData?.certificateOrganization || ""}
                           onChange={(e) => setCourseLandingFormData({
                             ...courseLandingFormData,
                             certificateOrganization: e.target.value,
                           })}
+                          maxLength={100}
                         />
                       </div>
                       <div>
-                        <Label htmlFor="certificateFrom" className="text-sm font-medium text-gray-700 mb-2 block">From (Printed)</Label>
-                        <Input
-                          id="certificateFrom"
+                        <SecureInstructorInput
+                          label="From (Printed)"
                           placeholder="BRAVYNEX ENGINEERING"
                           value={courseLandingFormData?.certificateFrom || ""}
                           onChange={(e) => setCourseLandingFormData({
                             ...courseLandingFormData,
                             certificateFrom: e.target.value,
                           })}
+                          maxLength={100}
                         />
                       </div>
                       <div>
-                        <Label htmlFor="defaultCertificateGrade" className="text-sm font-medium text-gray-700 mb-2 block">Default Grade</Label>
-                        <Input
-                          id="defaultCertificateGrade"
+                        <SecureInstructorInput
+                          label="Default Grade"
                           placeholder="A"
                           value={courseLandingFormData?.defaultCertificateGrade || ""}
                           onChange={(e) => setCourseLandingFormData({
                             ...courseLandingFormData,
                             defaultCertificateGrade: e.target.value,
                           })}
+                          maxLength={10}
+                          description="Used if your grading logic isn't provided elsewhere."
                         />
-                        <p className="text-xs text-gray-500 mt-1">Used if your grading logic isn&apos;t provided elsewhere.</p>
                       </div>
                     </div>
                   )}

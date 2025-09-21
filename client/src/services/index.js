@@ -23,9 +23,12 @@ export async function mediaUploadService(formData, onProgressCallback) {
       );
       onProgressCallback(percentCompleted);
     },
-    timeout: 300000, // 5 minutes timeout for large files
+    timeout: 600000, // 10 minutes timeout for large video files
     maxContentLength: Infinity,
     maxBodyLength: Infinity,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
   return data;
 }
@@ -85,9 +88,12 @@ export async function mediaBulkUploadService(formData, onProgressCallback) {
       );
       onProgressCallback(percentCompleted);
     },
-    timeout: 600000, // 10 minutes timeout for bulk uploads
+    timeout: 900000, // 15 minutes timeout for bulk uploads
     maxContentLength: Infinity,
     maxBodyLength: Infinity,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
   return data;
 }

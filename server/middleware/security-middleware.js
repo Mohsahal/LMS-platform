@@ -10,7 +10,6 @@ const createAdvancedRateLimit = (options) => {
     windowMs,
     max,
     message = "Too many requests, please try again later.",
-    keyGenerator = (req) => req.ip,
     skipSuccessfulRequests = false,
     skipFailedRequests = false,
     blockDuration = 0, // Additional block time after limit exceeded
@@ -21,7 +20,6 @@ const createAdvancedRateLimit = (options) => {
     max,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator,
     skipSuccessfulRequests,
     skipFailedRequests,
     handler: (req, res) => {
@@ -45,12 +43,6 @@ const bruteForceProtection = createAdvancedRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 attempts per 15 minutes
   message: "Too many failed login attempts. Please try again in 15 minutes.",
-  keyGenerator: (req) => {
-    // Use IP + User-Agent for more precise tracking
-    const ip = req.ip;
-    const userAgent = req.headers['user-agent'] || 'unknown';
-    return crypto.createHash('sha256').update(ip + userAgent).digest('hex');
-  },
 });
 
 // Registration protection
@@ -221,8 +213,21 @@ const markSuspiciousIP = (ip, blockDuration = 60 * 60 * 1000) => {
   });
 };
 
+// Security logger object with different log levels
+const securityLogger = {
+  info: (message, data = {}) => {
+    console.log(`[SECURITY-INFO] ${message}`, data);
+  },
+  warn: (message, data = {}) => {
+    console.warn(`[SECURITY-WARN] ${message}`, data);
+  },
+  error: (message, data = {}) => {
+    console.error(`[SECURITY-ERROR] ${message}`, data);
+  }
+};
+
 // Request logging for security monitoring
-const securityLogger = (req, res, next) => {
+const securityLoggerMiddleware = (req, res, next) => {
   const startTime = Date.now();
   
   res.on('finish', () => {
@@ -238,9 +243,10 @@ const securityLogger = (req, res, next) => {
       referer: req.headers.referer,
     };
 
-    // Log suspicious activities
-    if (res.statusCode >= 400 || duration > 5000) {
-      console.warn('Suspicious activity detected:', logData);
+    // Log suspicious activities (but not for media uploads which can take longer)
+    const isMediaUpload = req.url.includes('/media/') || req.url.includes('/upload');
+    if (res.statusCode >= 400 || (duration > 5000 && !isMediaUpload)) {
+      securityLogger.warn('Suspicious activity detected', logData);
     }
   });
 
@@ -278,5 +284,6 @@ module.exports = {
   checkSuspiciousIP,
   markSuspiciousIP,
   securityLogger,
+  securityLoggerMiddleware,
   cspOptions,
 };

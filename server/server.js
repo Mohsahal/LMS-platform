@@ -4,7 +4,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const { generalApiLimiter } = require("./middleware/rate-limiters");
-const { cspOptions, securityLogger } = require("./middleware/security-middleware");
+const { cspOptions, securityLoggerMiddleware } = require("./middleware/security-middleware");
 const cookieParser = require("cookie-parser");
 const csrf = require("csurf");
 const mongoSanitize = require("express-mongo-sanitize");
@@ -20,6 +20,7 @@ const studentCoursesRoutes = require("./routes/student-routes/student-courses-ro
 const studentCourseProgressRoutes = require("./routes/student-routes/course-progress-routes");
 const studentAnalyticsRoutes = require("./routes/student-routes/analytics-routes");
 const notifyRoutes = require("./routes/notify-routes");
+const secureInstructorRoutes = require("./routes/instructor-routes/secure-instructor-routes");
 
 
 const app = express();
@@ -51,7 +52,7 @@ app.use(helmet({
 }));
 
 // Security logging
-app.use(securityLogger);
+app.use(securityLoggerMiddleware);
 
 // Parse cookies (for CSRF token cookie)
 app.use(cookieParser());
@@ -155,6 +156,9 @@ app.use("/student/courses-bought", studentCoursesRoutes);
 app.use("/student/course-progress", studentCourseProgressRoutes);
 app.use("/student/analytics", studentAnalyticsRoutes);
 app.use("/notify", notifyRoutes);
+
+// Secure instructor routes with comprehensive security
+app.use("/secure/instructor", secureInstructorRoutes);
 
 
 app.use((err, req, res, next) => {

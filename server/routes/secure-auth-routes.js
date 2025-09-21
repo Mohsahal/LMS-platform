@@ -13,13 +13,13 @@ const {
   passwordResetProtection,
   sanitizeInput,
   xssProtection,
-  securityLogger
+  securityLoggerMiddleware
 } = require("../middleware/security-middleware");
 const authenticateMiddleware = require("../middleware/auth-middleware");
 const router = express.Router();
 
 // Apply security middleware to all routes
-router.use(securityLogger);
+router.use(securityLoggerMiddleware);
 router.use(xssProtection);
 router.use(sanitizeInput);
 

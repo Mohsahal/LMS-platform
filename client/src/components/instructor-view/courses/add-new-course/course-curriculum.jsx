@@ -9,12 +9,11 @@ import VideoPlayer from "@/components/video-player";
 import { courseCurriculumInitialFormData } from "@/config";
 import { InstructorContext } from "@/context/instructor-context";
 import {
-  mediaBulkUploadService,
   mediaDeleteService,
-  mediaUploadService,
 } from "@/services";
+import uploadService from "@/services/uploadService";
 import { Upload, Trash2, Video, ArrowLeft } from "lucide-react"; // Added ArrowLeft icon
-import { useContext, useRef, useLayoutEffect } from "react";
+import { useContext, useRef, useLayoutEffect, useState } from "react";
 import gsap from "gsap";
 import { useNavigate } from "react-router-dom"; // Imported useNavigate
 
@@ -88,15 +87,32 @@ function CourseCurriculum() {
     const selectedFile = event.target.files[0];
 
     if (selectedFile) {
+      // Validate file size (2GB limit)
+      const maxSize = 2 * 1024 * 1024 * 1024; // 2GB
+      if (selectedFile.size > maxSize) {
+        alert(`File size exceeds 2GB limit. Please choose a smaller file.`);
+        return;
+      }
+
+      // Validate file type
+      if (!selectedFile.type.startsWith('video/')) {
+        alert('Please select a valid video file.');
+        return;
+      }
+
       const videoFormData = new FormData();
       videoFormData.append("file", selectedFile);
 
       try {
         setMediaUploadProgress(true);
-        const response = await mediaUploadService(
+        setMediaUploadProgressPercentage(0);
+        
+        // Use enhanced upload service with better error handling
+        const response = await uploadService.uploadFile(
           videoFormData,
           setMediaUploadProgressPercentage
         );
+        
         if (response.success) {
           let cpyCourseCurriculumFormData = [...courseCurriculumFormData];
           cpyCourseCurriculumFormData[currentIndex] = {
@@ -106,9 +122,24 @@ function CourseCurriculum() {
           };
           setCourseCurriculumFormData(cpyCourseCurriculumFormData);
           setMediaUploadProgress(false);
+          setMediaUploadProgressPercentage(0);
+        } else {
+          alert('Upload failed. Please try again.');
         }
       } catch (error) {
-        console.log(error);
+        console.log('Upload error:', error);
+        if (error?.message?.includes('token')) {
+          alert('Authentication issue. Please refresh the page and try again.');
+        } else if (error?.code === 'ECONNABORTED') {
+          alert('Upload timeout. Please try again with a smaller file or check your internet connection.');
+        } else {
+          alert(`Upload failed: ${error?.message || 'Please try again.'}`);
+        }
+      } finally {
+        setMediaUploadProgress(false);
+        setMediaUploadProgressPercentage(0);
+        // Reset the file input
+        event.target.value = '';
       }
     }
   }
@@ -150,7 +181,7 @@ function CourseCurriculum() {
 
   function areAllCourseCurriculumFormDataObjectsEmpty(arr) {
     return arr.every((obj) => {
-      return Object.entries(obj).every(([key, value]) => {
+      return Object.entries(obj).every(([, value]) => {
         if (typeof value === "boolean") {
           return true;
         }
@@ -161,13 +192,27 @@ function CourseCurriculum() {
 
   async function handleMediaBulkUpload(event) {
     const selectedFiles = Array.from(event.target.files);
-    const bulkFormData = new FormData();
+    
+    // Validate files before upload
+    const maxSize = 2 * 1024 * 1024 * 1024; // 2GB per file
+    const invalidFiles = selectedFiles.filter(file => 
+      file.size > maxSize || !file.type.startsWith('video/')
+    );
+    
+    if (invalidFiles.length > 0) {
+      alert(`Some files are invalid. Please ensure all files are videos under 2GB.`);
+      return;
+    }
 
+    const bulkFormData = new FormData();
     selectedFiles.forEach((fileItem) => bulkFormData.append("files", fileItem));
 
     try {
       setMediaUploadProgress(true);
-      const response = await mediaBulkUploadService(
+      setMediaUploadProgressPercentage(0);
+      
+      // Use enhanced upload service for bulk uploads
+      const response = await uploadService.uploadBulkFiles(
         bulkFormData,
         setMediaUploadProgressPercentage
       );
@@ -181,7 +226,7 @@ function CourseCurriculum() {
 
         cpyCourseCurriculumFormdata = [
           ...cpyCourseCurriculumFormdata,
-          ...response?.data.map((item, index) => ({
+          ...(response?.data || []).map((item, index) => ({
             videoUrl: item?.url,
             public_id: item?.public_id,
             title: `Lecture ${
@@ -192,9 +237,24 @@ function CourseCurriculum() {
         ];
         setCourseCurriculumFormData(cpyCourseCurriculumFormdata);
         setMediaUploadProgress(false);
+        setMediaUploadProgressPercentage(0);
+      } else {
+        alert('Bulk upload failed. Please try again.');
       }
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.log('Bulk upload error:', error);
+      if (error?.message?.includes('token')) {
+        alert('Authentication issue. Please refresh the page and try again.');
+      } else if (error?.code === 'ECONNABORTED') {
+        alert('Upload timeout. Please try again with smaller files or check your internet connection.');
+      } else {
+        alert(`Bulk upload failed: ${error?.message || 'Please try again.'}`);
+      }
+    } finally {
+      setMediaUploadProgress(false);
+      setMediaUploadProgressPercentage(0);
+      // Reset the file input
+      event.target.value = '';
     }
   }
 

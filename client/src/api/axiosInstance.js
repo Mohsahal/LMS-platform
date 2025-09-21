@@ -1,5 +1,6 @@
 import axios from "axios";
 import { toast } from "@/hooks/use-toast";
+import tokenManager from "@/utils/tokenManager";
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://192.168.149.1:5000",
@@ -72,14 +73,14 @@ axiosInstance.interceptors.request.use(
       if (token) config.headers["X-CSRF-Token"] = token;
     }
 
-    let accessToken = null;
-    try {
-      const raw = localStorage.getItem("accessToken");
-      accessToken = raw ? JSON.parse(raw) : null;
-    } catch (_) {
-      accessToken = null;
-    }
+    // Get current token and check if it's valid
+    const accessToken = tokenManager.getCurrentToken();
     if (typeof accessToken === "string" && accessToken.trim().length > 0) {
+      // For media uploads, check if token will expire soon and warn user
+      const isMediaUpload = /\/media\/(upload|bulk-upload)/.test(config.url || "");
+      if (isMediaUpload && tokenManager.willTokenExpireSoon(accessToken, 10)) {
+        console.warn("Token will expire soon during upload. Consider refreshing the page.");
+      }
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
@@ -97,15 +98,23 @@ axiosInstance.interceptors.response.use(
     const isAuthLogin = /\/auth\/login($|\?)/.test(url);
     const isAuthRegister = /\/auth\/register($|\?)/.test(url);
     const isAuthEndpoint = isAuthLogin || isAuthRegister;
+    const isMediaUpload = /\/media\/(upload|bulk-upload)/.test(url);
+    
     if (status === 401 || status === 403) {
       const message = error?.response?.data?.message || (status === 401 ? "Unauthorized" : "Forbidden");
+      
+      // Special handling for media uploads - don't auto-logout on token expiry
+      if (isMediaUpload && status === 401 && message === "Token expired") {
+        toast({ 
+          title: "Upload failed", 
+          description: "Your session expired during upload. Please refresh the page and try again." 
+        });
+        return Promise.reject(error);
+      }
+      
       if (!isAuthEndpoint) {
         // Only clear token and redirect for protected, non-auth endpoints
-        try {
-          localStorage.removeItem("accessToken");
-        } catch {
-          // ignore
-        }
+        tokenManager.removeToken();
         toast({ title: "Session issue", description: message });
         if (typeof window !== "undefined") {
           window.location.href = "/auth";
