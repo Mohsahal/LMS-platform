@@ -27,11 +27,33 @@ const app = express();
 app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mohammedsahal1243:sahal124867@cluster0.1eaz3.mongodb.net/e-learn";
+// CORS configuration with dynamic origin support for development
+const allowedOrigins = [
+  'http://192.168.57.76:5173'
+];
+
 app.use(
   cors({
-    origin: [
-      'http://192.168.24.76:5173'
-    ],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // Check if origin is in allowed list
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      }
+      
+      // For development, allow any localhost or 192.168.x.x origin
+      if (process.env.NODE_ENV === 'development') {
+        const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+)(:\d+)?$/.test(origin);
+        if (isLocalhost) {
+          return callback(null, true);
+        }
+      }
+      
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    },
     methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
     credentials: true,

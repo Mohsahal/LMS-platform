@@ -3,6 +3,7 @@ import { SecureInput, PasswordStrengthIndicator, useRateLimit, useCSRFToken } fr
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Info } from 'lucide-react';
 
 const SecureAuthForm = ({ 
   type = 'login', // 'login', 'register', 'forgot', 'reset'
@@ -29,6 +30,7 @@ const SecureAuthForm = ({
   const [isFormValid, setIsFormValid] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
 
   // Real-time form validation
   useEffect(() => {
@@ -292,18 +294,31 @@ const SecureAuthForm = ({
       </CardHeader>
       <CardContent className="space-y-4 px-6 pb-6">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div className="relative">
             <SecureInput
               type="text"
               placeholder="Username *"
               value={formData.userName}
               onChange={handleInputChange('userName')}
+              onFocus={() => setFocusedField('userName')}
+              onBlur={() => setFocusedField(null)}
               required
               maxLength={30}
               className="w-full"
             />
             {validationErrors.userName && (
               <p className="text-red-500 text-sm mt-1">{validationErrors.userName}</p>
+            )}
+            {/* Certificate note for username field */}
+            {focusedField === 'userName' && (
+              <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-blue-50 border border-blue-200 rounded-md shadow-sm z-10">
+                <div className="flex items-start gap-2">
+                  <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-blue-800">
+                    This username will appear on your course completion certificate
+                  </p>
+                </div>
+              </div>
             )}
           </div>
 
@@ -322,18 +337,31 @@ const SecureAuthForm = ({
             )}
           </div>
 
-          <div>
+          <div className="relative">
             <SecureInput
               type="text"
               placeholder="Guardian Name *"
               value={formData.guardianName}
               onChange={handleInputChange('guardianName')}
+              onFocus={() => setFocusedField('guardianName')}
+              onBlur={() => setFocusedField(null)}
               required
               maxLength={50}
               className="w-full"
             />
             {validationErrors.guardianName && (
               <p className="text-red-500 text-sm mt-1">{validationErrors.guardianName}</p>
+            )}
+            {/* Certificate note for guardian name field */}
+            {focusedField === 'guardianName' && (
+              <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-blue-50 border border-blue-200 rounded-md shadow-sm z-10">
+                <div className="flex items-start gap-2">
+                  <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-blue-800">
+                    Guardian name will also appear on your course completion certificate
+                  </p>
+                </div>
+              </div>
             )}
           </div>
 

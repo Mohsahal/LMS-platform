@@ -13,10 +13,6 @@ import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { 
-  useScrollAnimation, 
-  useStaggerAnimation, 
-  useCardAnimation, 
-  useButtonAnimation,
   usePageTransition
 } from "@/hooks/use-gsap";
 
@@ -30,9 +26,6 @@ function StudentHomePage() {
   const navigate = useNavigate();
 
   // Animation refs
-  const heroRef = useScrollAnimation('fadeInUp');
-  const categoriesRef = useStaggerAnimation('staggerFadeInScale');
-  const coursesRef = useStaggerAnimation('staggerFadeInUp');
   const pageRef = usePageTransition();
 
   function handleNavigateToCoursesPage(getCurrentId) {
@@ -114,7 +107,7 @@ function StudentHomePage() {
 
     // Category card animations
     const categoryCards = document.querySelectorAll('.category-card');
-    categoryCards.forEach((card, index) => {
+    categoryCards.forEach((card) => {
       const hoverIn = gsap.timeline({ paused: true });
       const hoverOut = gsap.timeline({ paused: true });
       
@@ -140,7 +133,7 @@ function StudentHomePage() {
 
     // Course card animations
     const courseCards = document.querySelectorAll('.course-card');
-    courseCards.forEach((card, index) => {
+    courseCards.forEach((card) => {
       const hoverIn = gsap.timeline({ paused: true });
       const hoverOut = gsap.timeline({ paused: true });
       
@@ -225,6 +218,8 @@ function StudentHomePage() {
 
   const [current, setCurrent] = useState(0);
   const timeoutRef = useRef(null);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
   // Featured Courses: show 3 rows initially (approx 12 items), then load more in chunks
   const INITIAL_FEATURED_COUNT = 12;
   const LOAD_MORE_CHUNK = 12;
@@ -259,47 +254,71 @@ function StudentHomePage() {
     goTo(current - 1);
   }
 
+  // Touch gesture handlers for mobile slider
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      next();
+    } else if (isRightSwipe) {
+      prev();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Slider */}
-      <section className="px-4 lg:px-8 pt-6">
-        <div className="relative bg-white rounded-2xl shadow-transparent overflow-hidden border-0">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center p-6 lg:p-10">
+      <section className="px-3 sm:px-4 lg:px-8 pt-4 sm:pt-6">
+        <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-transparent overflow-hidden border-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-10 items-center p-4 sm:p-6 lg:p-10">
             {/* Left: Copy */}
-            <div>
-              <span className="inline-flex items-center text-sm px-4 py-2 rounded-full bg-gradient-to-r from-gray-700 to-gray-600 text-white font-semibold shadow-lg">
+            <div className="order-2 lg:order-1">
+              <span className="inline-flex items-center text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-gray-700 to-gray-600 text-white font-semibold shadow-lg">
                 {slides[current].badge}
               </span>
-              <h1 className="mt-6 text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight whitespace-pre-line">
+              <h1 className="mt-4 sm:mt-6 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight whitespace-pre-line">
                 {slides[current].title}
               </h1>
-              <p className="mt-6 text-gray-600 text-lg max-w-xl leading-relaxed">
+              <p className="mt-4 sm:mt-6 text-gray-600 text-sm sm:text-base lg:text-lg max-w-xl leading-relaxed">
                 {slides[current].sub}
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-6 text-sm text-gray-700">
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                  <div className="w-2 h-2 bg-gray-700 rounded-full"></div>
-                  <span className="font-medium">{slides[current].statLeft.label}</span>
+              <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3 sm:gap-4 lg:gap-6 text-xs sm:text-sm text-gray-700">
+                <div className="flex items-center gap-1.5 sm:gap-2 bg-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-sm border border-gray-200">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-700 rounded-full"></div>
+                  <span className="font-medium text-xs sm:text-sm">{slides[current].statLeft.label}</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                  <span className="font-medium">{slides[current].statMid.label}</span>
+                <div className="flex items-center gap-1.5 sm:gap-2 bg-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-sm border border-gray-200">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-500 rounded-full"></div>
+                  <span className="font-medium text-xs sm:text-sm">{slides[current].statMid.label}</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <span className="font-medium">{slides[current].statRight.label}</span>
+                <div className="flex items-center gap-1.5 sm:gap-2 bg-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-sm border border-gray-200">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full"></div>
+                  <span className="font-medium text-xs sm:text-sm">{slides[current].statRight.label}</span>
                 </div>
               </div>
-              <div className="mt-10 flex gap-4">
+              <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Button 
                   onClick={() => navigate("/courses")}
-                  className="bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-800 hover:to-black text-white font-semibold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                  className="bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-800 hover:to-black text-white font-semibold px-6 sm:px-8 py-2.5 sm:py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-sm sm:text-base w-full sm:w-auto"
                 >
                   Explore Programming
                 </Button>
                 <Button 
                   variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-8 py-3 transition-all duration-200"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-6 sm:px-8 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base w-full sm:w-auto"
                 >
                   Watch Preview
                 </Button>
@@ -307,39 +326,44 @@ function StudentHomePage() {
             </div>
 
             {/* Right: Visual (buttons are anchored to this container for perfect alignment) */}
-            <div className="relative">
+            <div 
+              className="relative order-1 lg:order-2"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <img
                 key={slides[current].id}
                 src={slides[current].image}
                 alt="E-learning hero"
                 loading="eager"
-                className="w-full h-[320px] lg:h-[420px] object-cover rounded-xl transition-opacity duration-500 shadow-lg"
+                className="w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[420px] object-cover rounded-lg sm:rounded-xl transition-opacity duration-500 shadow-lg"
               />
-              {/* Controls inside the image container so both arrows align on the same vertical axis */}
+              {/* Mobile Controls - Always visible on mobile */}
               <button
                 onClick={prev}
                 aria-label="Previous slide"
-                className="hidden lg:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200"
+                className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200 flex touch-manipulation"
               >
-                ‹
+                <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-700">‹</span>
               </button>
               <button
                 onClick={next}
                 aria-label="Next slide"
-                className="hidden lg:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200"
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 items-center justify-center rounded-full bg-white/90 shadow-lg hover:bg-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200 flex touch-manipulation"
               >
-                ›
+                <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-700">›</span>
               </button>
             </div>
           </div>
 
-          {/* Dots */}
-          <div className="flex items-center justify-center gap-2 pb-6">
+          {/* Dots - Enhanced for mobile */}
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 pb-4 sm:pb-6">
             {slides.map((s, i) => (
               <button
                 key={`dot-${s.id}`}
                 onClick={() => goTo(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${i === current ? "w-8 bg-gradient-to-r from-gray-700 to-black" : "w-2 bg-gray-300 hover:bg-gray-400"}`}
+                className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 touch-manipulation ${i === current ? "w-6 sm:w-8 bg-gradient-to-r from-gray-700 to-black" : "w-1.5 sm:w-2 bg-gray-300 hover:bg-gray-400"}`}
                 aria-label={`Go to slide ${i + 1}`}
               />
             ))}

@@ -31,21 +31,42 @@ const secureRegisterUser = async (req, res) => {
     });
   }
 
-  // Username validation
-  if (!validator.isLength(userName, { min: 3, max: 30 })) {
+  // Username validation - trim and validate
+  const trimmedUserName = userName ? userName.trim() : '';
+  
+  // Check if username is empty after trimming
+  if (!trimmedUserName) {
     return res.status(400).json({
       success: false,
-      message: "Username must be between 3 and 30 characters",
+      message: "Username cannot be empty or contain only spaces",
+      code: "EMPTY_USERNAME"
+    });
+  }
+
+  // Check length after trimming
+  if (!validator.isLength(trimmedUserName, { min: 3, max: 30 })) {
+    return res.status(400).json({
+      success: false,
+      message: "Username must be between 3 and 30 characters (spaces will be trimmed)",
       code: "INVALID_USERNAME_LENGTH"
     });
   }
 
-  // Check for suspicious username patterns
-  if (/(admin|root|system|test|demo)/i.test(userName)) {
+  // Check for suspicious username patterns (case insensitive)
+  if (/(admin|root|system|test|demo)/i.test(trimmedUserName)) {
     return res.status(400).json({
       success: false,
       message: "Username contains restricted words",
       code: "RESTRICTED_USERNAME"
+    });
+  }
+
+  // Check for excessive spaces or special characters
+  if (/\s{2,}/.test(trimmedUserName) || /[<>\"'&]/.test(trimmedUserName)) {
+    return res.status(400).json({
+      success: false,
+      message: "Username contains invalid characters or excessive spaces",
+      code: "INVALID_USERNAME_FORMAT"
     });
   }
 
@@ -79,7 +100,7 @@ const secureRegisterUser = async (req, res) => {
     ? validator.escape(guardianName.trim())
     : undefined;
 
-  if (guardianDetails && !validator.isLength(guardianDetails, { min: 2, max: 50 })) {
+  if (safeGuardianDetails && !validator.isLength(safeGuardianDetails, { min: 2, max: 50 })) {
     return res.status(400).json({
       success: false,
       message: "Guardian name must be between 2 and 50 characters",
@@ -92,7 +113,7 @@ const secureRegisterUser = async (req, res) => {
     const existingUser = await User.findOne({
       $or: [
         { userEmail: emailValidation.normalizedEmail },
-        { userName: validator.escape(userName.trim()) }
+        { userName: validator.escape(trimmedUserName) }
       ],
     });
 
@@ -111,7 +132,7 @@ const secureRegisterUser = async (req, res) => {
 
     // Create user with security fields
     const newUser = new User({
-      userName: validator.escape(userName.trim()),
+      userName: validator.escape(trimmedUserName),
       userEmail: emailValidation.normalizedEmail,
       role: "user",
       password: hashPassword,
@@ -147,10 +168,31 @@ const secureRegisterUser = async (req, res) => {
   } catch (error) {
     console.error("Secure registration error:", error);
     
-    // Don't expose internal errors
+    // Handle specific database errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: "Validation error: " + validationErrors.join(', '),
+        code: "VALIDATION_ERROR"
+      });
+    }
+    
+    if (error.code === 11000) {
+      // Duplicate key error
+      return res.status(400).json({
+        success: false,
+        message: "An account with this information already exists",
+        code: "USER_EXISTS"
+      });
+    }
+    
+    // Don't expose internal errors in production
     return res.status(500).json({
       success: false,
-      message: "Internal server error during registration",
+      message: process.env.NODE_ENV === 'development' 
+        ? `Internal server error: ${error.message}` 
+        : "Internal server error during registration",
       code: "INTERNAL_ERROR"
     });
   }

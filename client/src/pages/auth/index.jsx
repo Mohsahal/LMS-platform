@@ -213,13 +213,13 @@ function AuthPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4 px-6 pb-6">
-                    {registrationSuccess && (
+                    {/* {registrationSuccess && (
                       <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                         <p className="text-green-800 text-sm font-medium">
                           ✅ Registration successful! Please sign in with your credentials.
                         </p>
                       </div>
-                    )}
+                    )} */}
 
                     <CommonForm
                       formControls={signUpFormControls}

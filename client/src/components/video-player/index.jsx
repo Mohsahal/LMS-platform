@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import { Slider } from "../ui/slider";
 import { Button } from "../ui/button";
+import PropTypes from "prop-types";
 import {
   Maximize,
   Minimize,
@@ -107,9 +108,6 @@ function VideoPlayer({
     }
   }
 
-  function pad(string) {
-    return ("0" + string).slice(-2);
-  }
 
 
   const handleFullScreen = useCallback(() => {
@@ -206,7 +204,7 @@ function VideoPlayer({
           step={0.1}
           onValueChange={(value) => handleSeekChange([value[0] / 100])}
           onValueCommit={handleSeekMouseUp}
-          className="w-full mb-2 sm:mb-3 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600"
+          className="w-full mb-2 sm:mb-3 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 sm:[&::-webkit-slider-thumb]:h-5 sm:[&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:touch-manipulation"
         />
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-1 sm:space-x-2">
@@ -256,7 +254,7 @@ function VideoPlayer({
                 max={100}
                 step={1}
                 onValueChange={(value) => handleVolumeChange([value[0] / 100])}
-                className="w-20 sm:w-24 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600"
+                className="w-20 sm:w-24 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 sm:[&::-webkit-slider-thumb]:h-5 sm:[&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:touch-manipulation"
               />
             </div>
           </div>
@@ -282,5 +280,12 @@ function VideoPlayer({
     </div>
   );
 }
+
+VideoPlayer.propTypes = {
+  width: PropTypes.string,
+  height: PropTypes.string,
+  url: PropTypes.string,
+  onVideoEnded: PropTypes.func,
+};
 
 export default VideoPlayer;
