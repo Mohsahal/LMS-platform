@@ -19,7 +19,7 @@ import {
   resetCourseProgressService,
   downloadCertificateService,
 } from "@/services";
-import { Check, ChevronLeft, ChevronRight, Play, Award, Download, Lock } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Play, Award, Download, Lock, X } from "lucide-react";
 import { useContext, useEffect, useState, useCallback } from "react";
 import Confetti from "react-confetti";
 import { useNavigate, useParams } from "react-router-dom";
@@ -262,45 +262,49 @@ function StudentViewCourseProgressPage() {
     <div className="flex flex-col h-screen bg-[#1c1d1f] text-white">
       {showConfetti && <Confetti />}
       
+      
       {/* Video Completion Notification */}
       {showVideoCompleteNotification && (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-green-600 text-white p-6 rounded-lg shadow-2xl border-2 border-green-400 animate-pulse">
-          <div className="flex items-center space-x-3">
-            <Check className="h-8 w-8 text-green-200" />
-            <div>
-              <h3 className="text-lg font-bold">Video Completed!</h3>
-              <p className="text-sm text-green-100">{completedVideoTitle}</p>
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-green-600 text-white p-4 sm:p-6 rounded-lg shadow-2xl border-2 border-green-400 animate-pulse mx-2 sm:mx-4 max-w-[90vw] sm:max-w-md">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Check className="h-6 w-6 sm:h-8 sm:w-8 text-green-200 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm sm:text-lg font-bold">Video Completed!</h3>
+              <p className="text-xs sm:text-sm text-green-100 truncate">{completedVideoTitle}</p>
             </div>
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between p-4 bg-[#1c1d1f] border-b border-gray-700">
-        <div className="flex items-center space-x-4">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 sm:p-4 bg-[#1c1d1f] border-b border-gray-700">
+        <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
           <Button
             onClick={() => navigate("/student-courses")}
-            className="text-white"
+            className="text-white flex-shrink-0"
             variant="ghost"
             size="sm"
           >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Back to My Courses Page
+            <ChevronLeft className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to My Courses</span>
+            <span className="sm:hidden">Back</span>
           </Button>
-          <div>
-            <h1 className="text-lg font-bold hidden md:block">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-sm sm:text-lg font-bold truncate">
               {studentCurrentCourseProgress?.courseDetails?.title}
             </h1>
             {/* Progress Indicator */}
             <div className="flex items-center space-x-2 mt-1">
-              <div className="w-32 bg-gray-700 rounded-full h-2">
+              <div className="w-20 sm:w-32 bg-gray-700 rounded-full h-1.5 sm:h-2">
                 <div 
-                  className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-green-500 h-1.5 sm:h-2 rounded-full transition-all duration-300"
                   style={{ 
                     width: `${((studentCurrentCourseProgress?.progress?.filter(p => p.viewed).length || 0) / (studentCurrentCourseProgress?.courseDetails?.curriculum?.length || 1)) * 100}%` 
                   }}
                 ></div>
               </div>
-              <span className="text-sm text-gray-300">
-                {studentCurrentCourseProgress?.progress?.filter(p => p.viewed).length || 0} / {studentCurrentCourseProgress?.courseDetails?.curriculum?.length || 0} completed
+              <span className="text-xs sm:text-sm text-gray-300 whitespace-nowrap">
+                {studentCurrentCourseProgress?.progress?.filter(p => p.viewed).length || 0} / {studentCurrentCourseProgress?.courseDetails?.curriculum?.length || 0}
               </span>
             </div>
           </div>
@@ -312,56 +316,104 @@ function StudentViewCourseProgressPage() {
               isCourseCompleted 
                 ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800" 
                 : "bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700"
-            } text-white`}
+            } text-white text-xs sm:text-sm px-2 sm:px-3`}
             size="sm"
           >
-            <Award className="h-4 w-4 mr-2" />
-            {isCourseCompleted ? "Certificate Ready" : "Certificate"}
+            <Award className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{isCourseCompleted ? "Certificate Ready" : "Certificate"}</span>
+            <span className="sm:hidden">Cert</span>
           </Button>
-          <Button onClick={() => setIsSideBarOpen(!isSideBarOpen)}>
+          <Button 
+            onClick={() => setIsSideBarOpen(!isSideBarOpen)}
+            className="bg-gray-600 hover:bg-gray-700 text-white"
+            size="sm"
+          >
             {isSideBarOpen ? (
               <ChevronRight className="h-4 w-4" />
             ) : (
               <ChevronLeft className="h-4 w-4" />
             )}
+            <span className="hidden sm:inline ml-2">{isSideBarOpen ? "Hide" : "Show"} Content</span>
           </Button>
         </div>
       </div>
       <div className="flex flex-1 overflow-hidden">
         <div
           className={`flex-1 ${
-            isSideBarOpen ? "mr-[400px]" : ""
+            isSideBarOpen ? "lg:mr-[400px]" : ""
           } transition-all duration-300`}
         >
-          <VideoPlayer
-            width="100%"
-            height="500px"
-            url={currentLecture?.videoUrl}
-            onVideoEnded={handleVideoEnded}
-          />
-          <div className="p-6">
-            <h2 className="text-3xl font-bold mb-4">
+          <div className="w-full h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96">
+            <VideoPlayer
+              width="100%"
+              height="100%"
+              url={currentLecture?.videoUrl}
+              onVideoEnded={handleVideoEnded}
+            />
+          </div>
+          <div className="p-3 sm:p-6">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4">
               {currentLecture?.title || "Select a Lecture"}
             </h2>
-            <p className="text-gray-300 leading-relaxed mb-4">
+            <p className="text-gray-300 leading-relaxed mb-3 sm:mb-4 text-sm sm:text-base">
               {currentLecture?.description}
             </p>
             
+            {/* Mobile Progress Indicator */}
+            <div className="lg:hidden mt-4 p-3 bg-gray-800 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-300">Course Progress</span>
+                <span className="text-sm text-green-400 font-semibold">
+                  {Math.round(((studentCurrentCourseProgress?.progress?.filter(p => p.viewed).length || 0) / (studentCurrentCourseProgress?.courseDetails?.curriculum?.length || 1)) * 100)}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                  style={{ 
+                    width: `${((studentCurrentCourseProgress?.progress?.filter(p => p.viewed).length || 0) / (studentCurrentCourseProgress?.courseDetails?.curriculum?.length || 1)) * 100}%` 
+                  }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                {studentCurrentCourseProgress?.progress?.filter(p => p.viewed).length || 0} of {studentCurrentCourseProgress?.courseDetails?.curriculum?.length || 0} lectures completed
+              </p>
+            </div>
+            
+            {/* Desktop Progress Indicator */}
+            <div className="hidden lg:block mt-4 p-4 bg-gray-800 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-base text-gray-300 font-medium">Course Progress</span>
+                <span className="text-base text-green-400 font-semibold">
+                  {Math.round(((studentCurrentCourseProgress?.progress?.filter(p => p.viewed).length || 0) / (studentCurrentCourseProgress?.courseDetails?.curriculum?.length || 1)) * 100)}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-3">
+                <div 
+                  className="bg-green-500 h-3 rounded-full transition-all duration-300"
+                  style={{ 
+                    width: `${((studentCurrentCourseProgress?.progress?.filter(p => p.viewed).length || 0) / (studentCurrentCourseProgress?.courseDetails?.curriculum?.length || 1)) * 100}%` 
+                  }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-400 mt-2">
+                {studentCurrentCourseProgress?.progress?.filter(p => p.viewed).length || 0} of {studentCurrentCourseProgress?.courseDetails?.curriculum?.length || 0} lectures completed
+              </p>
+            </div>
           </div>
         </div>
         <div
           className={`fixed right-0 top-0 h-full bg-[#2d2f31] shadow-lg transform ${
             isSideBarOpen ? "translate-x-0" : "translate-x-full"
-          } transition-transform duration-300 ease-in-out z-20`}
-          style={{ width: "400px" }}
+          } transition-transform duration-300 ease-in-out z-20 w-full lg:w-[400px]`}
         >
-          <ScrollArea className="h-full p-4">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-              <h3 className="text-xl font-semibold">Course Content</h3>
+          <ScrollArea className="h-full p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg sm:text-xl font-semibold">Course Content</h3>
                 {isCourseCompleted && (
-                  <p className="text-sm text-green-400 flex items-center mt-1">
-                    <Award className="h-4 w-4 mr-1" />
+                  <p className="text-xs sm:text-sm text-green-400 flex items-center mt-1">
+                    <Award className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                     Course Completed
                   </p>
                 )}
@@ -370,8 +422,9 @@ function StudentViewCourseProgressPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsSideBarOpen(false)}
+                className="flex-shrink-0 text-gray-400 hover:text-white"
               >
-                <ChevronRight className="h-5 w-5" />
+                <X className="h-5 w-5" />
               </Button>
             </div>
             {studentCurrentCourseProgress?.courseDetails?.curriculum?.map(
@@ -393,7 +446,7 @@ function StudentViewCourseProgressPage() {
                 return (
                 <div
                   key={lecture._id}
-                    className={`flex items-center p-3 mb-3 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center p-3 sm:p-4 mb-2 sm:mb-3 rounded-lg transition-all duration-200 touch-manipulation ${
                       isCurrentLecture
                       ? "bg-blue-600 shadow-md"
                         : isAccessible
@@ -402,18 +455,18 @@ function StudentViewCourseProgressPage() {
                   }`}
                     onClick={() => isAccessible && setCurrentLecture(lecture)}
                 >
-                  <div className="flex-shrink-0 mr-3">
+                  <div className="flex-shrink-0 mr-2 sm:mr-3">
                       {isCompleted ? (
-                        <Check className="h-5 w-5 text-green-400" />
+                        <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
                       ) : isAccessible ? (
-                        <Play className="h-5 w-5 text-gray-400" />
+                        <Play className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     ) : (
-                        <Lock className="h-5 w-5 text-gray-500" />
+                        <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
                     )}
                   </div>
-                  <div className="flex-grow">
+                  <div className="flex-grow min-w-0">
                     <p
-                      className={`font-medium ${
+                      className={`font-medium text-sm sm:text-base truncate ${
                           isCurrentLecture
                           ? "text-white"
                             : isAccessible
@@ -424,7 +477,7 @@ function StudentViewCourseProgressPage() {
                       {lecture.title}
                     </p>
                     <p
-                      className={`text-sm ${
+                      className={`text-xs sm:text-sm ${
                           isCurrentLecture
                           ? "text-blue-200"
                             : isCompleted
@@ -436,12 +489,12 @@ function StudentViewCourseProgressPage() {
                     >
                       {isCompleted ? "Completed" : isCurrentLecture ? "▶️ Playing" : `Lecture ${index + 1}`}
                         {!isAccessible && sequentialAccess && (
-                          <span className="ml-2 text-xs text-red-400">(Locked)</span>
+                          <span className="ml-1 sm:ml-2 text-xs text-red-400">(Locked)</span>
                         )}
                     </p>
                   </div>
                   {lecture.freePreview && (
-                    <span className="ml-auto px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-200 rounded-full">
+                    <span className="ml-auto px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold text-blue-800 bg-blue-200 rounded-full flex-shrink-0">
                       Free
                     </span>
                   )}
@@ -456,29 +509,29 @@ function StudentViewCourseProgressPage() {
         <div
           className={`fixed right-0 top-0 h-full bg-[#2d2f31] shadow-lg transform ${
             showCertificateSidebar ? "translate-x-0" : "translate-x-full"
-          } transition-transform duration-300 ease-in-out z-30`}
-          style={{ width: "400px" }}
+          } transition-transform duration-300 ease-in-out z-30 w-full lg:w-[400px]`}
         >
-          <ScrollArea className="h-full p-4">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold">Your Certificate</h3>
+          <ScrollArea className="h-full p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h3 className="text-lg sm:text-xl font-semibold flex-1 min-w-0">Your Certificate</h3>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowCertificateSidebar(false)}
+                className="flex-shrink-0 text-gray-400 hover:text-white"
               >
-                <ChevronRight className="h-5 w-5" />
+                <X className="h-5 w-5" />
               </Button>
             </div>
             <div className="text-center">
               {isCourseCompleted ? (
                 <>
-                  <Award className="h-24 w-24 text-yellow-400 mx-auto mb-6" />
-                  <p className="text-lg mb-4 text-green-400">
+                  <Award className="h-16 w-16 sm:h-24 sm:w-24 text-yellow-400 mx-auto mb-4 sm:mb-6" />
+                  <p className="text-base sm:text-lg mb-3 sm:mb-4 text-green-400">
                     🎉 Congratulations! You have completed the course.
                   </p>
-                  <div className="mb-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
-                    <p className="text-sm text-green-300">
+                  <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
+                    <p className="text-xs sm:text-sm text-green-300">
                       Completed on: {studentCurrentCourseProgress?.completionDate ? 
                         new Date(studentCurrentCourseProgress.completionDate).toLocaleDateString() : 
                         'Recently'}
@@ -488,13 +541,13 @@ function StudentViewCourseProgressPage() {
                   {studentCurrentCourseProgress?.courseDetails?.certificateEnabled ? (
                     <Button
                       onClick={handleDownloadCertificate}
-                      className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center w-full mb-3"
+                      className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center w-full mb-2 sm:mb-3 text-sm sm:text-base py-3 sm:py-4 touch-manipulation"
                     >
-                      <Download className="h-5 w-5 mr-2" /> Download Certificate
+                      <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Download Certificate
                     </Button>
                   ) : (
-                    <div className="mb-3 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
-                      <p className="text-sm text-yellow-300">
+                    <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+                      <p className="text-xs sm:text-sm text-yellow-300">
                         Certificate generation is disabled for this course
                       </p>
                     </div>
@@ -503,38 +556,38 @@ function StudentViewCourseProgressPage() {
                   <Button
                     onClick={handleRewatchCourse}
                     variant="outline"
-                    className="w-full text-blue-400 border-blue-400 hover:bg-blue-900"
+                    className="w-full text-blue-400 border-blue-400 hover:bg-blue-900 text-sm sm:text-base py-3 sm:py-4 touch-manipulation"
                   >
                     <Play className="h-4 w-4 mr-2" /> Rewatch Course
                   </Button>
                 </>
               ) : (
                 <>
-                  <Lock className="h-24 w-24 text-gray-400 mx-auto mb-6" />
-                  <p className="text-lg text-gray-300 mb-4">
+                  <Lock className="h-16 w-16 sm:h-24 sm:w-24 text-gray-400 mx-auto mb-4 sm:mb-6" />
+                  <p className="text-base sm:text-lg text-gray-300 mb-3 sm:mb-4">
                     Complete all lectures to unlock your certificate.
                   </p>
-                  <div className="p-3 bg-gray-700 rounded-lg mb-4">
-                    <p className="text-sm text-gray-300">
+                  <div className="p-2 sm:p-3 bg-gray-700 rounded-lg mb-3 sm:mb-4">
+                    <p className="text-xs sm:text-sm text-gray-300">
                       Progress: {studentCurrentCourseProgress?.progress?.filter(p => p.viewed).length || 0} / {studentCurrentCourseProgress?.courseDetails?.curriculum?.length || 0} lectures completed
                     </p>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-gray-400 mt-1 sm:mt-2">
                       Watch each video completely to advance to the next one
                     </p>
                   </div>
                 </>
               )}
             </div>
-            <div className="mt-8 p-4 bg-gray-700 rounded-lg">
-              <h4 className="text-lg font-semibold mb-2">Course Completion</h4>
-              <p className="text-gray-300 mb-4">
+            <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-gray-700 rounded-lg">
+              <h4 className="text-base sm:text-lg font-semibold mb-2">Course Completion</h4>
+              <p className="text-gray-300 mb-3 sm:mb-4 text-sm sm:text-base">
                 To receive your certificate, ensure all lectures are marked as
                 viewed. Your progress is automatically saved.
               </p>
               <Button
                 onClick={handleRewatchCourse}
                 variant="outline"
-                className="w-full text-blue-400 border-blue-400 hover:bg-blue-900"
+                className="w-full text-blue-400 border-blue-400 hover:bg-blue-900 text-sm sm:text-base py-2 sm:py-3"
               >
                 Reset Course Progress
               </Button>
@@ -544,20 +597,20 @@ function StudentViewCourseProgressPage() {
 
         {/* Course Locked Dialog */}
         <Dialog open={lockCourse}>
-          <DialogContent className="sm:max-w-[425px] bg-gray-800 text-white p-6 rounded-lg shadow-xl">
+          <DialogContent className="w-[95vw] max-w-[425px] bg-gray-800 text-white p-4 sm:p-6 rounded-lg shadow-xl mx-2 sm:mx-4">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-red-500">
+              <DialogTitle className="text-lg sm:text-xl md:text-2xl font-bold text-red-500 text-center sm:text-left">
                 Course Not Purchased
               </DialogTitle>
-              <DialogDescription className="text-gray-300 mt-2">
+              <DialogDescription className="text-gray-300 mt-2 text-sm sm:text-base text-center sm:text-left">
                 It looks like you haven&apos;t purchased this course yet. Please
                 purchase the course to access its content.
               </DialogDescription>
             </DialogHeader>
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-center sm:justify-end gap-2 sm:gap-3">
               <Button
                 onClick={() => navigate("/student-courses")}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base px-4 sm:px-6 py-3 sm:py-3 w-full sm:w-auto touch-manipulation"
               >
                 Go to Courses
               </Button>
@@ -567,28 +620,28 @@ function StudentViewCourseProgressPage() {
 
         {/* Course Complete Dialog */}
         <Dialog open={showCourseCompleteDialog} onOpenChange={setShowCourseCompleteDialog}>
-          <DialogContent className="sm:max-w-[500px] bg-white text-gray-900 p-6 rounded-lg shadow-xl">
+          <DialogContent className="w-[95vw] max-w-[500px] bg-white text-gray-900 p-4 sm:p-6 rounded-lg shadow-xl mx-2 sm:mx-4">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-green-600 flex items-center">
-                <Award className="h-6 w-6 mr-2" />
+              <DialogTitle className="text-lg sm:text-xl md:text-2xl font-bold text-green-600 flex items-center justify-center sm:justify-start">
+                <Award className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
                 Course Completed!
               </DialogTitle>
-              <DialogDescription className="text-gray-600 mt-2">
+              <DialogDescription className="text-gray-600 mt-2 text-sm sm:text-base text-center sm:text-left">
                 Congratulations! You have successfully completed all lectures. 
                 Your certificate is now available for download.
               </DialogDescription>
             </DialogHeader>
-            <div className="mt-6 flex flex-col space-y-3">
+            <div className="mt-4 sm:mt-6 flex flex-col space-y-3 sm:space-y-3">
               {studentCurrentCourseProgress?.courseDetails?.certificateEnabled ? (
                 <Button
                   onClick={handleDownloadCertificate}
-                  className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center py-3"
+                  className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center py-3 sm:py-3 text-sm sm:text-base w-full touch-manipulation"
                 >
-                  <Download className="h-5 w-5 mr-2" /> Download Certificate
+                  <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Download Certificate
                 </Button>
               ) : (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800 text-center">
+                <div className="p-3 sm:p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-xs sm:text-sm text-yellow-800 text-center">
                     Certificate generation is disabled for this course
                   </p>
                 </div>
@@ -596,7 +649,7 @@ function StudentViewCourseProgressPage() {
               <Button
                 onClick={handleRewatchCourse}
                 variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-50 py-3"
+                className="text-blue-600 border-blue-600 hover:bg-blue-50 py-3 sm:py-3 text-sm sm:text-base w-full touch-manipulation"
               >
                 <Play className="h-4 w-4 mr-2" /> Rewatch Course
               </Button>
@@ -606,7 +659,7 @@ function StudentViewCourseProgressPage() {
                   setShowConfetti(false);
                 }}
                 variant="ghost"
-                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 text-sm sm:text-base py-3 sm:py-3 w-full touch-manipulation"
               >
                 Continue Learning
               </Button>

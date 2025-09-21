@@ -142,67 +142,50 @@ function InstructorDashboard({ listOfCourses = [] }) {
   ];
 
   return (
-    <div className="p-6 space-y-8">
-      {/* Welcome Section */}
-      {/* <div className="mb-8">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white">
-          <h1 className="text-3xl font-bold mb-2">Welcome back, Instructor! 👋</h1>
-          <p className="text-blue-100 text-lg">Here&apos;s what&apos;s happening with your courses today</p>
-          <div className="flex items-center gap-4 mt-4">
-            <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full">
-              <BookOpen className="w-4 h-4" />
-              <span className="text-sm">{listOfCourses.length} Active Courses</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full">
-              <Users className="w-4 h-4" />
-              <span className="text-sm">{totals.totalStudents} Students</span>
-            </div>
-          </div>
-        </div>
-      </div> */}
-
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 lg:space-y-8">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
         {kpis.map((item, index) => (
           <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
               <div className="flex items-center justify-between">
-                <div className={`p-3 rounded-xl ${item.bgColor}`}>
-                  <item.icon className={`h-6 w-6 ${item.iconColor}`} />
+                <div className={`p-2 sm:p-3 rounded-xl ${item.bgColor}`}>
+                  <item.icon className={`h-4 w-4 sm:h-6 sm:w-6 ${item.iconColor}`} />
                 </div>
-                <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
-                  <TrendingUp className="w-4 h-4" />
-                  {item.trend}
+                <div className="flex items-center gap-1 text-green-600 text-xs sm:text-sm font-medium">
+                  <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">{item.trend}</span>
+                  <span className="sm:hidden">+</span>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-2xl font-bold text-gray-900 mb-1">{item.value}</div>
-              <p className="text-sm text-gray-600 mb-2">{item.label}</p>
-              <p className="text-xs text-gray-500">{item.description}</p>
+            <CardContent className="pt-0 px-3 sm:px-6">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">{item.value}</div>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">{item.label}</p>
+              <p className="text-xs text-gray-500 hidden sm:block">{item.description}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
         {/* Courses Overview */}
         <Card className="border-0 shadow-lg bg-white">
-          <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-lg">
-            <div className="flex items-center justify-between">
+          <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-lg px-3 sm:px-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-gray-700" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
                 </div>
-                <div>
-                  <CardTitle className="text-xl font-semibold text-gray-900">Your Courses Performance</CardTitle>
-                  <p className="text-sm text-gray-500">Revenue and enrollment overview</p>
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Your Courses Performance</CardTitle>
+                  <p className="text-xs sm:text-sm text-gray-500">Revenue and enrollment overview</p>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-gray-700">{listOfCourses.length}</div>
-                <div className="text-sm text-gray-500">Total Courses</div>
+              <div className="text-left sm:text-right">
+                <div className="text-xl sm:text-2xl font-bold text-gray-700">{listOfCourses.length}</div>
+                <div className="text-xs sm:text-sm text-gray-500">Total Courses</div>
               </div>
             </div>
           </CardHeader>
@@ -211,30 +194,30 @@ function InstructorDashboard({ listOfCourses = [] }) {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 hover:bg-gray-50">
-                    <TableHead className="font-semibold text-gray-700">Course</TableHead>
-                    <TableHead className="font-semibold text-gray-700 text-center">Students</TableHead>
-                    <TableHead className="font-semibold text-gray-700 text-right">Revenue</TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm">Course</TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-center text-xs sm:text-sm">Students</TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-right text-xs sm:text-sm">Revenue</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {listOfCourses.slice(0, visibleCourses).map((c) => (
                     <TableRow key={c._id} className="hover:bg-gray-50 transition-colors">
                       <TableCell className="font-medium text-gray-900">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-gray-600 to-gray-800 rounded-lg flex items-center justify-center">
-                            <BookOpen className="w-4 h-4 text-white" />
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-gray-600 to-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                           </div>
-                          <span>{c.title}</span>
+                          <span className="text-xs sm:text-sm truncate">{c.title}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Users className="h-4 w-4 text-gray-700" />
-                          <span className="font-semibold text-gray-900">{c.students?.length || 0}</span>
+                        <div className="flex items-center justify-center gap-1 sm:gap-2">
+                          <Users className="h-3 w-3 sm:h-4 sm:w-4 text-gray-700" />
+                          <span className="font-semibold text-gray-900 text-xs sm:text-sm">{c.students?.length || 0}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <span className="font-bold text-green-600">${(c.students?.length || 0) * c.pricing}</span>
+                        <span className="font-bold text-green-600 text-xs sm:text-sm">${(c.students?.length || 0) * c.pricing}</span>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -242,10 +225,10 @@ function InstructorDashboard({ listOfCourses = [] }) {
               </Table>
             </div>
             {canLoadMoreCourses ? (
-              <div className="flex justify-center mt-4 pb-4">
+              <div className="flex justify-center mt-3 sm:mt-4 pb-3 sm:pb-4 px-3 sm:px-6">
                 <button
                   onClick={() => setVisibleCourses((n) => n + ROWS_CHUNK)}
-                  className="px-6 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="px-4 sm:px-6 py-2 text-xs sm:text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Load more courses
                 </button>
@@ -256,20 +239,20 @@ function InstructorDashboard({ listOfCourses = [] }) {
 
         {/* Recent Students */}
         <Card className="border-0 shadow-lg bg-white">
-          <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-lg">
-            <div className="flex items-center justify-between">
+          <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-lg px-3 sm:px-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-gray-700" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
                 </div>
-                <div>
-                  <CardTitle className="text-xl font-semibold text-gray-900">Recent Students</CardTitle>
-                  <p className="text-sm text-gray-500">Latest enrollments and activity</p>
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Recent Students</CardTitle>
+                  <p className="text-xs sm:text-sm text-gray-500">Latest enrollments and activity</p>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-gray-700">{Math.min(10, totals.studentList.length)}</div>
-                <div className="text-sm text-gray-500">New Students</div>
+              <div className="text-left sm:text-right">
+                <div className="text-xl sm:text-2xl font-bold text-gray-700">{Math.min(10, totals.studentList.length)}</div>
+                <div className="text-xs sm:text-sm text-gray-500">New Students</div>
               </div>
             </div>
           </CardHeader>
@@ -278,39 +261,39 @@ function InstructorDashboard({ listOfCourses = [] }) {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 hover:bg-gray-50">
-                    <TableHead className="font-semibold text-gray-700">Course Name</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Student Name</TableHead>
-                    <TableHead className="font-semibold text-gray-700 text-center">Actions</TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm">Course Name</TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm">Student Name</TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-center text-xs sm:text-sm">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {totals.studentList.slice(0, visibleStudents).map((s, i) => (
                     <TableRow key={`${s.studentEmail}-${i}`} className="hover:bg-gray-50 transition-colors">
                       <TableCell className="font-medium text-gray-900">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-gray-600 to-gray-800 rounded-lg flex items-center justify-center">
-                            <BookOpen className="w-4 h-4 text-white" />
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-gray-600 to-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                           </div>
-                          <span className="truncate max-w-32">{s.courseTitle}</span>
+                          <span className="text-xs sm:text-sm truncate max-w-24 sm:max-w-32">{s.courseTitle}</span>
                         </div>
                       </TableCell>
                       <TableCell className="font-medium text-gray-800">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center">
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg className="w-2 h-2 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                           </div>
-                          <span>{s.studentName}</span>
+                          <span className="text-xs sm:text-sm truncate">{s.studentName}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <button 
-                          className="p-2 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors"
+                          className="p-1 sm:p-2 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors"
                           onClick={() => handleShowRecentActions(s)}
                           title="View recent actions"
                         >
-                          <Eye className="h-4 w-4 text-gray-500" />
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
                         </button>
                       </TableCell>
                     </TableRow>
@@ -319,10 +302,10 @@ function InstructorDashboard({ listOfCourses = [] }) {
               </Table>
             </div>
             {totals.studentList.length > visibleStudents ? (
-              <div className="flex justify-center mt-4 pb-4">
+              <div className="flex justify-center mt-3 sm:mt-4 pb-3 sm:pb-4 px-3 sm:px-6">
                 <button
                   onClick={() => setVisibleStudents((n) => n + ROWS_CHUNK)}
-                  className="px-6 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="px-4 sm:px-6 py-2 text-xs sm:text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Load more students
                 </button>
@@ -333,29 +316,29 @@ function InstructorDashboard({ listOfCourses = [] }) {
       </div>
 
       <Dialog open={actionsOpen} onOpenChange={setActionsOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-xl mx-4 sm:mx-auto">
           <DialogHeader>
-            <DialogTitle>Recent actions</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">Recent actions</DialogTitle>
           </DialogHeader>
           <div className="mt-2 text-sm text-gray-600">
             <div className="mb-3">
-              <span className="font-semibold text-gray-900">{actionsContext.studentName}</span>
+              <span className="font-semibold text-gray-900 text-sm sm:text-base">{actionsContext.studentName}</span>
               <span className="mx-2">•</span>
-              <span className="text-gray-700">{actionsContext.courseTitle}</span>
+              <span className="text-gray-700 text-sm sm:text-base">{actionsContext.courseTitle}</span>
             </div>
             {actionsLoading ? (
-              <div className="py-6 text-center">Loading...</div>
+              <div className="py-6 text-center text-sm sm:text-base">Loading...</div>
             ) : recentActions.length > 0 ? (
-              <ul className="space-y-2">
+              <ul className="space-y-2 max-h-64 overflow-y-auto">
                 {recentActions.map((a, idx) => (
-                  <li key={idx} className="flex items-center justify-between p-2 rounded-md bg-gray-50">
-                    <span className="text-gray-900">{a.title}</span>
+                  <li key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-2 sm:p-3 rounded-md bg-gray-50 gap-1 sm:gap-0">
+                    <span className="text-gray-900 text-sm sm:text-base truncate">{a.title}</span>
                     <span className="text-xs text-gray-500">{a.dateViewed.toLocaleString()}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <div className="py-6 text-center text-gray-500">No recent actions found</div>
+              <div className="py-6 text-center text-gray-500 text-sm sm:text-base">No recent actions found</div>
             )}
           </div>
         </DialogContent>

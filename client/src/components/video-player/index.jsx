@@ -173,6 +173,7 @@ function VideoPlayer({
       style={{ width, height }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setShowControls(false)}
+      onTouchStart={() => setShowControls(true)}
     >
       <ReactPlayer
         ref={playerRef}
@@ -186,10 +187,17 @@ function VideoPlayer({
         onProgress={handleProgress}
         onDuration={handleDuration}
         onEnded={handleVideoEnded}
+        config={{
+          file: {
+            attributes: {
+              playsInline: true,
+            },
+          },
+        }}
       />
       <div
         ref={controlsRef}
-        className={`absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent`} // Modern gradient background
+        className={`absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent`}
         style={{ opacity: 0, pointerEvents: "none" }}
       >
         <Slider
@@ -198,72 +206,74 @@ function VideoPlayer({
           step={0.1}
           onValueChange={(value) => handleSeekChange([value[0] / 100])}
           onValueCommit={handleSeekMouseUp}
-          className="w-full mb-3 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600" // Custom slider styling
+          className="w-full mb-2 sm:mb-3 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600"
         />
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={handlePlayAndPause}
-              className="text-white hover:bg-white/20 transition-colors duration-200" // Sleeker button style
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10"
             >
               {playing ? (
-                <Pause className="h-6 w-6" />
+                <Pause className="h-4 w-4 sm:h-6 sm:w-6" />
               ) : (
-                <Play className="h-6 w-6" />
+                <Play className="h-4 w-4 sm:h-6 sm:w-6" />
               )}
             </Button>
             <Button
               onClick={handleRewind}
-              className="text-white hover:bg-white/20 transition-colors duration-200"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10"
               variant="ghost"
               size="icon"
             >
-              <RotateCcw className="h-6 w-6" />
+              <RotateCcw className="h-4 w-4 sm:h-6 sm:w-6" />
             </Button>
             <Button
               onClick={handleForward}
-              className="text-white hover:bg-white/20 transition-colors duration-200"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10"
               variant="ghost"
               size="icon"
             >
-              <RotateCw className="h-6 w-6" />
+              <RotateCw className="h-4 w-4 sm:h-6 sm:w-6" />
             </Button>
             <Button
               onClick={handleToggleMute}
-              className="text-white hover:bg-white/20 transition-colors duration-200"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10"
               variant="ghost"
               size="icon"
             >
               {muted ? (
-                <VolumeX className="h-6 w-6" />
+                <VolumeX className="h-4 w-4 sm:h-6 sm:w-6" />
               ) : (
-                <Volume2 className="h-6 w-6" />
+                <Volume2 className="h-4 w-4 sm:h-6 sm:w-6" />
               )}
             </Button>
-            <Slider
-              value={[volume * 100]}
-              max={100}
-              step={1}
-              onValueChange={(value) => handleVolumeChange([value[0] / 100])}
-              className="w-24 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600" // Custom slider styling
-            />
+            <div className="hidden sm:block">
+              <Slider
+                value={[volume * 100]}
+                max={100}
+                step={1}
+                onValueChange={(value) => handleVolumeChange([value[0] / 100])}
+                className="w-20 sm:w-24 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600"
+              />
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="text-white text-sm font-mono">
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            <div className="text-white text-xs sm:text-sm font-mono">
               {formatTime(currentTime)} / {formatTime(duration)}
             </div>
             <Button
-              className="text-white hover:bg-white/20 transition-colors duration-200"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10"
               variant="ghost"
               size="icon"
               onClick={handleFullScreen}
             >
               {isFullScreen ? (
-                <Minimize className="h-6 w-6" />
+                <Minimize className="h-4 w-4 sm:h-6 sm:w-6" />
               ) : (
-                <Maximize className="h-6 w-6" />
+                <Maximize className="h-4 w-4 sm:h-6 sm:w-6" />
               )}
             </Button>
           </div>

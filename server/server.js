@@ -30,7 +30,7 @@ const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mohammedsahal1243:saha
 app.use(
   cors({
     origin: [
-      'http://192.168.149.1:5173'
+      'http://192.168.24.76:5173'
     ],
     methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],

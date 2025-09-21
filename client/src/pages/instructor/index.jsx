@@ -5,12 +5,13 @@ import { AuthContext } from "@/context/auth-context";
 import { InstructorContext } from "@/context/instructor-context";
 import { fetchInstructorCourseListService } from "@/services";
 import { useContext, useEffect, useState, useCallback, useRef } from "react"; // Added useRef
-import { Search, Calendar, LogOut, BarChart3, BookOpen, TrendingUp } from "lucide-react";
+import { Search, Calendar, LogOut, BarChart3, BookOpen, TrendingUp, Menu, X } from "lucide-react";
 import { gsap } from "gsap"; // Import GSAP
 
 function InstructorDashboardpage() {
   const [currentView, setCurrentView] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const sidebarRef = useRef(null); // Ref for the sidebar
   const mainContentRef = useRef(null); // Ref for the main content
@@ -75,20 +76,40 @@ function InstructorDashboardpage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 relative">
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside ref={sidebarRef} className="w-64 bg-white shadow-xl hidden lg:block"> {/* Added ref */}
+      <aside 
+        ref={sidebarRef} 
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
+      >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 bg-gradient-to-r from-gray-700 ">
+          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 bg-gradient-to-r from-gray-700">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-lg text-black">Instructor Portal</p>
+                <p className="text-lg text-white font-semibold">Instructor Portal</p>
               </div>
             </div>
+            {/* Mobile close button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="lg:hidden p-2 rounded-lg hover:bg-white/20 text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
         
@@ -101,7 +122,10 @@ function InstructorDashboardpage() {
             <ul className="space-y-1">
               <li>
                 <button
-                  onClick={() => setCurrentView("dashboard")}
+                  onClick={() => {
+                    setCurrentView("dashboard");
+                    setIsMobileMenuOpen(false);
+                  }}
                   className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 ${
                     currentView === "dashboard"
                       ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300 shadow-sm'
@@ -123,8 +147,11 @@ function InstructorDashboardpage() {
               </li>
               <li>
                 <button
-                  onClick={() => setCurrentView("courses")}
-                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-all duration-200 ${
+                  onClick={() => {
+                    setCurrentView("courses");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 ${
                     currentView === "courses"
                       ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300 shadow-sm'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
@@ -145,7 +172,10 @@ function InstructorDashboardpage() {
               </li>
               <li>
                 <button
-                  onClick={() => setCurrentView("revenue")}
+                  onClick={() => {
+                    setCurrentView("revenue");
+                    setIsMobileMenuOpen(false);
+                  }}
                   className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 ${
                     currentView === "revenue"
                       ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300 shadow-sm'
@@ -187,22 +217,23 @@ function InstructorDashboardpage() {
       <div ref={mainContentRef} className="flex-1 flex flex-col overflow-hidden"> {/* Added ref */}
         {/* Top Header */}
         <header className="bg-white shadow-sm border-b border-gray-200">
-          <div className="flex items-center justify-between h-16 px-6">
+          <div className="flex items-center justify-between h-16 px-4 sm:px-6">
             <div className="flex items-center gap-4">
-              <div className="lg:hidden">
-                <button className="p-2 rounded-lg hover:bg-gray-100">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
+              {/* Mobile menu button */}
+              <button 
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <Menu className="w-5 h-5 text-gray-600" />
+              </button>
+              
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
                   {currentView === "dashboard" ? "Dashboard" : 
                    currentView === "courses" ? "My Courses" : 
                    currentView === "revenue" ? "Revenue Analysis" : "Dashboard"}
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500 truncate">
                   {currentView === "dashboard" 
                     ? "Monitor your courses and student progress" 
                     : currentView === "courses"
@@ -214,8 +245,30 @@ function InstructorDashboardpage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              {/* Enhanced Search */}
+            <div className="flex items-center gap-2 sm:gap-4">
+              {/* Mobile Search */}
+              <div className="relative md:hidden">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={handleSearch}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32 transition-all duration-200"
+                />
+                {searchQuery && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop Search */}
               <div className="relative hidden md:block">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -237,17 +290,23 @@ function InstructorDashboardpage() {
                 )}
               </div>
               
-
-              
-              {/* Enhanced Date Display */}
-              <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'short', 
-                  month: 'short', 
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
+              {/* Date Display */}
+              <div className="text-xs sm:text-sm text-gray-600 bg-gray-50 px-2 sm:px-3 py-2 rounded-lg flex items-center gap-1 sm:gap-2">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">
+                  {new Date().toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </span>
+                <span className="sm:hidden">
+                  {new Date().toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric'
+                  })}
+                </span>
               </div>
             </div>
           </div>

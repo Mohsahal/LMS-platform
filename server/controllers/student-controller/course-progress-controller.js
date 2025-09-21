@@ -352,11 +352,11 @@ const generateCompletionCertificate = async (req, res) => {
       // Name and Guardian section (top area) - FIXED COORDINATES
       name: { x: 170, y: 258, width: 260, height: 20 },
       guardian: { x: 400, y: 258, width: 240, height: 20 },
-      studentId: { x: 605, y: 254, width: 190, height: 20 },
+      studentId: { x: 605, y: 257, width: 190, height: 20 },
       
       // Course completion section (middle area) - FIXED COORDINATES
-      courseName: { x: 430, y: 284, width: 240, height: 20 },
-      grade: { x: 320, y: 307, width: 60, height: 20 },
+      courseName: { x: 418, y: 284, width: 240, height: 20 },
+      grade: { x: 319, y: 307, width: 60, height: 20 },
       institution: { x: 400, y: 306, width: 320, height: 20 },
       
       // Certificate details section (bottom area) - FIXED COORDINATES
@@ -441,10 +441,10 @@ const generateCompletionCertificate = async (req, res) => {
 
     // Generate and place QR code that links to student dashboard
     try {
-      // Build a dashboard URL; prefer FRONTEND_URL env, else infer from request
-      const frontendBase = process.env.CLIENT_URL || `${req.protocol}://${req.get("host")}`.replace(/\/$/, "");
-      // Adjust path to your student dashboard route
-      const dashboardPath = "/student/home"; // update if different
+      // Build a dashboard URL; prefer CLIENT_URL env, else use the configured client URL
+      const frontendBase = process.env.CLIENT_URL || "http://192.168.24.76:5173";
+      // Adjust path to your student dashboard route (root path for consistency with route guard)
+      const dashboardPath = "/"; // Student dashboard route (root)
       const qrTargetUrl = `${frontendBase}${dashboardPath}`;
 
       const qrDataUrl = await QRCode.toDataURL(qrTargetUrl, {
