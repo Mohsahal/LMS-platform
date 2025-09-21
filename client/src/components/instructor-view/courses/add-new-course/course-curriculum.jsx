@@ -32,18 +32,28 @@ function CourseCurriculum() {
   const lectureRefs = useRef([]);
   const navigate = useNavigate(); // Initialized useNavigate
 
-  // GSAP animation for new lecture items
+  // GSAP animation for new lecture items - only animate when items are actually added
+  const [previousLength, setPreviousLength] = useState(0);
+  
   useLayoutEffect(() => {
-    lectureRefs.current.forEach((el, index) => {
-      if (el) {
-        gsap.fromTo(
-          el,
-          { opacity: 0, y: 30, scale: 0.95 }, // More pronounced entry animation
-          { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "power3.out", delay: index * 0.1 }
-        );
-      }
-    });
-  }, [courseCurriculumFormData]);
+    const currentLength = courseCurriculumFormData.length;
+    
+    // Only animate if new items were added (not when searching/filtering)
+    if (currentLength > previousLength) {
+      const newItems = lectureRefs.current.slice(previousLength);
+      newItems.forEach((el, index) => {
+        if (el) {
+          gsap.fromTo(
+            el,
+            { opacity: 0, y: 30, scale: 0.95 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out", delay: index * 0.05 }
+          );
+        }
+      });
+    }
+    
+    setPreviousLength(currentLength);
+  }, [courseCurriculumFormData.length, previousLength]);
 
   function handleNewLecture() {
     setCourseCurriculumFormData([

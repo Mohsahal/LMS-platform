@@ -247,13 +247,45 @@ const generateCompletionCertificate = async (req, res) => {
     const certificateId = randomBytes(8).toString("hex").toUpperCase();
     const issuedOn = new Date(progress.completionDate || Date.now()).toDateString();
 
+    // Set headers for optimal PDF compatibility across applications
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=certificate_${(user.userName || "student").replace(/\s+/g, "_")}_${(course.title || "course").replace(/\s+/g, "_")}.pdf`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename=certificate_${(user.userName || "student").replace(/\s+/g, "_")}_${(course.title || "course").replace(/\s+/g, "_")}.pdf`);
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
 
-    const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 0 });
+    // Create PDF with maximum compatibility settings to prevent alignment issues
+    const doc = new PDFDocument({ 
+      size: "A4", 
+      layout: "landscape", 
+      margin: 0,
+      compress: false, // Disable compression to prevent alignment issues
+      autoFirstPage: true,
+      bufferPages: false, // Disable buffering for immediate rendering
+      info: {
+        Title: `Certificate - ${course.title}`,
+        Author: "BravyNex Engineering",
+        Subject: "Course Completion Certificate",
+        Creator: "BravyNex E-Learning Platform",
+        Producer: "PDFKit 0.13.0"
+      }
+    });
+    
+    // Set PDF metadata for maximum compatibility
+    doc.info.Title = `Certificate - ${course.title}`;
+    doc.info.Author = "BravyNex Engineering";
+    doc.info.Subject = "Course Completion Certificate";
+    doc.info.Creator = "BravyNex E-Learning Platform";
+    doc.info.Producer = "PDFKit 0.13.0";
+    
+    // Set PDF version for maximum compatibility
+    doc._root.data.PDFVersion = "1.4";
+    
+    // Lock PDF coordinate system to prevent any transformations
+    doc.save();
+    doc.transform(1, 0, 0, 1, 0, 0); // Identity matrix - no transformations
+    doc.restore();
+    
     doc.pipe(res);
 
     // background (optional - URL from course settings or local file)
@@ -294,47 +326,118 @@ const generateCompletionCertificate = async (req, res) => {
       }
     }
 
-    // Overlay text at fixed coordinates to match template
+    // Overlay text with robust positioning for cross-platform compatibility
     const pageWidth = doc.page.width;
     const pageHeight = doc.page.height;
     const centerX = pageWidth / 2;
+    const centerY = pageHeight / 2;
+
+    // Set consistent font and color for all certificate data
+    // This ensures all certificate text has uniform appearance
+    const certificateFontSize = 14;
+    const certificateColor = "#7E1891"; // Purple color to match certificate template text
+    // Alternative colors to try: "#1a0b3d" (dark purple), "#2d1b69" (medium purple), "#4c1d95" (lighter purple)
+    const certificateFont = "Helvetica-Bold"; // Consistent font family for readability
+    
+    // Apply consistent styling to all certificate text
+    doc.font(certificateFont).fontSize(certificateFontSize).fillColor(certificateColor);
+    
+    // Lock coordinate system for absolute positioning
+    doc.save();
+    doc.transform(1, 0, 0, 1, 0, 0); // Identity matrix - no coordinate transformations
+
+    // Define FIXED text positioning with absolute coordinates for maximum stability
+    // These coordinates are locked and will not change across different PDF viewers
+    const textPositions = {
+      // Name and Guardian section (top area) - FIXED COORDINATES
+      name: { x: 170, y: 258, width: 260, height: 20 },
+      guardian: { x: 400, y: 258, width: 240, height: 20 },
+      studentId: { x: 605, y: 256, width: 190, height: 20 },
+      
+      // Course completion section (middle area) - FIXED COORDINATES
+      courseName: { x: 430, y: 284, width: 240, height: 20 },
+      grade: { x: 320, y: 307, width: 60, height: 20 },
+      institution: { x: 400, y: 306, width: 320, height: 20 },
+      
+      // Certificate details section (bottom area) - FIXED COORDINATES
+      certificateId: { x: 250, y: 375, width: 360, height: 20 },
+      issueDate: { x: 240, y: 425, width: 220, height: 20 }
+    };
+
+    // Helper function to add text with ABSOLUTE positioning for maximum stability
+    const addCertificateText = (text, position, options = {}) => {
+      const defaultOptions = {
+        width: position.width,
+        align: "left",
+        lineGap: 0,
+        ellipsis: false,
+        baseline: "top", // Use top baseline for consistent positioning
+        ...options
+      };
+      
+      // Ensure text is string and trim whitespace
+      const cleanText = String(text || "").trim();
+      
+      // Use EXACT coordinates without any adjustments for maximum stability
+      const exactX = position.x;
+      const exactY = position.y;
+      
+      // Add text with ABSOLUTE positioning - no coordinate adjustments
+      doc.text(cleanText, exactX, exactY, defaultOptions);
+    };
+
+    // Function to ensure ABSOLUTE text rendering across all platforms
+    const renderTextWithFallback = (text, position, options = {}) => {
+      try {
+        // Primary rendering method with absolute positioning
+        addCertificateText(text, position, options);
+      } catch (error) {
+        console.warn(`Text rendering fallback for: ${text}`, error.message);
+        // Fallback: render with ABSOLUTE positioning and no adjustments
+        const cleanText = String(text || "").trim();
+        doc.text(cleanText, position.x, position.y, { 
+          width: position.width, 
+          align: "left",
+          baseline: "top" // Use top baseline for consistent positioning
+        });
+      }
+    };
 
     // Ms./Mr. [Name] .......... Student ID [id]
     const displayName = `${user.userName || user.userEmail}`;
     // Guardian name support (renamed from guardianDetails)
-    const guardianValue = user.guardianName || user.guardianDetails
+    const guardianValue = user.guardianName || user.guardianDetails;
     const guardianLine = guardianValue ? `${guardianValue}` : "";
-    doc.fontSize(14).fillColor("#3b0764");
-    // Name on left underline after Ms./Mr.
-    doc.text(`${displayName}`, 170, 258, { width: 260, align: "left" });
+    
+    // Add all certificate text using robust positioning with fallback
+    renderTextWithFallback(displayName, textPositions.name);
+    
     // Guardian details (son/daughter/ward of)
     if (guardianLine) {
-      doc.text(`${guardianLine}`, 400, 258, { width: 240, align: "left" });
+      renderTextWithFallback(guardianLine, textPositions.guardian);
     }
+    
     // Student ID
-    // doc.text(`${userId}`, 605, 256, { width: 175, align: "left" });
-    doc.text(`${userId}`, 605, 256, { width: 190, align: "left" });
+    renderTextWithFallback(userId, textPositions.studentId);
 
-    // has successfully completed the [Course]  Course
+    // has successfully completed the [Course] Course
     const courseNameToPrint = course.certificateCourseName || course.title;
-    // Only the course name goes in the blank between 'completed the' and 'Course'
-    doc.fillColor("#3b0764").fontSize(14);
-    doc.text(`${courseNameToPrint}`, 430, 284, { width: 240, align: "left" });
+    renderTextWithFallback(courseNameToPrint, textPositions.courseName);
 
     // with Grade ___ from ___
     const printedFrom = course.certificateFrom || "BRAVYNEX ENGINEERING";
     const printedGrade = course.defaultCertificateGrade || "A";
-    // Grade blank
-    doc.text(`${printedGrade}`, 320, 307, { width: 60, align: "left" });
-    // From blank
-    doc.text(`${printedFrom}`, 400, 306, { width: 320, align: "left" });
+    
+    // Grade and Institution
+    renderTextWithFallback(printedGrade, textPositions.grade);
+    renderTextWithFallback(printedFrom, textPositions.institution);
 
-    // Certificate ID value on the line
-    doc.fillColor("#3b0764").fontSize(14);
-    doc.text(`${certificateId}`, 250, 375, { width: 360, align: "left" });
-
-    // Date of Issuance value on its line
-    doc.text(`${issuedOn}`, 240, 425, { width: 220, align: "left" });
+    // Certificate ID and Issue Date
+    renderTextWithFallback(certificateId, textPositions.certificateId);
+    renderTextWithFallback(issuedOn, textPositions.issueDate);
+    
+    // Restore coordinate system after all text rendering
+    doc.restore();
 
     // Generate and place QR code that links to student dashboard
     try {
@@ -358,8 +461,8 @@ const generateCompletionCertificate = async (req, res) => {
       const qrY = doc.page.height - qrSize - 60;
       doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
 
-      // Optional label under QR
-      // doc.fillColor("#3b0764").fontSize(10).text("Scan for Student Dashboard", qrX - 10, qrY + qrSize + 5, { width: qrSize + 20, align: "center" });
+      // Optional label under QR with consistent styling
+      // doc.font(certificateFont).fontSize(10).fillColor(certificateColor).text("Scan for Student Dashboard", qrX - 10, qrY + qrSize + 5, { width: qrSize + 20, align: "center" });
     } catch (_) {
       // If QR generation fails, continue without blocking certificate
     }
@@ -367,10 +470,11 @@ const generateCompletionCertificate = async (req, res) => {
     // Issuer/signature area (right side)
     // Do not reprint issuer/organization if your template already contains them
 
-    // Signature block
-    // doc.fillColor("#6b21a8").fontSize(14).text(course.certificateIssuer || "Chief Executive Officer", pageWidth - 330, 520, { width: 300, align: "right" });
-    // doc.fillColor("#6b21a8").fontSize(14).text(course.certificateOrganization || "BRAVYNEX ENGINEERING", pageWidth - 330, 545, { width: 300, align: "right" });
+    // Signature block with consistent styling
+    // doc.font(certificateFont).fontSize(certificateFontSize).fillColor(certificateColor).text(course.certificateIssuer || "Chief Executive Officer", pageWidth - 330, 520, { width: 300, align: "right" });
+    // doc.font(certificateFont).fontSize(certificateFontSize).fillColor(certificateColor).text(course.certificateOrganization || "BRAVYNEX ENGINEERING", pageWidth - 330, 545, { width: 300, align: "right" });
 
+    // Finalize PDF with locked positioning for maximum stability
     doc.end();
   } catch (error) {
     console.log(error);

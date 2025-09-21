@@ -4,11 +4,13 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const { generalApiLimiter } = require("./middleware/rate-limiters");
+const { cspOptions, securityLogger } = require("./middleware/security-middleware");
 const cookieParser = require("cookie-parser");
 const csrf = require("csurf");
 const mongoSanitize = require("express-mongo-sanitize");
 const mongoose = require("mongoose");
 const authRoutes = require("./routes/auth-routes/index");
+const secureAuthRoutes = require("./routes/secure-auth-routes");
 const mediaRoutes = require("./routes/instructor-routes/media-routes");
 const instructorCourseRoutes = require("./routes/instructor-routes/course-routes");
 const instructorAnalyticsRoutes = require("./routes/instructor-routes/analytics-routes");
@@ -37,8 +39,19 @@ app.use(
   })
 );
 
-// Security headers
-app.use(helmet());
+// Enhanced security headers with CSP
+app.use(helmet({
+  contentSecurityPolicy: cspOptions,
+  crossOriginEmbedderPolicy: false,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+// Security logging
+app.use(securityLogger);
 
 // Parse cookies (for CSRF token cookie)
 app.use(cookieParser());
@@ -131,7 +144,8 @@ mongoose
   });
 
 //routes configuration
-app.use("/auth", authRoutes);
+app.use("/auth", authRoutes); // Legacy auth routes
+app.use("/secure", secureAuthRoutes); // Enhanced secure auth routes
 app.use("/media", mediaRoutes);
 app.use("/instructor/course", instructorCourseRoutes);
 app.use("/instructor/analytics", instructorAnalyticsRoutes);

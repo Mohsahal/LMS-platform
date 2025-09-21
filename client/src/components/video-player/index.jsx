@@ -18,9 +18,7 @@ function VideoPlayer({
   width = "100%",
   height = "100%",
   url,
-  onProgressUpdate = () => {},
   onVideoEnded = () => {},
-  progressData,
 }) {
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
@@ -30,20 +28,28 @@ function VideoPlayer({
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   const playerRef = useRef(null);
   const playerContainerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
   const controlsRef = useRef(null); // Ref for controls div
 
+  function formatTime(seconds) {
+    if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
   function handlePlayAndPause() {
     setPlaying(!playing);
   }
 
   function handleProgress(state) {
-    console.log("VideoPlayer handleProgress - state.played:", state.played); // Added log
     if (!seeking) {
       setPlayed(state.played);
+      setCurrentTime(state.playedSeconds);
     }
   }
 
@@ -53,14 +59,11 @@ function VideoPlayer({
 
   function handleVideoEnded() {
     console.log("Video ended - calling onVideoEnded callback");
-    setPlayed(1); // Ensure progress is set to 100%
     if (onVideoEnded && typeof onVideoEnded === 'function') {
-      onVideoEnded({
-        ...progressData,
-        progressValue: 1,
-      });
+      onVideoEnded();
     }
   }
+
 
   function handleRewind() {
     const currentTime = playerRef?.current?.getCurrentTime();
@@ -84,6 +87,7 @@ function VideoPlayer({
     const seekValue = newValue[0];
     if (isFinite(seekValue)) {
       setPlayed(seekValue);
+      setCurrentTime(seekValue * duration);
     }
     setSeeking(true);
   }
@@ -92,6 +96,7 @@ function VideoPlayer({
     setSeeking(false);
     if (isFinite(played)) {
       playerRef.current?.seekTo(played);
+      setCurrentTime(played * duration);
     }
   }
 
@@ -106,27 +111,6 @@ function VideoPlayer({
     return ("0" + string).slice(-2);
   }
 
-  function formatTime(seconds) {
-    if (!seconds || isNaN(seconds) || !isFinite(seconds) || seconds < 0) {
-      return "0:00";
-    }
-    
-    const numSeconds = Number(seconds);
-    if (isNaN(numSeconds) || !isFinite(numSeconds)) {
-      return "0:00";
-    }
-    
-    const date = new Date(numSeconds * 1000);
-    const hh = date.getUTCHours();
-    const mm = date.getUTCMinutes();
-    const ss = pad(date.getUTCSeconds());
-
-    if (hh) {
-      return `${hh}:${pad(mm)}:${ss}`;
-    }
-
-    return `${mm}:${ss}`;
-  }
 
   const handleFullScreen = useCallback(() => {
     if (!isFullScreen) {
@@ -172,22 +156,13 @@ function VideoPlayer({
     }
   }, [showControls]);
 
-  useEffect(() => {
-    if (onProgressUpdate && typeof onProgressUpdate === 'function') {
-      onProgressUpdate({
-        ...progressData,
-        progressValue: played,
-      });
-    }
-  }, [played, onProgressUpdate, progressData]);
 
   // Reset progress when URL changes (new lecture)
   useEffect(() => {
     setPlayed(0);
+    setCurrentTime(0);
     console.log("Video URL changed, resetting progress to 0");
   }, [url]);
-
-  const currentTime = played * duration;
 
   return (
     <div
