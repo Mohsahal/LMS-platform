@@ -29,7 +29,7 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mohammedsahal1243:sahal124867@cluster0.1eaz3.mongodb.net/e-learn";
 // CORS configuration with dynamic origin support for development
 const allowedOrigins = [
-  'http://192.168.57.76:5173'
+  'http://192.168.94.76:5173'
 ];
 
 app.use(

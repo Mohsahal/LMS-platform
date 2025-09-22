@@ -3,7 +3,7 @@ import { toast } from "@/hooks/use-toast";
 import tokenManager from "@/utils/tokenManager";
 
 const axiosInstance = axios.create({
-  baseURL: (import.meta.env.VITE_API_BASE_URL || "http://192.168.24.76:5000").replace(/\/$/, ''),
+  baseURL: (import.meta.env.VITE_API_BASE_URL).replace(/\/$/, ''),
   withCredentials: true,
 });
 
@@ -36,7 +36,7 @@ async function ensureCsrfToken() {
   }
   
   // Start new fetch
-  const base = import.meta.env.VITE_API_BASE_URL || "http://192.168.24.76:5000";
+  const base = import.meta.env.VITE_API_BASE_URL
   // Ensure no double slashes in URL
   const csrfUrl = `${base.replace(/\/$/, '')}/csrf-token`;
   csrfFetchInFlight = axios

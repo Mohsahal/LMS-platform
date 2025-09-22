@@ -16,7 +16,7 @@ function InstructorDashboardpage() {
   const sidebarRef = useRef(null); // Ref for the sidebar
   const mainContentRef = useRef(null); // Ref for the main content
 
-  const { resetCredentials } = useContext(AuthContext);
+  const { logout } = useContext(AuthContext);
   const { instructorCoursesList, setInstructorCoursesList } =
     useContext(InstructorContext);
 
@@ -43,8 +43,7 @@ function InstructorDashboardpage() {
   }, []); // Run animations once on component mount
 
   function handleLogout() {
-    resetCredentials();
-    sessionStorage.clear();
+    logout();
   }
 
 
