@@ -105,7 +105,7 @@ function StudentHomePage() {
       repeat: -1
     });
 
-    // Category card animations
+    // Category card animations (existing hover effects)
     const categoryCards = document.querySelectorAll('.category-card');
     categoryCards.forEach((card) => {
       const hoverIn = gsap.timeline({ paused: true });
@@ -131,7 +131,7 @@ function StudentHomePage() {
       card.addEventListener('mouseleave', () => hoverOut.play());
     });
 
-    // Course card animations
+    // Course card animations (existing hover effects)
     const courseCards = document.querySelectorAll('.course-card');
     courseCards.forEach((card) => {
       const hoverIn = gsap.timeline({ paused: true });
@@ -157,7 +157,7 @@ function StudentHomePage() {
       card.addEventListener('mouseleave', () => hoverOut.play());
     });
 
-    // Button animations
+    // Button animations (existing click effects)
     const buttons = document.querySelectorAll('.animated-button');
     buttons.forEach(button => {
       const clickAnimation = gsap.timeline({ paused: true });
@@ -169,11 +169,47 @@ function StudentHomePage() {
       button.addEventListener('click', () => clickAnimation.play());
     });
 
+    // NEW: ScrollTrigger for Course Categories buttons
+    gsap.fromTo('.category-button-animated', 
+      { opacity: 0, y: 50 },
+      { 
+        opacity: 1, 
+        y: 0, 
+        duration: 0.8, 
+        ease: "power2.out",
+        stagger: 0.1, // Stagger the animation for each button
+        scrollTrigger: {
+          trigger: ".course-categories-section", // Target the section
+          start: "top 80%", // When the top of the section enters 80% of the viewport
+          toggleActions: "play none none none",
+        }
+      }
+    );
+
+    // NEW: ScrollTrigger for Featured Courses cards - "cover with one" effect
+    gsap.utils.toArray('.course-card-animated').forEach((card) => {
+      gsap.fromTo(card,
+        { opacity: 0, y: 50 }, // Start from below and transparent
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: card, // Trigger for each individual card
+            start: "top 90%", // When the top of the card enters 90% of the viewport
+            toggleActions: "play none none none", // Play animation once on scroll down
+            // markers: true, // Uncomment for debugging ScrollTrigger
+          }
+        }
+      );
+    });
+
     // Cleanup function
     return () => {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
-  }, []);
+  }, [pageRef]); // Added pageRef to dependency array as it's used inside
 
   // High-quality hero images (royalty-free Unsplash)
   const heroImages = [
@@ -286,13 +322,13 @@ function StudentHomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-10 items-center p-4 sm:p-6 lg:p-10">
             {/* Left: Copy */}
             <div className="order-2 lg:order-1">
-              <span className="inline-flex items-center text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-gray-700 to-gray-600 text-white font-semibold shadow-lg">
+              <span className="inline-flex items-center text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-gray-700 to-gray-600 text-white font-semibold shadow-lg hero-badge">
                 {slides[current].badge}
               </span>
-              <h1 className="mt-4 sm:mt-6 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight whitespace-pre-line">
+              <h1 className="mt-4 sm:mt-6 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight whitespace-pre-line hero-title">
                 {slides[current].title}
               </h1>
-              <p className="mt-4 sm:mt-6 text-gray-600 text-sm sm:text-base lg:text-lg max-w-xl leading-relaxed">
+              <p className="mt-4 sm:mt-6 text-gray-600 text-sm sm:text-base lg:text-lg max-w-xl leading-relaxed hero-subtitle">
                 {slides[current].sub}
               </p>
               <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3 sm:gap-4 lg:gap-6 text-xs sm:text-sm text-gray-700">
@@ -309,16 +345,16 @@ function StudentHomePage() {
                   <span className="font-medium text-xs sm:text-sm">{slides[current].statRight.label}</span>
                 </div>
               </div>
-              <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 hero-button">
                 <Button 
                   onClick={() => navigate("/courses")}
-                  className="bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-800 hover:to-black text-white font-semibold px-6 sm:px-8 py-2.5 sm:py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-sm sm:text-base w-full sm:w-auto"
+                  className="bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-800 hover:to-black text-white font-semibold px-6 sm:px-8 py-2.5 sm:py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-sm sm:text-base w-full sm:w-auto animated-button"
                 >
                   Explore Programming
                 </Button>
                 <Button 
                   variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-6 sm:px-8 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base w-full sm:w-auto"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-6 sm:px-8 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base w-full sm:w-auto animated-button"
                 >
                   Watch Preview
                 </Button>
@@ -370,7 +406,7 @@ function StudentHomePage() {
           </div>
         </div>
       </section>
-      <section className="py-12 px-4 lg:px-8 bg-white">
+      <section className="py-12 px-4 lg:px-8 bg-white course-categories-section">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Course Categories</h2>
@@ -379,7 +415,7 @@ function StudentHomePage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {courseCategories.map((categoryItem) => (
             <Button
-                className="justify-start h-16 bg-white border-2 border-gray-200 hover:border-gray-400 hover:bg-gray-50 text-gray-700 hover:text-gray-900 font-semibold transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg"
+                className="justify-start h-16 bg-white border-2 border-gray-200 hover:border-gray-400 hover:bg-gray-50 text-gray-700 hover:text-gray-900 font-semibold transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg category-button-animated"
               variant="outline"
               key={categoryItem.id}
               onClick={() => handleNavigateToCoursesPage(categoryItem.id)}
@@ -390,7 +426,7 @@ function StudentHomePage() {
           </div>
         </div>
       </section>
-      <section className="py-16 px-4 lg:px-8 bg-gray-50">
+      <section className="py-16 px-4 lg:px-8 bg-gray-50 featured-courses-section">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Courses</h2>
@@ -402,14 +438,14 @@ function StudentHomePage() {
               <div
                 key={courseItem?._id}
                 onClick={() => handleCourseNavigate(courseItem?._id)}
-                  className="group bg-white rounded overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border-0"
+                  className="group bg-white rounded overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border-0 course-card-animated"
               >
                   <div className="relative">
                 <img
                   src={courseItem?.image}
                   width={300}
                       height={200}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 course-image"
                     />
                     <div className="absolute top-3 right-3">
                       <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
@@ -457,7 +493,7 @@ function StudentHomePage() {
               <Button
                 onClick={handleLoadMoreFeatured}
                 variant="outline"
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-8 py-3 transition-all duration-200"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-8 py-3 transition-all duration-200 animated-button"
               >
                 Load more
               </Button>

@@ -17,9 +17,13 @@ import {
   checkCoursePurchaseInfoService,
   fetchStudentViewCourseListService,
 } from "@/services";
-import { ArrowUpDownIcon, BookOpen } from "lucide-react";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { ArrowUpDownIcon, BookOpen, Star } from "lucide-react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 function createSearchParamsHelper(filterParams) {
   const queryParams = [];
@@ -54,6 +58,54 @@ function StudentViewCoursesPage() {
   const RESULTS_CHUNK = 6;
   const [visibleResults, setVisibleResults] = useState(INITIAL_RESULTS);
   const canLoadMoreResults = (studentViewCoursesList?.length || 0) > visibleResults;
+
+  const cardRefs = useRef([]);
+
+  useEffect(() => {
+    cardRefs.current = [];
+  }, [studentViewCoursesList]);
+
+  useEffect(() => {
+    ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+
+    const validCardElements = cardRefs.current.filter(Boolean);
+
+    validCardElements.forEach((card, index) => {
+      gsap.set(card, {
+        y: index * 25,
+        scale: 1 - (index * 0.07),
+        opacity: 0.4 + (index * 0.15),
+        zIndex: validCardElements.length - index,
+        filter: `blur(${index * 1.5}px)`,
+        transformOrigin: "center bottom",
+        rotationX: index * 5,
+        transformPerspective: 1000,
+      });
+
+      gsap.to(card, {
+        y: 0,
+        scale: 1,
+        opacity: 1,
+        filter: "blur(0px)",
+        rotationX: 0,
+        duration: 0.8,
+        delay: index * 0.1,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: card,
+          start: "top 85%",
+          end: "bottom center",
+          toggleActions: "play none none reverse",
+          // markers: true,
+        },
+      });
+    });
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+  }, [studentViewCoursesList, visibleResults]);
+
   useEffect(() => {
     // reset visible results when new data arrives
     setVisibleResults(INITIAL_RESULTS);
@@ -275,18 +327,21 @@ function StudentViewCoursesPage() {
             {studentViewCoursesList && studentViewCoursesList.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6">
-                  {studentViewCoursesList.slice(0, visibleResults).map((courseItem) => (
+                  {studentViewCoursesList.slice(0, visibleResults).map((courseItem, index) => (
                     <div
                       key={courseItem?._id}
+                      ref={el => {
+                        if (el) cardRefs.current[index] = el;
+                      }}
                       onClick={() => handleCourseNavigate(courseItem?._id)}
-                      className="group bg-white rounded overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-200"
+                      className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-200"
                     >
                       <div className="relative h-36 sm:h-44 overflow-hidden">
-                        <img src={courseItem?.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <img src={courseItem?.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={courseItem?.title} />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white/90 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-xs font-semibold text-gray-700 border border-gray-200">{courseItem?.level?.toUpperCase() || "LEVEL"}</div>
                       </div>
-                      <div className="p-3 sm:p-4">
+                      <div className="p-2 sm:p-4">
                         <h3 className="font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-gray-700 transition-colors text-sm sm:text-base">{courseItem?.title}</h3>
                         <div className="flex items-center gap-2 text-sm text-gray-600 mb-2 sm:mb-3">
                           {/* <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-gray-700 rounded-full flex items-center justify-center">

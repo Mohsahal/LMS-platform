@@ -31,10 +31,34 @@ function CourseCurriculum() {
   const lectureRefs = useRef([]);
   const navigate = useNavigate(); // Initialized useNavigate
 
-  // GSAP animation for new lecture items - only animate when items are actually added
+  // Refs for GSAP animations
+  const cardRef = useRef(null);
+  const titleRef = useRef(null);
+  const bulkUploadBtnRef = useRef(null);
+  const addLectureBtnRef = useRef(null);
+
+  // GSAP animation for initial load and new lecture items
   const [previousLength, setPreviousLength] = useState(0);
   
   useLayoutEffect(() => {
+    // Initial card and header animation
+    gsap.fromTo(cardRef.current, 
+      { opacity: 0, y: 20 }, 
+      { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }
+    );
+    gsap.fromTo(titleRef.current, 
+      { opacity: 0, x: -20 }, 
+      { opacity: 1, x: 0, duration: 0.6, ease: "power3.out", delay: 0.2 }
+    );
+    gsap.fromTo(bulkUploadBtnRef.current, 
+      { opacity: 0, x: 20 }, 
+      { opacity: 1, x: 0, duration: 0.6, ease: "power3.out", delay: 0.3 }
+    );
+    gsap.fromTo(addLectureBtnRef.current, 
+      { opacity: 0, x: 20 }, 
+      { opacity: 1, x: 0, duration: 0.6, ease: "power3.out", delay: 0.4 }
+    );
+
     const currentLength = courseCurriculumFormData.length;
     
     // Only animate if new items were added (not when searching/filtering)
@@ -45,14 +69,14 @@ function CourseCurriculum() {
           gsap.fromTo(
             el,
             { opacity: 0, y: 30, scale: 0.95 },
-            { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out", delay: index * 0.05 }
+            { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out", delay: index * 0.05 + 0.5 } // Added delay for sequential appearance
           );
         }
       });
     }
     
     setPreviousLength(currentLength);
-  }, [courseCurriculumFormData.length, previousLength]);
+  }, [courseCurriculumFormData.length]); // Added courseCurriculumFormData.length to dependency array
 
   function handleNewLecture() {
     setCourseCurriculumFormData([
@@ -286,9 +310,21 @@ function CourseCurriculum() {
   }
 
   return (
-    <Card className="shadow-lg rounded-xl overflow-hidden"> {/* Enhanced card styling */}
+    
+    <Card ref={cardRef} className="shadow-lg rounded-xl overflow-hidden"> {/* Enhanced card styling */}
+    
       <CardHeader className="flex flex-row items-center justify-between p-6 bg-gray-50 border-b border-gray-200">
-        <CardTitle className="text-2xl font-bold text-gray-800">Create Course Curriculum</CardTitle>
+        <div className="flex items-center gap-3"> {/* Added a div to group back button and title */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="text-gray-600 hover:text-gray-900 transition-colors duration-200"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <CardTitle ref={titleRef} className="text-2xl font-bold text-gray-800">Create Course Curriculum</CardTitle>
+        </div>
         <div className="flex space-x-3">
           <Input
             type="file"
@@ -300,6 +336,7 @@ function CourseCurriculum() {
             onChange={handleMediaBulkUpload}
           />
           <Button
+            ref={bulkUploadBtnRef} // Added ref
             // Changed from as="label" and htmlFor to onClick
             onClick={handleOpenBulkUploadDialog}
             variant="outline"
@@ -309,6 +346,7 @@ function CourseCurriculum() {
             Bulk Upload
           </Button>
           <Button
+            ref={addLectureBtnRef} // Added ref
             disabled={!isCourseCurriculumFormDataValid() || mediaUploadProgress}
             onClick={handleNewLecture}
             className="bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-200 flex items-center gap-2"
@@ -316,14 +354,7 @@ function CourseCurriculum() {
             <Video className="h-5 w-5" />
             Add Lecture
           </Button>
-          <Button
-            onClick={() => navigate(-1)} // Back button functionality
-            variant="outline"
-            className="flex items-center gap-2 text-gray-600 border-gray-300 hover:bg-gray-100 transition-colors duration-200"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            Back
-          </Button>
+         
         </div>
       </CardHeader>
       <CardContent className="p-6">

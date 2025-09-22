@@ -41,7 +41,7 @@ const secureUpload = createSecureUpload({
     'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4'
   ],
   maxFiles: 10,
-  fieldName: 'file'
+  fieldName: 'files' // Changed from 'file' to 'files'
 });
 
 // Legacy upload configuration (kept for backward compatibility)
@@ -103,7 +103,7 @@ router.delete("/delete/:id", async (req, res) => {
 
 // Secure bulk file upload
 router.post("/bulk-upload", 
-  uploadRateLimit(3, 15 * 60 * 1000), // 3 bulk uploads per 15 minutes
+  uploadRateLimit(10, 15 * 60 * 1000), // Increased from 3 to 10 bulk uploads per 15 minutes
   secureUpload.array("files", 10),
   validateUploadedFiles,
   async (req, res) => {

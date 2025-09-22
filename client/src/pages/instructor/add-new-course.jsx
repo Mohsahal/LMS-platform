@@ -17,7 +17,7 @@ import {
 } from "@/services";
 import { useContext, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
+import { ArrowLeft } from "lucide-react";
 function AddNewCoursePage() {
   const {
     courseLandingFormData,
@@ -130,9 +130,17 @@ function AddNewCoursePage() {
   console.log(params, currentEditedCourseId, "params");
 
   return (
-    <div className="container mx-auto p-4">
+    <div className=" mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-extrabold text-gray-900">Create a new course</h1>
+        <Button variant={"outline"} onClick={() => navigate(-1)}> {/* Moved onClick to Button and changed to navigate(-1) */}
+          <ArrowLeft className="h-5 w-5" />
+          Back
+        </Button>
+
+        <div className="flex-1 p-1 ml-2">
+          <h1 className="text-3xl font-extrabold text-gray-900">Create a new course</h1>
+        </div>
+        
         <Button
           disabled={!validateFormData()}
           className="text-sm tracking-wider font-bold px-8 bg-gray-800 hover:bg-black text-white"
@@ -141,9 +149,9 @@ function AddNewCoursePage() {
           SUBMIT
         </Button>
       </div>
-      <Card className="border-gray-200">
+      <Card className="border-gray-200 ">
         <CardContent>
-          <div className="container mx-auto p-4">
+          <div className=" mx-auto p-4">
             <Tabs defaultValue="curriculum" className="space-y-4">
               <TabsList className="bg-gray-100">
                 <TabsTrigger value="curriculum" className="data-[state=active]:bg-gray-800 data-[state=active]:text-white">Curriculum</TabsTrigger>

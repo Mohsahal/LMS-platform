@@ -25,8 +25,9 @@ const markCurrentLectureAsViewed = async (req, res) => {
         lecturesProgress: [
           {
             lectureId,
-            viewed: true,
+            viewed: true, // Mark as viewed directly
             dateViewed: new Date(),
+            progressPercentage: 100, // Assume 100% if explicitly marked as viewed
           },
         ],
       });
@@ -71,12 +72,12 @@ const markCurrentLectureAsViewed = async (req, res) => {
 
     //check all the lectures are viewed or not based on course completion percentage
     const completionThreshold = (course.completionPercentage || 95) / 100; // Convert percentage to decimal
-    const allLecturesViewed = course.curriculum.every(courseLecture => {
-      const progressEntry = progress.lecturesProgress.find(p => p.lectureId.toString() === courseLecture._id.toString());
-      return progressEntry && progressEntry.viewed;
-    });
+    
+    const viewedLecturesCount = progress.lecturesProgress.filter(p => p.viewed).length;
+    const totalLectures = course.curriculum.length;
+    const requiredLecturesForCompletion = Math.ceil(totalLectures * completionThreshold);
 
-    if (allLecturesViewed && !progress.completed) {
+    if (viewedLecturesCount >= requiredLecturesForCompletion && !progress.completed) {
       progress.completed = true;
       progress.completionDate = new Date();
 
@@ -571,4 +572,33 @@ module.exports = {
   resetCurrentCourseProgress,
   generateCompletionCertificate,
   updateVideoProgress,
+};
+
+// Helper function to check and set overall course completion
+const checkAndSetOverallCourseCompletion = async (progress, course) => {
+  if (!course || !progress || course.curriculum.length === 0) {
+    return;
+  }
+
+  const totalLectures = course.curriculum.length;
+  let totalProgressSum = 0;
+
+  for (const lecture of course.curriculum) {
+    const progressEntry = progress.lecturesProgress.find(p => p.lectureId.toString() === lecture._id.toString());
+    totalProgressSum += (progressEntry?.progressPercentage || 0);
+  }
+
+  const overallCourseProgress = (totalProgressSum / totalLectures);
+  const courseCompletionThreshold = (course.completionPercentage || 95);
+
+  if (overallCourseProgress >= courseCompletionThreshold && !progress.completed) {
+    progress.completed = true;
+    progress.completionDate = new Date();
+    await progress.save();
+  } else if (overallCourseProgress < courseCompletionThreshold && progress.completed) {
+    // If progress drops below threshold after being completed (e.g., due to reset or re-watch)
+    progress.completed = false;
+    progress.completionDate = null;
+    await progress.save();
+  }
 };

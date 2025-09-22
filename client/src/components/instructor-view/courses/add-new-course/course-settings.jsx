@@ -165,7 +165,7 @@ function CourseSettings() {
                           required
                         />
                       </div>
-                      <div>
+                      {/* <div>
                         <SecureInstructorInput
                           label="Template Image URL"
                           type="url"
@@ -178,8 +178,8 @@ function CourseSettings() {
                           maxLength={500}
                           description="Provide the exact template background image URL. We will overlay text precisely."
                         />
-                      </div>
-                      <div>
+                      </div> */}
+                      {/* <div>
                         <SecureInstructorInput
                           label="Issuer Title"
                           placeholder="Chief Executive Officer"
@@ -202,8 +202,8 @@ function CourseSettings() {
                           })}
                           maxLength={100}
                         />
-                      </div>
-                      <div>
+                      </div> */}
+                      {/* <div>
                         <SecureInstructorInput
                           label="From (Printed)"
                           placeholder="BRAVYNEX ENGINEERING"
@@ -214,7 +214,7 @@ function CourseSettings() {
                           })}
                           maxLength={100}
                         />
-                      </div>
+                      </div> */}
                       <div>
                         <SecureInstructorInput
                           label="Default Grade"
@@ -282,7 +282,7 @@ function CourseSettings() {
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <Label htmlFor="passingScore" className="text-sm font-medium text-gray-700 mb-2 block">
                       Passing Score (%)
                     </Label>
@@ -305,7 +305,7 @@ function CourseSettings() {
                     <p className="text-xs text-gray-500 mt-1">
                       Minimum score required to complete the course
                     </p>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
