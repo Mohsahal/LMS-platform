@@ -87,13 +87,13 @@ function StudentViewCommonHeader() {
                 Analytics
               </Button>
 
-              <Button 
+              {/* <Button 
                 variant="ghost" 
                 className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors duration-200" 
                 onClick={() => navigate("/about")}
               >
                 About
-              </Button>
+              </Button> */}
             </nav>
             <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 w-full max-w-md">
               <div className="relative flex-1">
@@ -188,13 +188,13 @@ function StudentViewCommonHeader() {
             >
               Home
             </Button>
-            <Button 
+            {/* <Button 
               variant="ghost" 
               className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-2 sm:px-3 py-2 rounded-md transition-colors duration-200 text-xs sm:text-sm" 
               onClick={() => navigate("/about")}
             >
               About
-            </Button>
+            </Button> */}
             <Button 
               variant="ghost" 
               className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-2 sm:px-3 py-2 rounded-md transition-colors duration-200 text-xs sm:text-sm" 

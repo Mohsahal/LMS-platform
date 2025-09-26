@@ -46,7 +46,15 @@ function VideoPlayer({
   }
 
   function handlePlayAndPause() {
-    setPlaying(!playing);
+    const next = !playing;
+    setPlaying(next);
+    // When switching to play, hide the center control quickly
+    if (next) {
+      setTimeout(() => setShowControls(false), 120);
+    } else {
+      // When pausing, keep controls visible
+      setShowControls(true);
+    }
   }
 
   function handleProgress(state) {
@@ -225,19 +233,25 @@ function VideoPlayer({
           },
         }}
       />
-      {/* Click overlay to toggle play/pause; starts paused by default */}
-      {!playing && (
+      {/* Center play/pause control - appears when controls are shown (mouse move/touch) */}
+      <div
+        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        style={{ opacity: showControls ? 1 : 0, transition: "opacity 200ms ease" }}
+        onMouseMove={handleMouseMove}
+      >
         <button
           type="button"
-          onClick={() => setPlaying(true)}
-          className="absolute inset-0 flex items-center justify-center bg-black/20 focus:outline-none"
-          aria-label="Play video"
+          onClick={handlePlayAndPause}
+          className="pointer-events-auto w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/80 hover:bg-white focus:outline-none shadow-md flex items-center justify-center"
+          aria-label={playing ? "Pause video" : "Play video"}
         >
-          <div className="w-14 h-14 rounded-full bg-white/80 flex items-center justify-center">
-            <Play className="h-6 w-6 text-black" />
-          </div>
+          {playing ? (
+            <Pause className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
+          ) : (
+            <Play className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
+          )}
         </button>
-      )}
+      </div>
       {/* Center overlay for buffering/offline */}
       {(isBuffering || isOffline) && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 select-none" aria-live="polite">

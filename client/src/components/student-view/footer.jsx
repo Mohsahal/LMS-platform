@@ -99,7 +99,7 @@ function Footer() {
             <li><Link to="/home" className="hover:underline">Home</Link></li>
             <li><Link to="/courses" className="hover:underline">Courses</Link></li>
             <li><Link to="/student-courses" className="hover:underline">My Courses</Link></li>
-            <li><Link to="/about" className="hover:underline">About</Link></li>
+            {/* <li><Link to="/about" className="hover:underline">About</Link></li> */}
           </ul>
         </div>
 
