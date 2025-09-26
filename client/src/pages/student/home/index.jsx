@@ -65,27 +65,33 @@ function StudentHomePage() {
     fetchAllStudentViewCourses();
   }, []);
 
-  // Separate useEffect for animations (runs only once)
+  // Separate useEffect for animations
   useEffect(() => {
-    // Page enter animation
-    pageRef.enter('fade');
+    // Play entrance animations ONLY on hard refresh (not SPA navigation)
+    const navEntry = performance.getEntriesByType('navigation')[0];
+    const isReload = navEntry ? navEntry.type === 'reload' : (performance.navigation && performance.navigation.type === 1);
+
+    // Page enter animation on hard refresh
+    if (isReload) {
+      pageRef.enter('fade');
+    }
     
     // Hero section animations
-    const heroTimeline = gsap.timeline({ delay: 0.3 });
+    const heroTimeline = gsap.timeline({ delay: isReload ? 0.1 : 0 });
     heroTimeline
       .fromTo('.hero-title', 
-        { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }
       )
       .fromTo('.hero-subtitle', 
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
-        "-=0.4"
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
+        "-=0.2"
       )
       .fromTo('.hero-button', 
-        { opacity: 0, scale: 0.8 },
-        { opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.7)" },
-        "-=0.3"
+        { opacity: 0, scale: 0.95 },
+        { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(1.5)" },
+        "-=0.2"
       );
 
     // Floating background animations
@@ -170,21 +176,34 @@ function StudentHomePage() {
     });
 
     // NEW: ScrollTrigger for Course Categories buttons
-    gsap.fromTo('.category-button-animated', 
-      { opacity: 0, y: 50 },
-      { 
-        opacity: 1, 
-        y: 0, 
-        duration: 0.8, 
-        ease: "power2.out",
-        stagger: 0.1, // Stagger the animation for each button
-        scrollTrigger: {
-          trigger: ".course-categories-section", // Target the section
-          start: "top 80%", // When the top of the section enters 80% of the viewport
-          toggleActions: "play none none none",
+    if (isReload) {
+      gsap.fromTo('.category-button-animated', 
+        { opacity: 0, y: 30 },
+        { 
+          opacity: 1, 
+          y: 0, 
+          duration: 0.4, 
+          ease: "power2.out",
+          stagger: 0.06,
+          scrollTrigger: {
+            trigger: ".course-categories-section",
+            start: "top 90%",
+            toggleActions: "play none none none",
+            once: true,
+          }
         }
+      );
+
+      // Ensure ScrollTrigger calculates positions after images/layout load
+      const refresh = () => {
+        try { ScrollTrigger.refresh(); } catch (_) {}
+      };
+      if (document.readyState === 'complete') {
+        setTimeout(refresh, 50);
+      } else {
+        window.addEventListener('load', refresh, { once: true });
       }
-    );
+    }
 
     // NEW: ScrollTrigger for Featured Courses cards - "cover with one" effect
     gsap.utils.toArray('.course-card-animated').forEach((card) => {
@@ -205,8 +224,9 @@ function StudentHomePage() {
       );
     });
 
-    // Cleanup function
+    // Cleanup function: kill timeline and all ScrollTriggers
     return () => {
+      heroTimeline.kill();
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
   }, [pageRef]); // Added pageRef to dependency array as it's used inside
@@ -253,6 +273,7 @@ function StudentHomePage() {
   ];
 
   const [current, setCurrent] = useState(0);
+  const isAnimatingRef = useRef(false);
   const timeoutRef = useRef(null);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -278,16 +299,64 @@ function StudentHomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current]);
 
+  function transitionTo(index, direction = 1) {
+    if (isAnimatingRef.current) return;
+    isAnimatingRef.current = true;
+
+    const title = document.querySelector('.hero-title');
+    const subtitle = document.querySelector('.hero-subtitle');
+    const badge = document.querySelector('.hero-badge');
+    const buttons = document.querySelector('.hero-button');
+    const image = document.querySelector('.hero-image');
+
+    const outTl = gsap.timeline({ defaults: { duration: 0.25, ease: 'power2.in' } });
+    outTl
+      .to(badge, { y: -10, opacity: 0 }, 0)
+      .to(title, { y: -15, opacity: 0 }, 0)
+      .to(subtitle, { y: -10, opacity: 0 }, 0)
+      .to(buttons, { y: -10, opacity: 0 }, 0)
+      .to(image, { x: direction * -40, opacity: 0 }, 0)
+      .add(() => {
+        setCurrent((index + slides.length) % slides.length);
+      })
+      .add(() => {
+        // allow time for DOM to update
+      })
+      .add(() => {
+        const newTitle = document.querySelector('.hero-title');
+        const newSubtitle = document.querySelector('.hero-subtitle');
+        const newBadge = document.querySelector('.hero-badge');
+        const newButtons = document.querySelector('.hero-button');
+        const newImage = document.querySelector('.hero-image');
+
+        gsap.set([newBadge, newTitle, newSubtitle, newButtons], { opacity: 0, y: 15 });
+        gsap.set(newImage, { opacity: 0, x: direction * 40 });
+
+        const inTl = gsap.timeline({ defaults: { duration: 0.3, ease: 'power2.out' } });
+        inTl
+          .to(newImage, { x: 0, opacity: 1 }, 0)
+          .to(newBadge, { y: 0, opacity: 1 }, 0.05)
+          .to(newTitle, { y: 0, opacity: 1 }, 0.08)
+          .to(newSubtitle, { y: 0, opacity: 1 }, 0.1)
+          .to(newButtons, { y: 0, opacity: 1 }, 0.12)
+          .add(() => {
+            isAnimatingRef.current = false;
+          });
+      });
+  }
+
   function goTo(index) {
-    setCurrent((index + slides.length) % slides.length);
+    const target = (index + slides.length) % slides.length;
+    const direction = target > current || (current === slides.length - 1 && target === 0) ? 1 : -1;
+    transitionTo(target, direction);
   }
 
   function next() {
-    goTo(current + 1);
+    transitionTo(current + 1, 1);
   }
 
   function prev() {
-    goTo(current - 1);
+    transitionTo(current - 1, -1);
   }
 
   // Touch gesture handlers for mobile slider
@@ -373,7 +442,7 @@ function StudentHomePage() {
                 src={slides[current].image}
                 alt="E-learning hero"
                 loading="eager"
-                className="w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[420px] object-cover rounded-lg sm:rounded-xl transition-opacity duration-500 shadow-lg"
+                className="w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[420px] object-cover rounded-lg sm:rounded-xl transition-opacity duration-500 shadow-lg hero-image"
               />
               {/* Mobile Controls - Always visible on mobile */}
               <button

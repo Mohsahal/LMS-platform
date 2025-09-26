@@ -6,18 +6,14 @@ const UserSchema = new mongoose.Schema({
     required: true,
     trim: true,
     minlength: 3,
-    maxlength: 30,
+    maxlength: 13,
     unique: true,
     validate: {
       validator: function(v) {
-        // Allow letters, numbers, spaces, underscores, and hyphens
-        // But no excessive spaces or special characters
-        return /^[a-zA-Z0-9\s_-]+$/.test(v) && 
-               !/\s{2,}/.test(v) && 
-               !/[<>\"'&]/.test(v) && 
-               !/(admin|root|system|test|demo)/i.test(v);
+        // Only alphabets and spaces are allowed
+        return /^[A-Za-z\s]+$/.test(v);
       },
-      message: 'Username can only contain letters, numbers, spaces, underscores, and hyphens. No excessive spaces or special characters allowed. Restricted words are not allowed.'
+      message: 'Name can contain only letters and spaces (3-13 characters)'
     }
   },
   userEmail: {

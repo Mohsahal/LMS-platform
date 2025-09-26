@@ -171,6 +171,10 @@ function InstructorCourses({ listOfCourses }) {
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             onClick={() => {
+                              // Pre-set the course ID in context to avoid any timing issues
+                              if (typeof setCurrentEditedCourseId === "function") {
+                                setCurrentEditedCourseId(course?._id);
+                              }
                               navigate(`/instructor/edit-course/${course?._id}`);
                             }}
                             variant="outline"

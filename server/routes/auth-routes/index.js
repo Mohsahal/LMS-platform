@@ -5,6 +5,8 @@ const { strictAuthLimiter, moderateActionLimiter } = require("../../middleware/r
 const authenticateMiddleware = require("../../middleware/auth-middleware");
 const router = express.Router();
 
+// Removed GET / to allow SPA route /auth to render client
+
 router.post("/register", moderateActionLimiter, registerUser);
 router.post("/login", strictAuthLimiter, loginUser);
 router.get("/check-auth", authenticateMiddleware, (req, res) => {

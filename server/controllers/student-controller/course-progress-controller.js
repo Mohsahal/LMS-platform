@@ -49,6 +49,7 @@ const markCurrentLectureAsViewed = async (req, res) => {
           lectureId,
           viewed: true,
           dateViewed: new Date(),
+          
         });
         await progress.save();
       } else {
@@ -302,12 +303,15 @@ const generateCompletionCertificate = async (req, res) => {
       // Try multiple local filenames for convenience
       const uploadsDir = path.join(__dirname, "../../uploads");
       const candidates = [
-        path.join(uploadsDir, "certificate_bg.png"),
-        path.join(uploadsDir, "Certificate_v002.png"),
+        path.join(uploadsDir, "certificate.png"),
+        
       ];
       let appliedBackground = false;
       for (const p of candidates) {
+    
+
         if (fs.existsSync(p)) {
+          
           try {
             doc.image(p, 0, 0, { width: doc.page.width, height: doc.page.height });
             appliedBackground = true;
@@ -443,7 +447,7 @@ const generateCompletionCertificate = async (req, res) => {
     // Generate and place QR code that links to student dashboard
     try {
       // Build a dashboard URL; prefer CLIENT_URL env, else use the configured client URL
-      const frontendBase = process.env.CLIENT_URL || "http://192.168.24.76:5173";
+      const frontendBase = process.env.CLIENT_URL 
       // Adjust path to your student dashboard route (root path for consistency with route guard)
       const dashboardPath = "/"; // Student dashboard route (root)
       const qrTargetUrl = `${frontendBase}${dashboardPath}`;

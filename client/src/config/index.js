@@ -198,6 +198,18 @@ export const courseLandingInitialFormData = {
   objectives: "",
   welcomeMessage: "",
   image: "",
+  // Settings defaults
+  completionPercentage: 95,
+  sequentialAccess: true,
+  // Certificate defaults (optional)
+  certificateEnabled: false,
+  certificateTemplateUrl: "",
+  certificateIssuer: "Chief Executive Officer",
+  certificateOrganization: "BRAVYNEX ENGINEERING",
+  certificateGradeEnabled: false,
+  certificateCourseName: "",
+  certificateFrom: "BRAVYNEX ENGINEERING",
+  defaultCertificateGrade: "A",
 };
 
 export const courseCurriculumInitialFormData = [

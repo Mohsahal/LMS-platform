@@ -1,5 +1,6 @@
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const crypto = require("crypto");
 const { securityLogger } = require("./security-middleware");
 
@@ -102,6 +103,10 @@ function validateFileExtension(filename, mimetype) {
 
 // Function to validate file signature (magic numbers)
 function validateFileSignature(buffer, mimetype) {
+  // If we don't have a buffer preview (e.g., streaming from disk), skip deep signature checks
+  if (!buffer || !Buffer.isBuffer(buffer) || buffer.length === 0) {
+    return { valid: true };
+  }
   // Check for malicious signatures
   for (const signature of MALICIOUS_SIGNATURES) {
     if (buffer.slice(0, signature.length).equals(signature)) {
@@ -124,6 +129,14 @@ function validateFileSignature(buffer, mimetype) {
       buffer.slice(0, sig.length).equals(sig)
     );
     if (!isValid) {
+      // Relaxed validation for common MP4 variants: allow if 'ftyp' box is present near the start
+      if (mimetype === 'video/mp4') {
+        const searchWindow = buffer.slice(0, Math.min(8192, buffer.length));
+        const ftypIndex = searchWindow.indexOf(Buffer.from('ftyp'));
+        if (ftypIndex !== -1) {
+          return { valid: true };
+        }
+      }
       return { valid: false, reason: 'File signature does not match MIME type' };
     }
   }
@@ -242,13 +255,26 @@ const createSecureUpload = (options = {}) => {
 };
 
 // Middleware to validate uploaded files
-const validateUploadedFiles = (req, res, next) => {
+const validateUploadedFiles = async (req, res, next) => {
   try {
     const files = req.files || (req.file ? [req.file] : []);
     
     for (const file of files) {
+      // Obtain a small preview buffer (first N bytes) for signature checks
+      let previewBuffer = file.buffer;
+      if (!previewBuffer && file.path) {
+        const fd = fs.openSync(file.path, 'r');
+        try {
+          const len = Math.min(8192, fs.statSync(file.path).size || 8192);
+          const tmp = Buffer.alloc(len);
+          fs.readSync(fd, tmp, 0, len, 0);
+          previewBuffer = tmp;
+        } finally {
+          fs.closeSync(fd);
+        }
+      }
       // Validate file signature
-      const signatureValidation = validateFileSignature(file.buffer, file.mimetype);
+      const signatureValidation = validateFileSignature(previewBuffer, file.mimetype);
       if (!signatureValidation.valid) {
         securityLogger.warn('File upload blocked - invalid signature', {
           ip: req.ip,
@@ -262,8 +288,16 @@ const validateUploadedFiles = (req, res, next) => {
         });
       }
 
-      // Additional security checks
-      if (file.buffer.length === 0) {
+      // Additional security checks: ensure non-empty content
+      let fileSizeBytes = 0;
+      if (file && typeof file.size === 'number') {
+        fileSizeBytes = file.size;
+      } else if (file && file.buffer && Buffer.isBuffer(file.buffer)) {
+        fileSizeBytes = file.buffer.length;
+      } else if (file && file.path) {
+        try { fileSizeBytes = fs.statSync(file.path).size || 0; } catch (_) { fileSizeBytes = 0; }
+      }
+      if (!Number.isFinite(fileSizeBytes) || fileSizeBytes <= 0) {
         return res.status(400).json({
           success: false,
           message: 'Empty file not allowed'
@@ -271,7 +305,10 @@ const validateUploadedFiles = (req, res, next) => {
       }
 
       // Check for embedded scripts in file content
-      const content = file.buffer.toString('utf8', 0, Math.min(1024, file.buffer.length));
+      const contentSource = previewBuffer || file.buffer;
+      const content = contentSource && Buffer.isBuffer(contentSource)
+        ? contentSource.toString('utf8', 0, Math.min(1024, contentSource.length))
+        : "";
       const dangerousPatterns = [
         /<script/i,
         /javascript:/i,

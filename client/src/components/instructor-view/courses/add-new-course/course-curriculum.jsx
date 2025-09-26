@@ -29,6 +29,7 @@ function CourseCurriculum() {
 
   const bulkUploadInputRef = useRef(null);
   const lectureRefs = useRef([]);
+  const uploadedFileKeysRef = useRef(new Set());
   const navigate = useNavigate(); // Initialized useNavigate
 
   // Refs for GSAP animations
@@ -76,7 +77,7 @@ function CourseCurriculum() {
     }
     
     setPreviousLength(currentLength);
-  }, [courseCurriculumFormData.length]); // Added courseCurriculumFormData.length to dependency array
+  }, [courseCurriculumFormData.length, previousLength]); // Added dependencies to satisfy linter
 
   function handleNewLecture() {
     setCourseCurriculumFormData([
@@ -141,7 +142,7 @@ function CourseCurriculum() {
           let cpyCourseCurriculumFormData = [...courseCurriculumFormData];
           cpyCourseCurriculumFormData[currentIndex] = {
             ...cpyCourseCurriculumFormData[currentIndex],
-            videoUrl: response?.data?.url,
+            videoUrl: response?.data?.secure_url || response?.data?.url,
             public_id: response?.data?.public_id,
           };
           setCourseCurriculumFormData(cpyCourseCurriculumFormData);
@@ -188,16 +189,7 @@ function CourseCurriculum() {
     }
   }
 
-  function isCourseCurriculumFormDataValid() {
-    return courseCurriculumFormData.every((item) => {
-      return (
-        item &&
-        typeof item === "object" &&
-        item.title.trim() !== "" &&
-        item.videoUrl.trim() !== ""
-      );
-    });
-  }
+  // removed unused validation function; Add Lecture is allowed without media
 
   function handleOpenBulkUploadDialog() {
     bulkUploadInputRef.current?.click();
@@ -216,6 +208,24 @@ function CourseCurriculum() {
 
   async function handleMediaBulkUpload(event) {
     const selectedFiles = Array.from(event.target.files);
+    // De-duplicate files within selection and against previously uploaded files (by name+size)
+    const makeKey = (f) => `${f.name}::${f.size}`;
+    const unique = [];
+    const seen = new Set();
+    for (const f of selectedFiles) {
+      const key = makeKey(f);
+      if (uploadedFileKeysRef.current.has(key)) {
+        continue; // skip already uploaded before
+      }
+      if (seen.has(key)) continue; // skip duplicates in current pick
+      seen.add(key);
+      unique.push(f);
+    }
+    if (unique.length === 0) {
+      // nothing new to upload
+      event.target.value = '';
+      return;
+    }
     
     // Validate files before upload
     const maxSize = 2 * 1024 * 1024 * 1024; // 2GB per file
@@ -228,84 +238,111 @@ function CourseCurriculum() {
       return;
     }
 
-    const bulkFormData = new FormData();
-    selectedFiles.forEach((fileItem) => bulkFormData.append("files", fileItem));
+    // Helper to append uploaded results to curriculum
+    const appendUploaded = (uploadedArray, sourceFiles = []) => {
+      let cpy = areAllCourseCurriculumFormDataObjectsEmpty(courseCurriculumFormData)
+        ? []
+        : [...courseCurriculumFormData];
+      cpy = [
+        ...cpy,
+        ...uploadedArray.map((item, index) => ({
+          videoUrl: item?.secure_url || item?.url,
+          public_id: item?.public_id,
+          title: `Lecture ${cpy.length + (index + 1)}`,
+          freePreview: false,
+        })),
+      ];
+      setCourseCurriculumFormData(cpy);
+      // mark these files as uploaded to avoid re-upload next time
+      for (const sf of sourceFiles) {
+        uploadedFileKeysRef.current.add(`${sf.name}::${sf.size}`);
+      }
+    };
+
+    // Upload in small batches to avoid gateway limits (e.g., ngrok 503)
+    const BATCH_SIZE = 3;
+    const batches = [];
+    for (let i = 0; i < unique.length; i += BATCH_SIZE) {
+      batches.push(unique.slice(i, i + BATCH_SIZE));
+    }
 
     try {
       setMediaUploadProgress(true);
       setMediaUploadProgressPercentage(0);
-      
-      // Use enhanced upload service for bulk uploads
-      const response = await uploadService.uploadBulkFiles(
-        bulkFormData,
-        setMediaUploadProgressPercentage
-      );
 
-      console.log(response, "bulk");
-      if (response?.success) {
-        let cpyCourseCurriculumFormdata =
-          areAllCourseCurriculumFormDataObjectsEmpty(courseCurriculumFormData)
-            ? []
-            : [...courseCurriculumFormData];
-
-        cpyCourseCurriculumFormdata = [
-          ...cpyCourseCurriculumFormdata,
-          ...(response?.data || []).map((item, index) => ({
-            videoUrl: item?.url,
-            public_id: item?.public_id,
-            title: `Lecture ${
-              cpyCourseCurriculumFormdata.length + (index + 1)
-            }`,
-            freePreview: false,
-          })),
-        ];
-        setCourseCurriculumFormData(cpyCourseCurriculumFormdata);
-        setMediaUploadProgress(false);
-        setMediaUploadProgressPercentage(0);
-      } else {
-        alert('Bulk upload failed. Please try again.');
+      for (let b = 0; b < batches.length; b++) {
+        const batch = batches[b];
+        const form = new FormData();
+        batch.forEach((f) => form.append("files", f));
+        try {
+          const res = await uploadService.uploadBulkFiles(form, setMediaUploadProgressPercentage);
+          const uploadedList = res?.uploaded || res?.data || [];
+          if (Array.isArray(uploadedList) && uploadedList.length) {
+            appendUploaded(uploadedList, batch);
+          } else if (Array.isArray(res?.failed) && res.failed.length) {
+            console.warn('Some files failed in batch', res.failed);
+          }
+        } catch (bulkErr) {
+          // Fallback: upload one by one for this batch (handles 503/gateway issues)
+          console.warn('Bulk batch failed, falling back to single uploads', bulkErr?.message);
+          for (const fileItem of batch) {
+            const singleForm = new FormData();
+            singleForm.append("file", fileItem);
+            const singleRes = await uploadService.uploadFile(singleForm, setMediaUploadProgressPercentage);
+            if (singleRes?.success) {
+              appendUploaded([singleRes?.data], [fileItem]);
+            }
+          }
+        }
       }
+
+      setMediaUploadProgress(false);
+      setMediaUploadProgressPercentage(0);
     } catch (error) {
       console.log('Bulk upload error:', error);
-      if (error?.message?.includes('token')) {
-        alert('Authentication issue. Please refresh the page and try again.');
-      } else if (error?.code === 'ECONNABORTED') {
-        alert('Upload timeout. Please try again with smaller files or check your internet connection.');
-      } else {
-        alert(`Bulk upload failed: ${error?.message || 'Please try again.'}`);
-      }
+      alert(`Bulk upload failed: ${error?.message || 'Please try again.'}`);
     } finally {
       setMediaUploadProgress(false);
       setMediaUploadProgressPercentage(0);
-      // Reset the file input
       event.target.value = '';
     }
   }
 
   async function handleDeleteLecture(currentIndex) {
     const lectureToDelete = lectureRefs.current[currentIndex];
-    if (lectureToDelete) {
-      await gsap.to(lectureToDelete, {
-        opacity: 0,
-        x: -50, // Slide out to the left
-        duration: 0.4,
-        ease: "power3.in",
-        onComplete: async () => {
-          let cpyCourseCurriculumFormData = [...courseCurriculumFormData];
-          const getCurrentSelectedVideoPublicId =
-            cpyCourseCurriculumFormData[currentIndex].public_id;
+    const performLocalRemoval = () => {
+      let cpy = [...courseCurriculumFormData];
+      cpy = cpy.filter((_, index) => index !== currentIndex);
+      setCourseCurriculumFormData(cpy);
+    };
 
-          const response = await mediaDeleteService(getCurrentSelectedVideoPublicId);
+    const removeWithAnimation = async () => {
+      if (lectureToDelete) {
+        await gsap.to(lectureToDelete, {
+          opacity: 0,
+          x: -50,
+          duration: 0.4,
+          ease: "power3.in",
+        });
+      }
+      performLocalRemoval();
+    };
 
-          if (response?.success) {
-            cpyCourseCurriculumFormData = cpyCourseCurriculumFormData.filter(
-              (_, index) => index !== currentIndex
-            );
+    try {
+      const cpy = [...courseCurriculumFormData];
+      const publicId = cpy[currentIndex]?.public_id;
 
-            setCourseCurriculumFormData(cpyCourseCurriculumFormData);
-          }
-        },
-      });
+      // If there is an uploaded media, try to delete it server-side first
+      if (publicId && publicId.trim() !== "") {
+        const response = await mediaDeleteService(publicId);
+        if (!response?.success) {
+          console.warn("Media delete failed; removing lecture locally anyway.");
+        }
+      }
+    } catch (e) {
+      console.warn("Error during media deletion:", e);
+    } finally {
+      await removeWithAnimation();
     }
   }
 
@@ -347,7 +384,7 @@ function CourseCurriculum() {
           </Button>
           <Button
             ref={addLectureBtnRef} // Added ref
-            disabled={!isCourseCurriculumFormDataValid() || mediaUploadProgress}
+            disabled={mediaUploadProgress}
             onClick={handleNewLecture}
             className="bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-200 flex items-center gap-2"
           >

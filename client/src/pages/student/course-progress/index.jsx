@@ -219,19 +219,36 @@ function StudentViewCourseProgressPage() {
       console.log('Certificate download response:', res);
       
       if (res.status === 200) {
-      const blob = new Blob([res.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `certificate_${
-        auth?.user?.userName || "student"
-      }_${
-        studentCurrentCourseProgress?.courseDetails?.title || "course"
-      }.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+        // Validate content-type to ensure we received a PDF, not an error JSON
+        const contentType = res.headers?.["content-type"] || "";
+        const isPdf = contentType.includes("application/pdf");
+        const blob = new Blob([res.data], { type: isPdf ? "application/pdf" : contentType || "application/octet-stream" });
+
+        if (!isPdf) {
+          // Try to decode error message
+          try {
+            const text = await blob.text();
+            console.error('Certificate error payload:', text);
+            alert(JSON.parse(text)?.message || 'Failed to generate certificate. Please ensure the course is completed.');
+            return;
+          } catch (decodeErr) {
+            console.warn('Failed to parse certificate error payload', decodeErr);
+          }
+        }
+
+        // Force a download regardless of browser PDF viewer
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `certificate_${
+          auth?.user?.userName || "student"
+        }_${
+          studentCurrentCourseProgress?.courseDetails?.title || "course"
+        }.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
       } else {
         console.error('Certificate download failed with status:', res.status);
         alert('Failed to download certificate. Please try again.');

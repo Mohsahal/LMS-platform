@@ -30,6 +30,8 @@ function VideoPlayer({
   const [showControls, setShowControls] = useState(true);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   const playerRef = useRef(null);
   const playerContainerRef = useRef(null);
@@ -51,6 +53,10 @@ function VideoPlayer({
     if (!seeking) {
       setPlayed(state.played);
       setCurrentTime(state.playedSeconds);
+    }
+    // Do not clear buffering indicator while offline
+    if (!isOffline) {
+      setIsBuffering(false);
     }
   }
 
@@ -134,9 +140,15 @@ function VideoPlayer({
     };
 
     document.addEventListener("fullscreenchange", handleFullScreenChange);
+    const onlineListener = () => setIsOffline(false);
+    const offlineListener = () => setIsOffline(true);
+    window.addEventListener('online', onlineListener);
+    window.addEventListener('offline', offlineListener);
 
     return () => {
       document.removeEventListener("fullscreenchange", handleFullScreenChange);
+      window.removeEventListener('online', onlineListener);
+      window.removeEventListener('offline', offlineListener);
     };
   }, []);
 
@@ -160,7 +172,23 @@ function VideoPlayer({
     setPlayed(0);
     setCurrentTime(0);
     console.log("Video URL changed, resetting progress to 0");
+    // Auto-play on new URL (when a lecture is selected)
+    if (url) {
+      setPlaying(true);
+    }
   }, [url]);
+
+  // Auto-resume when coming back online
+  useEffect(() => {
+    if (isOffline) {
+      // Force buffering UI and pause playback when offline
+      setIsBuffering(true);
+      setPlaying(false);
+    } else if (url) {
+      setIsBuffering(false);
+      setPlaying(true);
+    }
+  }, [isOffline, url]);
 
   return (
     <div
@@ -182,6 +210,10 @@ function VideoPlayer({
         playing={playing}
         volume={volume}
         muted={muted}
+        onBuffer={() => setIsBuffering(true)}
+        onBufferEnd={() => !isOffline && setIsBuffering(false)}
+        onError={() => setIsBuffering(true)}
+        onStart={() => !isOffline && setIsBuffering(false)}
         onProgress={handleProgress}
         onDuration={handleDuration}
         onEnded={handleVideoEnded}
@@ -193,9 +225,35 @@ function VideoPlayer({
           },
         }}
       />
+      {/* Click overlay to toggle play/pause; starts paused by default */}
+      {!playing && (
+        <button
+          type="button"
+          onClick={() => setPlaying(true)}
+          className="absolute inset-0 flex items-center justify-center bg-black/20 focus:outline-none"
+          aria-label="Play video"
+        >
+          <div className="w-14 h-14 rounded-full bg-white/80 flex items-center justify-center">
+            <Play className="h-6 w-6 text-black" />
+          </div>
+        </button>
+      )}
+      {/* Center overlay for buffering/offline */}
+      {(isBuffering || isOffline) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 select-none" aria-live="polite">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-10 h-10 border-4 border-white/60 border-t-transparent rounded-full animate-spin"></div>
+            <div className="text-white text-xs sm:text-sm font-medium">
+              {isOffline ? 'You are offline. Reconnecting…' : 'Loading…'}
+            </div>
+          </div>
+        </div>
+      )}
       <div
         ref={controlsRef}
         className={`absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent`}
+        
+
         style={{ opacity: 0, pointerEvents: "none" }}
       >
         <Slider

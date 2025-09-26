@@ -243,9 +243,11 @@ const securityLoggerMiddleware = (req, res, next) => {
       referer: req.headers.referer,
     };
 
-    // Log suspicious activities (but not for media uploads which can take longer)
-    const isMediaUpload = req.url.includes('/media/') || req.url.includes('/upload');
-    if (res.statusCode >= 400 || (duration > 5000 && !isMediaUpload)) {
+    // Avoid flagging expected long-running requests (media, certificate generation) as suspicious
+    const isMedia = req.url.includes('/media/') || req.url.includes('/upload');
+    const isCertificate = req.url.includes('/certificate/');
+    const shouldSkipDuration = isMedia || isCertificate;
+    if (res.statusCode >= 400 || (duration > 5000 && !shouldSkipDuration)) {
       securityLogger.warn('Suspicious activity detected', logData);
     }
   });
@@ -260,6 +262,8 @@ const cspOptions = {
     styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
     fontSrc: ["'self'", "https://fonts.gstatic.com"],
     imgSrc: ["'self'", "data:", "https:"],
+    // Allow Cloudinary and HTTPS media (videos, audio)
+    mediaSrc: ["'self'", "https://res.cloudinary.com", "https://*.cloudinary.com", "blob:", "data:"],
     scriptSrc: ["'self'"],
     connectSrc: ["'self'"],
     frameSrc: ["'none'"],

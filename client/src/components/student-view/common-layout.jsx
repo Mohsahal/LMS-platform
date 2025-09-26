@@ -1,7 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import StudentViewCommonHeader from "./header";
 import { Link } from "react-router-dom";
-import Footer from "@/components/footer";
+import Footer from "@/components/student-view/footer";
 
 function StudentViewCommonLayout() {
   const location = useLocation();

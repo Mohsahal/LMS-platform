@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -21,40 +22,65 @@ const studentCourseProgressRoutes = require("./routes/student-routes/course-prog
 const studentAnalyticsRoutes = require("./routes/student-routes/analytics-routes");
 const notifyRoutes = require("./routes/notify-routes");
 const secureInstructorRoutes = require("./routes/instructor-routes/secure-instructor-routes");
-
+const path = require('path');
 
 const app = express();
 app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mohammedsahal1243:sahal124867@cluster0.1eaz3.mongodb.net/e-learn";
 // CORS configuration with dynamic origin support for development
-const allowedOrigins = [
-  'http://192.168.94.76:5173'
-];
+// const allowedOrigins = [
+//   'http://192.168.94.76:5173'
+// ];
+
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       // Allow requests with no origin (like mobile apps or curl requests)
+//       if (!origin) return callback(null, true);
+      
+//       // Check if origin is in allowed list
+//       if (allowedOrigins.indexOf(origin) !== -1) {
+//         return callback(null, true);
+//       }
+      
+//       // For development, allow any localhost or 192.168.x.x origin
+//       if (process.env.NODE_ENV === 'development') {
+//         const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+)(:\d+)?$/.test(origin);
+//         if (isLocalhost) {
+//           return callback(null, true);
+//         }
+//       }
+      
+//       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+//       return callback(new Error(msg), false);
+//     },
+//     methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
+//     credentials: true,
+//     preflightContinue: false,
+//     optionsSuccessStatus: 204
+//   })
+// );
+
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+// CORS allowlist from env (comma-separated)
+const CORS_ORIGINS = (process.env.CORS_ORIGINS)
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
+    origin: function(origin, callback) {
       if (!origin) return callback(null, true);
-      
-      // Check if origin is in allowed list
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        return callback(null, true);
-      }
-      
-      // For development, allow any localhost or 192.168.x.x origin
-      if (process.env.NODE_ENV === 'development') {
-        const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+)(:\d+)?$/.test(origin);
-        if (isLocalhost) {
-          return callback(null, true);
-        }
-      }
-      
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+      // Allow same-origin and allowed list; also permit ngrok for dev
+      const isAllowed = CORS_ORIGINS.includes(origin) || /https?:\/\/[a-z0-9-]+\.ngrok(-free)?\.app(:\d+)?$/i.test(origin);
+      return callback(isAllowed ? null : new Error("Not allowed by CORS"), isAllowed);
     },
-    methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
+    methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
     credentials: true,
     preflightContinue: false,
@@ -62,9 +88,33 @@ app.use(
   })
 );
 
+// Serve static frontend files (Vite outputs to dist)
+app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
+
 // Enhanced security headers with CSP
+const { directives } = cspOptions;
+const dynamicConnectSrc = new Set([...(directives.connectSrc || ["'self'"])]);
+const dynamicMediaSrc = new Set([...(directives.mediaSrc || [])]);
+// Add allowed CORS origins to CSP connectSrc
+CORS_ORIGINS.forEach((o) => dynamicConnectSrc.add(o));
+// Allow ngrok in dev for API/ws
+dynamicConnectSrc.add("https://*.ngrok.app");
+dynamicConnectSrc.add("wss://*.ngrok.app");
+// Ensure Cloudinary is allowed for media
+dynamicMediaSrc.add("'self'");
+dynamicMediaSrc.add("https://res.cloudinary.com");
+dynamicMediaSrc.add("https://*.cloudinary.com");
+dynamicMediaSrc.add("blob:");
+dynamicMediaSrc.add("data:");
+
 app.use(helmet({
-  contentSecurityPolicy: cspOptions,
+  contentSecurityPolicy: {
+    directives: {
+      ...directives,
+      connectSrc: Array.from(dynamicConnectSrc),
+      mediaSrc: Array.from(dynamicMediaSrc),
+    }
+  },
   crossOriginEmbedderPolicy: false,
   hsts: {
     maxAge: 31536000,
@@ -131,19 +181,31 @@ app.use((req, res, next) => {
 app.options('*', cors());
 
 // CSRF protection (double-submit cookie pattern)
-const csrfProtection = csrf({ cookie: {
-  key: "csrfToken",
-  httpOnly: false, // readable by JS to set header
-  sameSite: "lax",
-  secure: false, // set true if serving over HTTPS
-}});
+// const csrfProtection = csrf({ cookie: {
+//   key: "csrfToken",
+//   httpOnly: false, // readable by JS to set header
+//   sameSite: "lax",
+//   secure: false, // set true if serving over HTTPS
+// }});
 
-app.use(csrfProtection);
+// app.use(csrfProtection);
+
+
+// Note: This catch-all must be registered AFTER API routes
+// Moved below after routes registration
+
+
 
 // Endpoint for clients to fetch CSRF token
 app.get("/csrf-token", (req, res) => {
+  if (typeof req.csrfToken === 'function') {
   return res.status(200).json({ csrfToken: req.csrfToken() });
+  }
+  return res.status(200).json({ csrfToken: null });
 });
+
+app.get('/favicon.ico', (req, res) => res.sendStatus(204));
+
 
 //database connection
 console.log("Attempting to connect to MongoDB...");
@@ -181,6 +243,26 @@ app.use("/notify", notifyRoutes);
 
 // Secure instructor routes with comprehensive security
 app.use("/secure/instructor", secureInstructorRoutes);
+
+// SPA fallback: send index.html for any non-API route
+app.get('*', (req, res, next) => {
+  // Only treat as API for explicit API roots; allow SPA routes like /instructor/... to render
+  const apiPrefixes = [
+    '/secure',
+    '/media',
+    '/instructor/course', // narrow to instructor API only
+    '/student',
+    '/notify'
+  ];
+  const isApi = apiPrefixes.some((p) => req.path === p || req.path.startsWith(p + '/'))
+    || req.path === '/csrf-token'
+    || req.path === '/health'
+    || req.path === '/favicon.ico';
+
+  if (isApi) return next();
+
+  return res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
+});
 
 
 app.use((err, req, res, next) => {
@@ -225,3 +307,6 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server is now running on port ${PORT}`);
 });
+
+
+

@@ -43,29 +43,67 @@ function AddNewCoursePage() {
   }
 
   function validateFormData() {
-    for (const key in courseLandingFormData) {
-      if (isEmpty(courseLandingFormData[key])) {
+    // Only validate required landing fields
+    const requiredFields = [
+      "title",
+      "category",
+      "level",
+      "primaryLanguage",
+      "subtitle",
+      "description",
+      "pricing",
+      "image",
+    ];
+
+    for (const key of requiredFields) {
+      const value = courseLandingFormData[key];
+      if (isEmpty(value) || (typeof value === "string" && value.trim() === "")) {
         return false;
       }
     }
 
-    let hasFreePreview = false;
-
-    for (const item of courseCurriculumFormData) {
+    // If certificates are enabled, require certificate name and grade
+    if (courseLandingFormData?.certificateEnabled) {
+      const certName = courseLandingFormData?.certificateCourseName;
+      const certGrade = courseLandingFormData?.defaultCertificateGrade;
       if (
-        isEmpty(item.title) ||
-        isEmpty(item.videoUrl) ||
-        isEmpty(item.public_id)
+        isEmpty(certName) ||
+        (typeof certName === "string" && certName.trim() === "") ||
+        isEmpty(certGrade) ||
+        (typeof certGrade === "string" && certGrade.trim() === "")
       ) {
         return false;
       }
-
-      if (item.freePreview) {
-        hasFreePreview = true; //found at least one free preview
-      }
     }
 
-    return hasFreePreview;
+    // Ensure pricing is a positive number
+    const priceNum = Number(courseLandingFormData.pricing);
+    if (!Number.isFinite(priceNum) || priceNum <= 0) return false;
+
+    // Validate curriculum basics
+    if (!Array.isArray(courseCurriculumFormData) || courseCurriculumFormData.length === 0) {
+      return false;
+    }
+
+    let hasFreePreview = false;
+    for (const item of courseCurriculumFormData) {
+      // Always need a title for each lecture
+      if (isEmpty(item?.title) || String(item.title).trim() === "") {
+        return false;
+      }
+      if (item?.freePreview) hasFreePreview = true;
+    }
+
+    // On create, require at least one uploaded media and one free preview
+    if (currentEditedCourseId === null) {
+      const hasAnyVideo = courseCurriculumFormData.some(
+        (i) => !isEmpty(i?.videoUrl) && !isEmpty(i?.public_id)
+      );
+      return hasFreePreview && hasAnyVideo;
+    }
+
+    // On edit, allow saving without free preview/media constraints
+    return true;
   }
 
   async function handleCreateCourse() {
@@ -106,8 +144,8 @@ function AddNewCoursePage() {
       const setCourseFormData = Object.keys(
         courseLandingInitialFormData
       ).reduce((acc, key) => {
-        acc[key] = response?.data[key] || courseLandingInitialFormData[key];
-
+        const value = response?.data[key];
+        acc[key] = value !== undefined ? value : courseLandingInitialFormData[key];
         return acc;
       }, {});
 
@@ -178,3 +216,4 @@ function AddNewCoursePage() {
 }
 
 export default AddNewCoursePage;
+

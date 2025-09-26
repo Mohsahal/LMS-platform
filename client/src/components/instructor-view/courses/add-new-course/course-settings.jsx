@@ -274,7 +274,7 @@ function CourseSettings() {
                     </div>
                     <Switch
                       id="sequentialAccess"
-                      checked={courseLandingFormData?.sequentialAccess !== false}
+                      checked={Boolean(courseLandingFormData?.sequentialAccess)}
                       onCheckedChange={(v) => setCourseLandingFormData({ 
                         ...courseLandingFormData, 
                         sequentialAccess: v 

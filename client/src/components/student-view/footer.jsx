@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { contactAdminService } from "@/services";
 import { Facebook, Instagram, Linkedin, Twitter, Mail, Phone, MapPin } from "lucide-react";
-import SecureContactForm from "./security/SecureContactForm";
+import SecureContactForm from "../security/SecureContactForm";
 
 function Footer() {
   const [contactForm, setContactForm] = useState({ 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { SecureInput, SecureTextarea, useRateLimit, useCSRFToken } from './SecureForm';
 import { useToast } from '@/hooks/use-toast';
 import { contactAdminService } from '@/services';
@@ -32,7 +32,7 @@ const SecureContactForm = () => {
       errors.fromName = 'Name is required';
     } else if (formData.fromName.trim().length < 2) {
       errors.fromName = 'Name must be at least 2 characters';
-    } else if (!/^[a-zA-Z\s\-'\.]+$/.test(formData.fromName.trim())) {
+    } else if (!/^[a-zA-Z\s\-'.]+$/.test(formData.fromName.trim())) {
       errors.fromName = 'Name contains invalid characters';
     }
 
@@ -44,14 +44,15 @@ const SecureContactForm = () => {
       errors.fromEmail = 'Invalid email format';
     }
 
-    // Phone validation (optional)
+    // Phone validation (optional, enforce exactly 10 digits when provided)
     if (formData.phoneNumber.trim()) {
-      const cleanPhone = formData.phoneNumber.replace(/[\s\-\(\)\+]/g, '');
-      if (!/^\d{10,15}$/.test(cleanPhone)) {
-        errors.phoneNumber = 'Invalid phone number format';
+      const cleanPhone = formData.phoneNumber.replace(/\D/g, '');
+      if (!/^\d{10}$/.test(cleanPhone)) {
+        errors.phoneNumber = 'Enter a valid 10-digit phone number';
       }
     }
 
+    
     // Message validation
     if (!formData.message.trim()) {
       errors.message = 'Message is required';
@@ -78,9 +79,14 @@ const SecureContactForm = () => {
   }, [formData]);
 
   const handleInputChange = (field) => (e) => {
+    let value = e.target.value;
+    if (field === 'phoneNumber') {
+      // Allow only digits and cap at 10
+      value = value.replace(/\D/g, '').slice(0, 10);
+    }
     setFormData(prev => ({
       ...prev,
-      [field]: e.target.value
+      [field]: value
     }));
     
     // Mark field as touched when user starts typing
@@ -164,6 +170,10 @@ const SecureContactForm = () => {
           institution: '',
           message: ''
         });
+        // Clear validation and touched states so errors don't show on empty fields
+        setTouchedFields({});
+        setValidationErrors({});
+        setIsFormValid(false);
       } else {
         throw new Error(response?.message || 'Failed to send message');
       }

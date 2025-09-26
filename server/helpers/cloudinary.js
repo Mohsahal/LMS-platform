@@ -89,4 +89,4 @@ const deleteMediaFromCloudinary = async (publicId) => {
   }
 };
 
-module.exports = { uploadMediaToCloudinary, uploadMediaBufferToCloudinary, uploadLargeBufferToCloudinary, deleteMediaFromCloudinary };
+module.exports = { cloudinary, uploadMediaToCloudinary, uploadMediaBufferToCloudinary, uploadLargeBufferToCloudinary, deleteMediaFromCloudinary };

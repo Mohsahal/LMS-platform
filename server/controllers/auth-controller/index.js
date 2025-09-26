@@ -10,13 +10,14 @@ const registerUser = async (req, res) => {
   console.log("Request headers:", req.headers);
   
   const { userName, userEmail, password, dob, guardianName } = req.body || {};
+  const normalizedUserName = (userName + "").trim().replace(/\s+/g, ' ');
   
   console.log("Extracted fields:", { userName, userEmail, password: password ? "present" : "missing" });
 
   // Validate required fields
-  if (!userName || !userEmail || !password) {
+  if (!normalizedUserName || !userEmail || !password) {
     console.log("❌ Missing required fields:", { 
-      userName: userName || "MISSING", 
+      userName: normalizedUserName || "MISSING", 
       userEmail: userEmail || "MISSING", 
       password: password ? "present" : "MISSING" 
     });
@@ -36,8 +37,13 @@ const registerUser = async (req, res) => {
   if (!validator.isEmail(normalizedEmail || "")) {
     return res.status(400).json({ success: false, message: "Invalid email address" });
   }
-  if (!validator.isLength(userName + "", { min: 3, max: 60 })) {
-    return res.status(400).json({ success: false, message: "Invalid name length" });
+
+  // Username validation: alphabets and spaces only, 3–13 chars
+  if (!validator.isLength(normalizedUserName + "", { min: 3, max: 13 })) {
+    return res.status(400).json({ success: false, message: "Name must be 3-13 characters" });
+  }
+  if (!/^[A-Za-z\s]+$/.test(normalizedUserName)) {
+    return res.status(400).json({ success: false, message: "Name can contain only letters and spaces" });
   }
   if (!validator.isStrongPassword(password + "", { minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1 })) {
     return res.status(400).json({ success: false, message: "Weak password: include upper, lower, number, special symbol, min 8" });
@@ -58,7 +64,7 @@ const registerUser = async (req, res) => {
 
     try {
     const existingUser = await User.findOne({
-      $or: [{ userEmail: normalizedEmail }, { userName }],
+      $or: [{ userEmail: normalizedEmail }, { userName: normalizedUserName }],
     });
 
     if (existingUser) {
@@ -70,7 +76,8 @@ const registerUser = async (req, res) => {
 
     const hashPassword = await bcrypt.hash(password, 10);
     const newUser = new User({
-      userName: validator.escape(userName + ""),
+      // Preserve single spaces; model validation trims
+      userName: normalizedUserName,
       userEmail: normalizedEmail,
       role: "user",
       password: hashPassword,
@@ -93,6 +100,26 @@ const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Registration error:", error);
+    // Duplicate key error (unique index)
+    if (error && (error.code === 11000 || error.code === 11001)) {
+      const field = Object.keys(error.keyPattern || {})[0] || 'field';
+      return res.status(400).json({
+        success: false,
+        message: `${field === 'userEmail' ? 'Email' : 'Username'} already exists`,
+        field,
+      });
+    }
+    // Mongoose validation error
+    if (error && error.name === 'ValidationError') {
+      const details = Object.fromEntries(
+        Object.entries(error.errors || {}).map(([k, v]) => [k, v?.message || 'Invalid value'])
+      );
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        details,
+      });
+    }
     return res.status(500).json({
       success: false,
       message: "Internal server error during registration",

@@ -64,7 +64,7 @@ const secureUpload = createSecureUpload({
 
 // Single file upload with comprehensive security
 router.post("/media/upload", 
-  uploadRateLimit(5, 15 * 60 * 1000), // 5 uploads per 15 minutes
+  uploadRateLimit(15, 15 * 60 * 1000), // 15 uploads per 15 minutes
   secureUpload.single("file"),
   validateUploadedFiles,
   secureMediaUpload
@@ -89,7 +89,7 @@ const imageUpload = createSecureUpload({
 });
 
 router.post("/media/upload-image", 
-  uploadRateLimit(10, 15 * 60 * 1000), // 10 image uploads per 15 minutes
+  uploadRateLimit(30, 15 * 60 * 1000), // 30 image uploads per 15 minutes
   imageUpload.single("image"),
   validateUploadedFiles,
   secureMediaUpload

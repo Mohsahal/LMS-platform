@@ -79,8 +79,8 @@ const updateCourseByID = async (req, res) => {
 
     const updatedCourse = await Course.findByIdAndUpdate(
       id,
-      updatedCourseData,
-      { new: true }
+      { $set: updatedCourseData },
+      { new: true, runValidators: true }
     );
 
     if (!updatedCourse) {
