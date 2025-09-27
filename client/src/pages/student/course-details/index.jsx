@@ -57,9 +57,10 @@ function StudentViewCourseDetailsPage() {
   const navigate = useNavigate();
 
   const fetchStudentViewCourseDetails = useCallback(async () => {
-    const response = await fetchStudentViewCourseDetailsService(
-      currentCourseDetailsId
-    );
+    const courseId = id || currentCourseDetailsId;
+    if (!courseId) return;
+    
+    const response = await fetchStudentViewCourseDetailsService(courseId);
 
     if (response?.success) {
       setStudentViewCourseDetails(response?.data);
@@ -68,7 +69,7 @@ function StudentViewCourseDetailsPage() {
       setStudentViewCourseDetails(null);
       setLoadingState(false);
     }
-  }, [currentCourseDetailsId, setStudentViewCourseDetails, setLoadingState]);
+  }, [id, currentCourseDetailsId, setStudentViewCourseDetails, setLoadingState]);
 
   function handleSetFreePreview(getCurrentVideoInfo) {
     setDisplayCurrentVideoFreePreview(getCurrentVideoInfo?.videoUrl);
@@ -149,12 +150,11 @@ function StudentViewCourseDetailsPage() {
   }, [displayCurrentVideoFreePreview]);
 
   useEffect(() => {
-    if (currentCourseDetailsId !== null) fetchStudentViewCourseDetails();
-  }, [currentCourseDetailsId, fetchStudentViewCourseDetails]);
-
-  useEffect(() => {
-    if (id) setCurrentCourseDetailsId(id);
-  }, [id, setCurrentCourseDetailsId]);
+    if (id) {
+      setCurrentCourseDetailsId(id);
+      fetchStudentViewCourseDetails();
+    }
+  }, [id, setCurrentCourseDetailsId, fetchStudentViewCourseDetails]);
 
   // Check purchase status to toggle CTA
   useEffect(() => {
