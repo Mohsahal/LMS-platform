@@ -525,6 +525,14 @@ app.get("/csrf-token", (req, res) => {
 
 app.get('/favicon.ico', (req, res) => res.sendStatus(204));
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({ 
+    status: "OK", 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 //database connection
 console.log("Attempting to connect to MongoDB...");
@@ -565,21 +573,35 @@ app.use("/secure/instructor", secureInstructorRoutes);
 
 // SPA fallback: send index.html for any non-API route
 app.get('*', (req, res, next) => {
-  // Only treat as API for explicit API roots; allow SPA routes like /instructor/... to render
+  // Define all API route prefixes that should NOT serve the SPA
   const apiPrefixes = [
     '/secure',
     '/media',
-    '/instructor/course', // narrow to instructor API only
-    '/student',
-    '/notify'
+    '/student/course', // API routes only
+    '/student/order',
+    '/student/courses-bought',
+    '/student/course-progress',
+    '/student/analytics',
+    '/instructor/course', // API routes only
+    '/instructor/analytics',
+    '/auth',
+    '/notify',
+    '/csrf-token',
+    '/health',
+    '/favicon.ico'
   ];
-  const isApi = apiPrefixes.some((p) => req.path === p || req.path.startsWith(p + '/'))
-    || req.path === '/csrf-token'
-    || req.path === '/health'
-    || req.path === '/favicon.ico';
+  
+  // Check if the current path is an API route
+  const isApi = apiPrefixes.some((prefix) => 
+    req.path === prefix || req.path.startsWith(prefix + '/')
+  );
 
-  if (isApi) return next();
+  if (isApi) {
+    console.log(`API route detected: ${req.path} - passing to API handlers`);
+    return next();
+  }
 
+  console.log(`SPA route detected: ${req.path} - serving index.html`);
   return res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
 });
 
