@@ -7,6 +7,7 @@ import { fetchInstructorCourseListService } from "@/services";
 import { useContext, useEffect, useState, useCallback, useRef } from "react"; // Added useRef
 import { Search, Calendar, LogOut, BarChart3, BookOpen, TrendingUp, Menu, X } from "lucide-react";
 import { gsap } from "gsap"; // Import GSAP
+import { useNavigate } from "react-router-dom";
 
 function InstructorDashboardpage() {
   const [currentView, setCurrentView] = useState("dashboard");
@@ -15,6 +16,7 @@ function InstructorDashboardpage() {
 
   const sidebarRef = useRef(null); // Ref for the sidebar
   const mainContentRef = useRef(null); // Ref for the main content
+  const navigate = useNavigate();
 
   const { logout } = useContext(AuthContext);
   const { instructorCoursesList, setInstructorCoursesList } =
@@ -44,6 +46,8 @@ function InstructorDashboardpage() {
 
   function handleLogout() {
     logout();
+    // Navigate to auth page after logout
+    navigate("/auth");
   }
 
 

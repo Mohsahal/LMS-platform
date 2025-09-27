@@ -26,6 +26,8 @@ function StudentViewCommonHeader() {
       resetCredentials();
       sessionStorage.clear();
     }
+    // Navigate to auth page after logout
+    navigate("/auth");
   }
 
   function handleSearchSubmit(event) {

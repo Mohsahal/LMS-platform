@@ -136,7 +136,8 @@ class TokenManager {
     } catch (error) {
       // Redirect to login if token refresh fails
       if (typeof window !== "undefined") {
-        window.location.href = "/auth";
+        // Use React Router navigation instead of window.location.href
+        // This will be handled by the RouteGuard component
       }
       throw error;
     }

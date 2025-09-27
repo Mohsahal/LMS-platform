@@ -118,7 +118,8 @@ axiosInstance.interceptors.response.use(
         tokenManager.removeToken();
         toast({ title: "Session issue", description: message });
         if (typeof window !== "undefined") {
-          window.location.href = "/auth";
+          // Use React Router navigation instead of window.location.href
+          // This will be handled by the RouteGuard component
         }
       } else if (isAuthLogin) {
         // For login failures, do not redirect or clear input; allow caller to handle toast

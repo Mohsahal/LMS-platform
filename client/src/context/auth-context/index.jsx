@@ -6,11 +6,13 @@ import PropTypes from "prop-types";
 import validator from "validator";
 import { useToast } from "@/hooks/use-toast";
 import axiosInstance from "@/api/axiosInstance"; // 使用配置好的axiosInstance
+import { useNavigate } from "react-router-dom";
 
 export const AuthContext = createContext(null);
 
 export default function AuthProvider({ children }) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [signInFormData, setSignInFormData] = useState(initialSignInFormData);
   const [signUpFormData, setSignUpFormData] = useState(initialSignUpFormData);
   const [auth, setAuth] = useState({
@@ -115,9 +117,9 @@ export default function AuthProvider({ children }) {
         // Redirect based on user role (slight delay to allow toast to show)
         setTimeout(() => {
           if (data.data.user.role === "instructor") {
-            window.location.href = "/instructor";
+            navigate("/instructor");
           } else {
-            window.location.href = "/";
+            navigate("/");
           }
         }, 600);
       } else {
@@ -210,9 +212,8 @@ export default function AuthProvider({ children }) {
     setRegistrationSuccess(false);
     setIsRegistering(false);
     
-    // Redirect to auth page
-    window.location.href = "/auth";
-    
+    // Use React Router navigation instead of window.location.href
+    // This will be handled by the RouteGuard component
     console.log("✅ Logout successful");
   }
 
