@@ -69,7 +69,7 @@ function App() {
             </StudentRouteGuard>
           }
         >
-          <Route path="" element={<StudentHomePage />} />
+          <Route index element={<StudentHomePage />} />
           <Route path="home" element={<StudentHomePage />} />
           {/* <Route path="about" element={<AboutPage />} /> */}
           <Route path="courses" element={<StudentViewCoursesPage />} />
@@ -85,6 +85,18 @@ function App() {
             element={<StudentViewCourseProgressPage />}
           />
         </Route>
+
+        {/* Direct route for /home to ensure it works */}
+        <Route
+          path="/home"
+          element={
+            <StudentRouteGuard>
+              <StudentViewCommonLayout>
+                <StudentHomePage />
+              </StudentViewCommonLayout>
+            </StudentRouteGuard>
+          }
+        />
 
         {/* 404 Route */}
         <Route path="*" element={<NotFoundPage />} />
