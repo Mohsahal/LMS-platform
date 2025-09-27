@@ -1,16 +1,1 @@
-# SPA fallback for all routes
 /*    /index.html   200
-
-# API routes should not be redirected
-/api/*    /api/:splat   200
-/secure/*    /secure/:splat   200
-/media/*    /media/:splat   200
-/auth/*    /auth/:splat   200
-/instructor/course/*    /instructor/course/:splat   200
-/instructor/analytics/*    /instructor/analytics/:splat   200
-/student/course/*    /student/course/:splat   200
-/student/order/*    /student/order/:splat   200
-/student/courses-bought/*    /student/courses-bought/:splat   200
-/student/course-progress/*    /student/course-progress/:splat   200
-/student/analytics/*    /student/analytics/:splat   200
-/notify/*    /notify/:splat   200
