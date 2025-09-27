@@ -16,12 +16,10 @@ import StudentViewCourseProgressPage from "./pages/student/course-progress";
 import StudentAnalyticsPage from "./pages/student/analytics";
 import AnimationProvider from "./context/animation-context";
 import PageTransition from "./components/page-transition";
-import RoutePreserver from "./components/RoutePreserver";
 
 function App() {
   return (
     <AnimationProvider>
-      <RoutePreserver />
       <Routes>
         {/* Public Auth Route - redirects authenticated users */}
         <Route

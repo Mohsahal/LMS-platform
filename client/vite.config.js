@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/',
   resolve: {
     alias: {
       "@": path.resolve(path.dirname(fileURLToPath(import.meta.url)), "./src"),
@@ -13,13 +12,9 @@ export default defineConfig({
   },
   server: {
     historyApiFallback: true,
-    port: 5173,
-    host: true
   },
   preview: {
     historyApiFallback: true,
-    port: 4173,
-    host: true
   },
   build: {
     outDir: 'dist',
@@ -30,9 +25,5 @@ export default defineConfig({
         manualChunks: undefined,
       },
     },
-  },
-  // Ensure proper SPA handling
-  define: {
-    __VUE_PROD_DEVTOOLS__: false,
   },
 });
