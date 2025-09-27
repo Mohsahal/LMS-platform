@@ -342,7 +342,8 @@ const CORS_ORIGINS = (process.env.CORS_ORIGINS || "")
 // Add your Render.com domains to the allowed origins
 const allowedOrigins = [
   ...CORS_ORIGINS,
-  'https://lms-platform-client.onrender.com'
+  'https://lms-platform-client.onrender.com',
+  'http://localhost:5173'
 ];
 
 // Debug CORS configuration
