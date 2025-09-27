@@ -1,0 +1,108 @@
+[1mdiff --git a/server/server.js b/server/server.js[m
+[1mindex 39f49da..c95ee5d 100644[m
+[1m--- a/server/server.js[m
+[1m+++ b/server/server.js[m
+[36m@@ -399,7 +399,9 @@[m [mapp.use(express.static(path.join(__dirname, 'public')));[m
+ [m
+ [m
+ // Serve static frontend files (Vite outputs to dist)[m
+[31m-app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));[m
+[32m+[m[32mapp.use(express.static(path.join(__dirname, '..', 'client', 'dist'), {[m
+[32m+[m[32m  index: false // Don't serve index.html automatically for static files[m
+[32m+[m[32m}));[m
+ [m
+ // Enhanced security headers with CSP[m
+ const { directives } = cspOptions;[m
+[36m@@ -474,7 +476,9 @@[m [mapp.use((req, res, next) => {[m
+   const userAgent = req.get('User-Agent') || 'Unknown';[m
+   const isMobile = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);[m
+   [m
+[32m+[m[32m  console.log(`\n=== REQUEST DEBUG ===`);[m
+   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);[m
+[32m+[m[32m  console.log(`Full URL: ${req.protocol}://${req.get('host')}${req.originalUrl}`);[m
+   console.log(`Origin: ${origin}`);[m
+   console.log(`User-Agent: ${userAgent}`);[m
+   console.log(`Is Mobile: ${isMobile}`);[m
+[36m@@ -493,6 +497,7 @@[m [mapp.use((req, res, next) => {[m
+       console.log('Request query:', cleanQuery);[m
+     }[m
+   }[m
+[32m+[m[32m  console.log(`===================\n`);[m
+   next();[m
+ });[m
+ [m
+[36m@@ -571,19 +576,19 @@[m [mapp.use("/notify", notifyRoutes);[m
+ // Secure instructor routes with comprehensive security[m
+ app.use("/secure/instructor", secureInstructorRoutes);[m
+ [m
+[32m+[m[32m// Handle root path explicitly[m
+[32m+[m[32mapp.get('/', (req, res) => {[m
+[32m+[m[32m  console.log('Root path requested - serving index.html');[m
+[32m+[m[32m  const indexPath = path.join(__dirname, '..', 'client', 'dist', 'index.html');[m
+[32m+[m[32m  return res.sendFile(indexPath);[m
+[32m+[m[32m});[m
+[32m+[m
+ // SPA fallback: send index.html for any non-API route[m
+ app.get('*', (req, res, next) => {[m
+[31m-  // Define all API route prefixes that should NOT serve the SPA[m
+[31m-  const apiPrefixes = [[m
+[32m+[m[32m  // Define exact API routes that should NOT serve the SPA[m
+[32m+[m[32m  const apiRoutes = [[m
+     '/secure',[m
+     '/media',[m
+[31m-    '/student/course', // API routes only[m
+[31m-    '/student/order',[m
+[31m-    '/student/courses-bought',[m
+[31m-    '/student/course-progress',[m
+[31m-    '/student/analytics',[m
+[31m-    '/instructor/course', // API routes only[m
+[31m-    '/instructor/analytics',[m
+     '/auth',[m
+     '/notify',[m
+     '/csrf-token',[m
+[36m@@ -591,18 +596,40 @@[m [mapp.get('*', (req, res, next) => {[m
+     '/favicon.ico'[m
+   ];[m
+   [m
+[31m-  // Check if the current path is an API route[m
+[31m-  const isApi = apiPrefixes.some((prefix) => [m
+[31m-    req.path === prefix || req.path.startsWith(prefix + '/')[m
+[32m+[m[32m  // Define API route prefixes (these should be handled by API)[m
+[32m+[m[32m  const apiPrefixes = [[m
+[32m+[m[32m    '/student/course',[m
+[32m+[m[32m    '/student/order',[m[41m [m
+[32m+[m[32m    '/student/courses-bought',[m
+[32m+[m[32m    '/student/course-progress',[m
+[32m+[m[32m    '/student/analytics',[m
+[32m+[m[32m    '/instructor/course',[m
+[32m+[m[32m    '/instructor/analytics'[m
+[32m+[m[32m  ];[m
+[32m+[m[41m  [m
+[32m+[m[32m  // Check if it's an exact API route[m
+[32m+[m[32m  const isExactApiRoute = apiRoutes.includes(req.path);[m
+[32m+[m[41m  [m
+[32m+[m[32m  // Check if it's an API route with prefix[m
+[32m+[m[32m  const isApiPrefixRoute = apiPrefixes.some((prefix) =>[m[41m [m
+[32m+[m[32m    req.path.startsWith(prefix + '/')[m
+   );[m
+ [m
+[31m-  if (isApi) {[m
+[32m+[m[32m  if (isExactApiRoute || isApiPrefixRoute) {[m
+     console.log(`API route detected: ${req.path} - passing to API handlers`);[m
+     return next();[m
+   }[m
+ [m
+   console.log(`SPA route detected: ${req.path} - serving index.html`);[m
+[31m-  return res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));[m
+[32m+[m[32m  const indexPath = path.join(__dirname, '..', 'client', 'dist', 'index.html');[m
+[32m+[m[32m  console.log(`Looking for index.html at: ${indexPath}`);[m
+[32m+[m[41m  [m
+[32m+[m[32m  return res.sendFile(indexPath, (err) => {[m
+[32m+[m[32m    if (err) {[m
+[32m+[m[32m      console.error('Error serving index.html:', err);[m
+[32m+[m[32m      return res.status(500).send('Error loading application');[m
+[32m+[m[32m    }[m
+[32m+[m[32m  });[m
+ });[m
+ [m
+ [m
