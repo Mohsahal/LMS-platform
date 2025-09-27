@@ -671,9 +671,6 @@
 
 
 
-
-
-
 require("dotenv").config();
 
 const express = require("express");
@@ -688,7 +685,7 @@ const mongoSanitize = require("express-mongo-sanitize");
 const mongoose = require("mongoose");
 const path = require("path");
 
-// Routes
+// ----------------- Routes -----------------
 const authRoutes = require("./routes/auth-routes/index");
 const secureAuthRoutes = require("./routes/secure-auth-routes");
 const mediaRoutes = require("./routes/instructor-routes/media-routes");
@@ -708,6 +705,11 @@ app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
+if (!MONGO_URI) {
+  console.error("❌ MONGO_URI not set in environment");
+  process.exit(1);
+}
+
 // ----------------- CORS -----------------
 const CORS_ORIGINS = (process.env.CORS_ORIGINS || "")
   .split(",")
@@ -720,39 +722,31 @@ const allowedOrigins = [
   "http://localhost:5173",
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // allow server-to-server
-      const isAllowed = allowedOrigins.some((o) => {
-        if (o.includes("*")) {
-          const regex = new RegExp("^" + o.replace(/\*/g, ".*") + "$");
-          return regex.test(origin);
-        }
-        return origin === o;
-      });
-      return isAllowed
-        ? callback(null, true)
-        : callback(new Error("Not allowed by CORS"));
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-CSRF-Token",
-      "X-Requested-With",
-      "Accept",
-    ],
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true);
+    const isAllowed = allowedOrigins.some(o => {
+      if (o.includes("*")) {
+        const regex = new RegExp("^" + o.replace(/\*/g, ".*") + "$");
+        return regex.test(origin);
+      }
+      return origin === o;
+    });
+    return isAllowed ? callback(null, true) : callback(new Error("Not allowed by CORS"));
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "Accept"],
+  credentials: true,
+}));
+
+app.options("*", cors()); // preflight
 
 // ----------------- Security -----------------
 const { directives } = cspOptions;
 const dynamicConnectSrc = new Set([...(directives.connectSrc || ["'self'"])]);
 const dynamicMediaSrc = new Set([...(directives.mediaSrc || [])]);
 
-CORS_ORIGINS.forEach((o) => dynamicConnectSrc.add(o));
+CORS_ORIGINS.forEach(o => dynamicConnectSrc.add(o));
 dynamicConnectSrc.add("http://localhost:5000");
 dynamicConnectSrc.add("https://localhost:5000");
 
@@ -762,22 +756,20 @@ dynamicMediaSrc.add("https://*.cloudinary.com");
 dynamicMediaSrc.add("blob:");
 dynamicMediaSrc.add("data:");
 
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        ...directives,
-        connectSrc: Array.from(dynamicConnectSrc),
-        mediaSrc: Array.from(dynamicMediaSrc),
-      },
-    },
-    crossOriginEmbedderPolicy: false,
-  })
-);
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...directives,
+      connectSrc: Array.from(dynamicConnectSrc),
+      mediaSrc: Array.from(dynamicMediaSrc),
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+}));
 
 app.use(securityLoggerMiddleware);
 app.use(cookieParser());
-app.use(express.json({ limit: "10kb" }));
+app.use(express.json({ limit: "100kb" }));
 app.use(mongoSanitize());
 
 // ----------------- Rate limiting -----------------
@@ -786,7 +778,7 @@ const authLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => req.path === "/csrf-token",
+  skip: req => req.path === "/csrf-token",
 });
 
 app.use("/auth", authLimiter);
@@ -797,31 +789,23 @@ app.use((req, res, next) => {
 
 // ----------------- CSRF -----------------
 const csrfProtection = csrf({
-  cookie: { key: "csrfToken", httpOnly: false, sameSite: "lax", secure: false },
+  cookie: { key: "csrfToken", httpOnly: false, sameSite: "lax", secure: process.env.NODE_ENV === "production" },
 });
 app.use(csrfProtection);
 
 app.get("/csrf-token", (req, res) => {
-  return res.status(200).json({
-    csrfToken: typeof req.csrfToken === "function" ? req.csrfToken() : null,
-  });
+  res.status(200).json({ csrfToken: typeof req.csrfToken === "function" ? req.csrfToken() : null });
 });
 
 // ----------------- Database -----------------
-if (!MONGO_URI) {
-  console.error("❌ MONGO_URI not set in environment");
-  process.exit(1);
-}
-
-mongoose
-  .connect(MONGO_URI)
+mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => {
+  .catch(err => {
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   });
 
-// ----------------- Routes -----------------
+// ----------------- API Routes -----------------
 app.use("/auth", authRoutes);
 app.use("/secure", secureAuthRoutes);
 app.use("/media", mediaRoutes);
@@ -837,48 +821,30 @@ app.use("/secure/instructor", secureInstructorRoutes);
 
 app.get("/favicon.ico", (req, res) => res.sendStatus(204));
 app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || "development",
-  });
+  res.status(200).json({ status: "OK", timestamp: new Date().toISOString(), environment: process.env.NODE_ENV || "development" });
 });
 
-// ----------------- Static + SPA fallback -----------------
-// Serve React build
+// ----------------- Serve React SPA -----------------
 app.use(express.static(path.join(__dirname, "..", "client", "dist")));
 
 app.get("*", (req, res, next) => {
   const apiPrefixes = [
-    "/secure",
-    "/media",
-    "/student",
-    "/instructor",
-    "/auth",
-    "/notify",
-    "/csrf-token",
-    "/health",
-    "/favicon.ico",
+    "/auth", "/secure", "/media", "/student", "/instructor",
+    "/notify", "/csrf-token", "/health", "/favicon.ico"
   ];
 
-  const isApi = apiPrefixes.some(
-    (prefix) => req.path === prefix || req.path.startsWith(prefix + "/")
-  );
-
+  const isApi = apiPrefixes.some(prefix => req.path === prefix || req.path.startsWith(prefix + "/"));
   if (isApi) return next();
 
-  return res.sendFile(path.join(__dirname, "..", "client", "dist", "index.html"));
+  res.sendFile(path.join(__dirname, "..", "client", "dist", "index.html"));
 });
 
-// ----------------- Error Handler -----------------
+// ----------------- Global Error -----------------
 app.use((err, req, res, next) => {
-  console.error("Global error:", err.message);
+  console.error(err.stack);
   res.status(err.status || 500).json({
     success: false,
-    message:
-      process.env.NODE_ENV === "development"
-        ? err.message
-        : "Internal server error",
+    message: process.env.NODE_ENV === "development" ? err.message : "Internal server error",
   });
 });
 
@@ -886,6 +852,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
-
 
