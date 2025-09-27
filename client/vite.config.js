@@ -30,4 +30,8 @@ export default defineConfig({
       },
     },
   },
+  // Ensure proper SPA handling
+  define: {
+    __VUE_PROD_DEVTOOLS__: false,
+  },
 });
