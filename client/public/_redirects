@@ -1,1 +1,9 @@
+# SPA fallback for client-side routing
 /*    /index.html   200
+
+# Specific routes that should redirect to index.html
+/auth    /index.html   200
+/courses    /index.html   200
+/instructor    /index.html   200
+/student    /index.html   200
+/home    /index.html   200
