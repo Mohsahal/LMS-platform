@@ -139,7 +139,7 @@ function VideoPlayer({
   function handleMouseMove() {
     setShowControls(true);
     clearTimeout(controlsTimeoutRef.current);
-    controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
+    controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 4000);
   }
 
   useEffect(() => {
@@ -165,10 +165,10 @@ function VideoPlayer({
     if (controlsRef.current) {
       gsap.to(controlsRef.current, {
         opacity: showControls ? 1 : 0,
-        y: showControls ? 0 : 30, // Slide up/down effect
-        scale: showControls ? 1 : 0.95, // Slight scale effect
-        duration: 0.4,
-        ease: "power3.out",
+        y: showControls ? 0 : 20, // Slide up/down effect
+        scale: showControls ? 1 : 0.98, // Slight scale effect
+        duration: 0.3,
+        ease: "power2.out",
         pointerEvents: showControls ? "auto" : "none",
       });
     }
@@ -201,7 +201,7 @@ function VideoPlayer({
   return (
     <div
       ref={playerContainerRef}
-      className={`relative bg-black rounded-lg overflow-hidden shadow-2xl transition-all duration-300 ease-in-out 
+      className={`relative bg-black rounded-lg overflow-hidden shadow-2xl transition-all duration-300 ease-in-out group
       ${isFullScreen ? "w-screen h-screen" : ""}
       `}
       style={{ width, height }}
@@ -266,8 +266,6 @@ function VideoPlayer({
       <div
         ref={controlsRef}
         className={`absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent`}
-        
-
         style={{ opacity: 0, pointerEvents: "none" }}
       >
         <Slider
@@ -278,13 +276,13 @@ function VideoPlayer({
           onValueCommit={handleSeekMouseUp}
           className="w-full mb-2 sm:mb-3 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 sm:[&::-webkit-slider-thumb]:h-5 sm:[&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:touch-manipulation"
         />
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-1 sm:space-x-2">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={handlePlayAndPause}
-              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
             >
               {playing ? (
                 <Pause className="h-4 w-4 sm:h-6 sm:w-6" />
@@ -294,7 +292,7 @@ function VideoPlayer({
             </Button>
             <Button
               onClick={handleRewind}
-              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
               variant="ghost"
               size="icon"
             >
@@ -302,7 +300,7 @@ function VideoPlayer({
             </Button>
             <Button
               onClick={handleForward}
-              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
               variant="ghost"
               size="icon"
             >
@@ -310,7 +308,7 @@ function VideoPlayer({
             </Button>
             <Button
               onClick={handleToggleMute}
-              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
               variant="ghost"
               size="icon"
             >
@@ -320,7 +318,7 @@ function VideoPlayer({
                 <Volume2 className="h-4 w-4 sm:h-6 sm:w-6" />
               )}
             </Button>
-            <div className="hidden sm:block">
+            <div className="hidden sm:block flex-shrink-0">
               <Slider
                 value={[volume * 100]}
                 max={100}
@@ -330,15 +328,16 @@ function VideoPlayer({
               />
             </div>
           </div>
-          <div className="flex items-center space-x-1 sm:space-x-2">
-            <div className="text-white text-xs sm:text-sm font-mono">
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            <div className="text-white text-xs sm:text-sm font-mono whitespace-nowrap">
               {formatTime(currentTime)} / {formatTime(duration)}
             </div>
             <Button
-              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
               variant="ghost"
               size="icon"
               onClick={handleFullScreen}
+              title={isFullScreen ? "Exit fullscreen" : "Enter fullscreen"}
             >
               {isFullScreen ? (
                 <Minimize className="h-4 w-4 sm:h-6 sm:w-6" />

@@ -2,7 +2,7 @@ import { courseCategories } from "@/config";
 // removed static banner in favor of dynamic hero images
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useCallback } from "react";
 import { StudentContext } from "@/context/student-context";
 import {
   checkCoursePurchaseInfoService,
@@ -29,7 +29,6 @@ function StudentHomePage() {
   const pageRef = usePageTransition();
 
   function handleNavigateToCoursesPage(getCurrentId) {
-    console.log(getCurrentId);
     sessionStorage.removeItem("filters");
     const currentFilter = {
       category: [getCurrentId],
@@ -40,10 +39,10 @@ function StudentHomePage() {
     navigate("/courses");
   }
 
-  async function fetchAllStudentViewCourses() {
+  const fetchAllStudentViewCourses = useCallback(async () => {
     const response = await fetchStudentViewCourseListService();
     if (response?.success) setStudentViewCoursesList(response?.data);
-  }
+  }, [setStudentViewCoursesList]);
 
   async function handleCourseNavigate(getCurrentCourseId) {
     const response = await checkCoursePurchaseInfoService(
@@ -63,7 +62,7 @@ function StudentHomePage() {
   // Separate useEffect for data fetching (runs only once)
   useEffect(() => {
     fetchAllStudentViewCourses();
-  }, []);
+  }, [fetchAllStudentViewCourses]);
 
   // Separate useEffect for animations
   useEffect(() => {
@@ -196,7 +195,11 @@ function StudentHomePage() {
 
       // Ensure ScrollTrigger calculates positions after images/layout load
       const refresh = () => {
-        try { ScrollTrigger.refresh(); } catch (_) {}
+        try { 
+          ScrollTrigger.refresh(); 
+        } catch (error) {
+          console.warn('ScrollTrigger refresh failed:', error);
+        }
       };
       if (document.readyState === 'complete') {
         setTimeout(refresh, 50);

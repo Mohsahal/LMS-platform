@@ -201,10 +201,6 @@ function StudentViewCourseProgressPage() {
 
   async function handleDownloadCertificate() {
     try {
-      console.log('Attempting to download certificate...');
-      console.log('User ID:', auth?.user?._id);
-      console.log('Course ID:', studentCurrentCourseProgress?.courseDetails?._id);
-      console.log('Course completed status:', isCourseCompleted);
       
       if (!isCourseCompleted) {
         alert('Course must be completed before downloading certificate.');

@@ -157,26 +157,8 @@ const loginUser = async (req, res) => {
     { expiresIn: "120m" }
   );
 
-  // Create login notification
-  try {
-    await NotificationHelper.createSystemNotification(
-      checkUser.userEmail,
-      checkUser.role === 'instructor' ? 'instructor' : 'student',
-      {
-        title: 'Welcome Back! 👋',
-        message: `Successfully logged in to your account. Welcome back, ${checkUser.userName}!`,
-        data: {
-          loginTime: new Date(),
-          userAgent: req.headers['user-agent'] || 'Unknown',
-          ipAddress: req.ip || 'Unknown'
-        },
-        priority: 'low'
-      }
-    );
-  } catch (notificationError) {
-    // Log notification error but don't fail the login
-    console.error('Login notification creation failed:', notificationError);
-  }
+  // TODO: Implement notification system
+  console.log(`User ${checkUser.userName} logged in successfully at ${new Date()}`);
 
   res.status(200).json({
     success: true,

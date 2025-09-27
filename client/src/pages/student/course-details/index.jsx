@@ -18,7 +18,7 @@ import {
   captureAndFinalizePaymentService,
   checkCoursePurchaseInfoService,
 } from "@/services";
-import { CheckCircle, Lock, PlayCircle, BookOpen } from "lucide-react";
+import { CheckCircle, Lock, PlayCircle, BookOpen, Loader2 } from "lucide-react";
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -46,6 +46,7 @@ function StudentViewCourseDetailsPage() {
 
   const { auth } = useContext(AuthContext);
   const [isPurchased, setIsPurchased] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
 
   const [displayCurrentVideoFreePreview, setDisplayCurrentVideoFreePreview] =
     useState(null);
@@ -70,62 +71,77 @@ function StudentViewCourseDetailsPage() {
   }, [currentCourseDetailsId, setStudentViewCourseDetails, setLoadingState]);
 
   function handleSetFreePreview(getCurrentVideoInfo) {
-    console.log(getCurrentVideoInfo);
     setDisplayCurrentVideoFreePreview(getCurrentVideoInfo?.videoUrl);
   }
 
   async function handleCreatePayment() {
     if (isPurchased) return navigate(`/course-progress/${studentViewCourseDetails?._id}`);
-    const paymentPayload = {
-      userId: auth?.user?._id,
-      userName: auth?.user?.userName,
-      userEmail: auth?.user?.userEmail,
-      orderStatus: "pending",
-      paymentMethod: "razorpay",
-      paymentStatus: "initiated",
-      orderDate: new Date(),
-      paymentId: "",
-      payerId: "",
-      instructorId: studentViewCourseDetails?.instructorId,
-      instructorName: studentViewCourseDetails?.instructorName,
-      courseImage: studentViewCourseDetails?.image,
-      courseTitle: studentViewCourseDetails?.title,
-      courseId: studentViewCourseDetails?._id,
-      coursePricing: studentViewCourseDetails?.pricing,
-    };
+    
+    setIsEnrolling(true);
+    
+    try {
+      const paymentPayload = {
+        userId: auth?.user?._id,
+        userName: auth?.user?.userName,
+        userEmail: auth?.user?.userEmail,
+        orderStatus: "pending",
+        paymentMethod: "razorpay",
+        paymentStatus: "initiated",
+        orderDate: new Date(),
+        paymentId: "",
+        payerId: "",
+        instructorId: studentViewCourseDetails?.instructorId,
+        instructorName: studentViewCourseDetails?.instructorName,
+        courseImage: studentViewCourseDetails?.image,
+        courseTitle: studentViewCourseDetails?.title,
+        courseId: studentViewCourseDetails?._id,
+        coursePricing: studentViewCourseDetails?.pricing,
+      };
 
-    console.log(paymentPayload, "paymentPayload");
-    const sdkLoaded = await loadRazorpayScript();
-    if (!sdkLoaded) return alert("Failed to load Razorpay SDK");
-    const response = await createPaymentService(paymentPayload);
-    if (!response?.success) return alert(response?.message || "Failed to create order");
+      const sdkLoaded = await loadRazorpayScript();
+      if (!sdkLoaded) {
+        alert("Failed to load Razorpay SDK");
+        return;
+      }
+      
+      const response = await createPaymentService(paymentPayload);
+      if (!response?.success) {
+        alert(response?.message || "Failed to create order");
+        return;
+      }
 
-    const { razorpayOrderId, amount, currency, keyId, orderId } = response.data;
-    const options = {
-      key: keyId,
-      amount,
-      currency: currency || "INR",
-      name: "Course Purchase",
-      description: studentViewCourseDetails?.title,
-      order_id: razorpayOrderId,
-      prefill: { name: auth?.user?.userName, email: auth?.user?.userEmail },
-      theme: { color: "#111827" },
-      handler: async function (rzpRes) {
-        const finalize = await captureAndFinalizePaymentService(
-          rzpRes.razorpay_payment_id,
-          rzpRes.razorpay_signature || "",
-          orderId
-        );
-        if (finalize?.success) {
-          setIsPurchased(true);
-          navigate(`/course-progress/${studentViewCourseDetails?._id}`);
-        } else {
-          alert("Payment captured but order finalize failed");
-        }
-      },
-    };
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+      const { razorpayOrderId, amount, currency, keyId, orderId } = response.data;
+      const options = {
+        key: keyId,
+        amount,
+        currency: currency || "INR",
+        name: "Course Purchase",
+        description: studentViewCourseDetails?.title,
+        order_id: razorpayOrderId,
+        prefill: { name: auth?.user?.userName, email: auth?.user?.userEmail },
+        theme: { color: "#111827" },
+        handler: async function (rzpRes) {
+          const finalize = await captureAndFinalizePaymentService(
+            rzpRes.razorpay_payment_id,
+            rzpRes.razorpay_signature || "",
+            orderId
+          );
+          if (finalize?.success) {
+            setIsPurchased(true);
+            navigate(`/course-progress/${studentViewCourseDetails?._id}`);
+          } else {
+            alert("Payment captured but order finalize failed");
+          }
+        },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Enrollment error:", error);
+      alert("An error occurred during enrollment. Please try again.");
+    } finally {
+      setIsEnrolling(false);
+    }
   }
 
   useEffect(() => {
@@ -408,9 +424,19 @@ function StudentViewCourseDetailsPage() {
                       
                       <Button 
                         onClick={handleCreatePayment} 
-                        className="w-full bg-gray-800 hover:bg-black text-white font-semibold py-3 text-base sm:text-lg transition-colors duration-200"
+                        disabled={isEnrolling}
+                        className="w-full bg-gray-800 hover:bg-black text-white font-semibold py-3 text-base sm:text-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isPurchased ? "Go to Course" : `Enroll Now - ₹${Number(studentViewCourseDetails?.pricing || 0).toLocaleString("en-IN")}`}
+                        {isEnrolling ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Enrolling...
+                          </>
+                        ) : isPurchased ? (
+                          "Go to Course"
+                        ) : (
+                          `Enroll Now - ₹${Number(studentViewCourseDetails?.pricing || 0).toLocaleString("en-IN")}`
+                        )}
                       </Button>
                       
                       <p className="text-center text-xs sm:text-sm text-gray-500">

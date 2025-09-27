@@ -28,46 +28,12 @@ const app = express();
 app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mohammedsahal1243:sahal124867@cluster0.1eaz3.mongodb.net/e-learn";
-// CORS configuration with dynamic origin support for development
-// const allowedOrigins = [
-//   'http://192.168.94.76:5173'
-// ];
-
-// app.use(
-//   cors({
-//     origin: function (origin, callback) {
-//       // Allow requests with no origin (like mobile apps or curl requests)
-//       if (!origin) return callback(null, true);
-      
-//       // Check if origin is in allowed list
-//       if (allowedOrigins.indexOf(origin) !== -1) {
-//         return callback(null, true);
-//       }
-      
-//       // For development, allow any localhost or 192.168.x.x origin
-//       if (process.env.NODE_ENV === 'development') {
-//         const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+)(:\d+)?$/.test(origin);
-//         if (isLocalhost) {
-//           return callback(null, true);
-//         }
-//       }
-      
-//       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-//       return callback(new Error(msg), false);
-//     },
-//     methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
-//     credentials: true,
-//     preflightContinue: false,
-//     optionsSuccessStatus: 204
-//   })
-// );
 
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 // CORS allowlist from env (comma-separated)
-const CORS_ORIGINS = (process.env.CORS_ORIGINS)
+const CORS_ORIGINS = (process.env.CORS_ORIGINS || "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
@@ -75,10 +41,23 @@ const CORS_ORIGINS = (process.env.CORS_ORIGINS)
 app.use(
   cors({
     origin: function(origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      // Allow same-origin and allowed list; also permit ngrok for dev
-      const isAllowed = CORS_ORIGINS.includes(origin) || /https?:\/\/[a-z0-9-]+\.ngrok(-free)?\.app(:\d+)?$/i.test(origin);
-      return callback(isAllowed ? null : new Error("Not allowed by CORS"), isAllowed);
+      
+      // Allow localhost with any port
+      const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+      
+      // Allow origins from CORS_ORIGINS env variable
+      const isInAllowedList = CORS_ORIGINS.includes(origin);
+      
+      const isAllowed = isLocalhost || isInAllowedList;
+      
+      if (isAllowed) {
+        return callback(null, true);
+      } else {
+        console.log(`CORS blocked request from origin: ${origin}`);
+        return callback(new Error("Not allowed by CORS policy"), false);
+      }
     },
     methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
@@ -97,9 +76,10 @@ const dynamicConnectSrc = new Set([...(directives.connectSrc || ["'self'"])]);
 const dynamicMediaSrc = new Set([...(directives.mediaSrc || [])]);
 // Add allowed CORS origins to CSP connectSrc
 CORS_ORIGINS.forEach((o) => dynamicConnectSrc.add(o));
-// Allow ngrok in dev for API/ws
-dynamicConnectSrc.add("https://*.ngrok.app");
-dynamicConnectSrc.add("wss://*.ngrok.app");
+// Allow localhost backend server
+dynamicConnectSrc.add("http://localhost:5000");
+dynamicConnectSrc.add("https://localhost:5000");
+// Add any additional allowed domains here if needed
 // Ensure Cloudinary is allowed for media
 dynamicMediaSrc.add("'self'");
 dynamicMediaSrc.add("https://res.cloudinary.com");
@@ -159,7 +139,15 @@ app.use((req, res, next) => {
 
 // Request logging middleware
 app.use((req, res, next) => {
+  const origin = req.get('Origin') || req.get('Referer') || 'Unknown';
+  const userAgent = req.get('User-Agent') || 'Unknown';
+  const isMobile = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  console.log(`Origin: ${origin}`);
+  console.log(`User-Agent: ${userAgent}`);
+  console.log(`Is Mobile: ${isMobile}`);
+  
   if (req.params && Object.keys(req.params).length > 0) {
     console.log('Request params:', req.params);
   }
@@ -180,15 +168,15 @@ app.use((req, res, next) => {
 // Handle CORS preflight requests
 app.options('*', cors());
 
-// CSRF protection (double-submit cookie pattern)
-// const csrfProtection = csrf({ cookie: {
-//   key: "csrfToken",
-//   httpOnly: false, // readable by JS to set header
-//   sameSite: "lax",
-//   secure: false, // set true if serving over HTTPS
-// }});
 
-// app.use(csrfProtection);
+const csrfProtection = csrf({ cookie: {
+  key: "csrfToken",
+  httpOnly: false, // readable by JS to set header
+  sameSite: "lax",
+  secure: false, // set true if serving over HTTPS
+}});
+
+app.use(csrfProtection);
 
 
 // Note: This catch-all must be registered AFTER API routes

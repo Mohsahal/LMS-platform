@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { initialSignInFormData, initialSignUpFormData } from "@/config";
 import { checkAuthService, loginService, registerService } from "@/services";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState, useCallback } from "react";
 import PropTypes from "prop-types";
 import validator from "validator";
 import { useToast } from "@/hooks/use-toast";
@@ -143,14 +143,12 @@ export default function AuthProvider({ children }) {
 
   //check auth user
 
-  async function checkAuthUser() {
+  const checkAuthUser = useCallback(async () => {
     try {
       // Check if there's a token in sessionStorage
       const token = localStorage.getItem("accessToken");
-      console.log("Token in sessionStorage:", token);
       
       if (!token) {
-        console.log("No token found, user not authenticated");
         setAuth({
           authenticate: false,
           user: null,
@@ -160,7 +158,6 @@ export default function AuthProvider({ children }) {
       }
 
       const data = await checkAuthService();
-      console.log("CheckAuth response:", data);
       
       if (data.success) {
         setAuth({
@@ -177,7 +174,6 @@ export default function AuthProvider({ children }) {
         setLoading(false);
       }
     } catch (error) {
-      console.log("CheckAuth error:", error);
       const message = error?.response?.data?.message || error?.message || "Auth check error";
       toast({ title: "Auth error", description: message });
       setAuth({
@@ -186,7 +182,7 @@ export default function AuthProvider({ children }) {
       });
       setLoading(false);
     }
-  }
+  }, [setAuth, setLoading, toast]);
 
   function resetCredentials() {
     setAuth({
@@ -226,9 +222,7 @@ export default function AuthProvider({ children }) {
 
   useEffect(() => {
     checkAuthUser();
-  }, []);
-
-  console.log(auth, "gf");
+  }, [checkAuthUser]);
 
   async function handleForgotPassword(email) {
     try {

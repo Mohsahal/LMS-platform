@@ -259,7 +259,7 @@ function CourseCurriculum() {
       }
     };
 
-    // Upload in small batches to avoid gateway limits (e.g., ngrok 503)
+    // Upload in small batches to avoid gateway limits
     const BATCH_SIZE = 3;
     const batches = [];
     for (let i = 0; i < unique.length; i += BATCH_SIZE) {
