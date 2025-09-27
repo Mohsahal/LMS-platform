@@ -6,42 +6,5 @@ services:
     staticPublishPath: ./dist
     routes:
       - type: rewrite
-        source: /home
+        source: /*
         destination: /index.html
-      - type: rewrite
-        source: /courses
-        destination: /index.html
-      - type: rewrite
-        source: /instructor
-        destination: /index.html
-      - type: rewrite
-        source: /auth
-        destination: /index.html
-      - type: rewrite
-        source: /student-courses
-        destination: /index.html
-      - type: rewrite
-        source: /analytics
-        destination: /index.html
-      - type: rewrite
-        source: /course/*
-        destination: /index.html
-      - type: rewrite
-        source: /course-progress/*
-        destination: /index.html
-      - type: rewrite
-        source: /payment-return
-        destination: /index.html
-      - type: rewrite
-        source: /unauthorized
-        destination: /index.html
-    headers:
-      - path: /index.html
-        name: Cache-Control
-        value: no-cache
-      - path: /assets/*
-        name: Cache-Control
-        value: public, max-age=31536000
-    envVars:
-      - key: NODE_ENV
-        value: production
