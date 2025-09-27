@@ -298,6 +298,7 @@
 
 
 
+
 require("dotenv").config();
 
 const express = require("express");
@@ -592,23 +593,30 @@ app.use("/notify", notifyRoutes);
 // Secure instructor routes with comprehensive security
 app.use("/secure/instructor", secureInstructorRoutes);
 
-// SPA fallback: send index.html for any non-API route
+// SPA fallback: send index.html for any non-API route - FIXED VERSION
 app.get('*', (req, res, next) => {
-  // Only treat as API for explicit API roots; allow SPA routes like /instructor/... to render
+  // Define all API route prefixes that should NOT serve the SPA
   const apiPrefixes = [
     '/secure',
     '/media',
     '/student',
     '/notify',
     '/csrf-token',
-    '/health'
+    '/health',
+    '/auth', // ← ADDED: This was missing
+    '/instructor' // ← ADDED: This was missing
   ];
   
-  const isApi = apiPrefixes.some((p) => req.path === p || req.path.startsWith(p + '/'))
+  // Check if the current path is an API route
+  const isApi = apiPrefixes.some((prefix) => req.path === prefix || req.path.startsWith(prefix + '/'))
     || req.path === '/favicon.ico';
 
-  if (isApi) return next();
+  if (isApi) {
+    console.log(`API route detected: ${req.path} - passing to API handlers`);
+    return next();
+  }
 
+  console.log(`SPA route detected: ${req.path} - serving index.html`);
   return res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
 });
 
@@ -675,8 +683,6 @@ app.listen(PORT, () => {
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
 });
-
-
 
 
 
