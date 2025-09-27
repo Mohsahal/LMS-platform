@@ -598,10 +598,8 @@ app.get('*', (req, res, next) => {
   const apiPrefixes = [
     '/secure',
     '/media',
-    '/instructor/course',
     '/student',
     '/notify',
-    '/auth',
     '/csrf-token',
     '/health'
   ];
