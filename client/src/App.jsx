@@ -86,18 +86,6 @@ function App() {
           />
         </Route>
 
-        {/* Direct route for /home to ensure it works */}
-        <Route
-          path="/home"
-          element={
-            <StudentRouteGuard>
-              <StudentViewCommonLayout>
-                <StudentHomePage />
-              </StudentViewCommonLayout>
-            </StudentRouteGuard>
-          }
-        />
-
         {/* 404 Route */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

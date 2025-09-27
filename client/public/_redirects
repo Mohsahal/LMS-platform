@@ -1,1 +1,10 @@
-/*    /index.html   200
+/home    /index.html   200
+/courses    /index.html   200
+/instructor    /index.html   200
+/auth    /index.html   200
+/student-courses    /index.html   200
+/analytics    /index.html   200
+/course/*    /index.html   200
+/course-progress/*    /index.html   200
+/payment-return    /index.html   200
+/unauthorized    /index.html   200
