@@ -1,11 +1,12 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { captureAndFinalizePaymentService } from "@/services";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Loader2, CheckCircle, AlertCircle, CreditCard } from "lucide-react";
 
 function PaypalPaymentReturnPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const paymentId = params.get("paymentId");
   const payerId = params.get("PayerID");
@@ -32,7 +33,7 @@ function PaypalPaymentReturnPage() {
             
             // Redirect after showing success message
             setTimeout(() => {
-              window.location.href = "/student-courses";
+              navigate("/student-courses");
             }, 3000);
           } else {
             setPaymentStatus("error");
@@ -49,7 +50,7 @@ function PaypalPaymentReturnPage() {
       setPaymentStatus("error");
       setErrorMessage("Invalid payment parameters");
     }
-  }, [payerId, paymentId]);
+  }, [payerId, paymentId, navigate]);
 
   const renderContent = () => {
     switch (paymentStatus) {
@@ -104,7 +105,7 @@ function PaypalPaymentReturnPage() {
             </p>
             <div className="space-y-3">
               <button 
-                onClick={() => window.location.href = "/student-courses"}
+                onClick={() => navigate("/student-courses")}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
                 Go to My Courses

@@ -138,6 +138,7 @@ class TokenManager {
       if (typeof window !== "undefined") {
         // Use React Router navigation instead of window.location.href
         // This will be handled by the RouteGuard component
+        window.location.href = "/auth";
       }
       throw error;
     }
