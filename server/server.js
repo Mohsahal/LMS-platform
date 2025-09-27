@@ -399,7 +399,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 // Serve static frontend files (Vite outputs to dist)
-app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
+app.use(express.static(path.join(__dirname, '..', 'client', 'dist'), {
+  index: false // Don't serve index.html automatically for static files
+}));
 
 // Enhanced security headers with CSP
 const { directives } = cspOptions;
@@ -474,7 +476,9 @@ app.use((req, res, next) => {
   const userAgent = req.get('User-Agent') || 'Unknown';
   const isMobile = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
   
+  console.log(`\n=== REQUEST DEBUG ===`);
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  console.log(`Full URL: ${req.protocol}://${req.get('host')}${req.originalUrl}`);
   console.log(`Origin: ${origin}`);
   console.log(`User-Agent: ${userAgent}`);
   console.log(`Is Mobile: ${isMobile}`);
@@ -493,6 +497,7 @@ app.use((req, res, next) => {
       console.log('Request query:', cleanQuery);
     }
   }
+  console.log(`===================\n`);
   next();
 });
 
@@ -571,19 +576,19 @@ app.use("/notify", notifyRoutes);
 // Secure instructor routes with comprehensive security
 app.use("/secure/instructor", secureInstructorRoutes);
 
+// Handle root path explicitly
+app.get('/', (req, res) => {
+  console.log('Root path requested - serving index.html');
+  const indexPath = path.join(__dirname, '..', 'client', 'dist', 'index.html');
+  return res.sendFile(indexPath);
+});
+
 // SPA fallback: send index.html for any non-API route
 app.get('*', (req, res, next) => {
-  // Define all API route prefixes that should NOT serve the SPA
-  const apiPrefixes = [
+  // Define exact API routes that should NOT serve the SPA
+  const apiRoutes = [
     '/secure',
     '/media',
-    '/student/course', // API routes only
-    '/student/order',
-    '/student/courses-bought',
-    '/student/course-progress',
-    '/student/analytics',
-    '/instructor/course', // API routes only
-    '/instructor/analytics',
     '/auth',
     '/notify',
     '/csrf-token',
@@ -591,18 +596,40 @@ app.get('*', (req, res, next) => {
     '/favicon.ico'
   ];
   
-  // Check if the current path is an API route
-  const isApi = apiPrefixes.some((prefix) => 
-    req.path === prefix || req.path.startsWith(prefix + '/')
+  // Define API route prefixes (these should be handled by API)
+  const apiPrefixes = [
+    '/student/course',
+    '/student/order', 
+    '/student/courses-bought',
+    '/student/course-progress',
+    '/student/analytics',
+    '/instructor/course',
+    '/instructor/analytics'
+  ];
+  
+  // Check if it's an exact API route
+  const isExactApiRoute = apiRoutes.includes(req.path);
+  
+  // Check if it's an API route with prefix
+  const isApiPrefixRoute = apiPrefixes.some((prefix) => 
+    req.path.startsWith(prefix + '/')
   );
 
-  if (isApi) {
+  if (isExactApiRoute || isApiPrefixRoute) {
     console.log(`API route detected: ${req.path} - passing to API handlers`);
     return next();
   }
 
   console.log(`SPA route detected: ${req.path} - serving index.html`);
-  return res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
+  const indexPath = path.join(__dirname, '..', 'client', 'dist', 'index.html');
+  console.log(`Looking for index.html at: ${indexPath}`);
+  
+  return res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err);
+      return res.status(500).send('Error loading application');
+    }
+  });
 });
 
 
