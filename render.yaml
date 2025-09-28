@@ -2,7 +2,7 @@ services:
   - type: web
     name: e-learn-platform
     env: node
-    buildCommand: node build-micro.js
+    buildCommand: npm run build
     startCommand: npm start
     healthCheckPath: /health
     envVars:
@@ -10,7 +10,3 @@ services:
         value: production
       - key: PORT
         value: 10000
-    plan: free
-    rootDir: .
-    autoDeploy: true
-    region: oregon

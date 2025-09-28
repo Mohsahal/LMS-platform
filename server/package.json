@@ -7,9 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node build-and-start.js",
     "dev": "nodemon server.js",
-    "build": "echo 'server build: nothing to do'",
-    "production": "node build-and-start.js",
-    "serve": "node server.js"
+    "build": "node build-and-start.js",
+    "production": "node build-and-start.js"
   },
   "keywords": [],
   "author": "",

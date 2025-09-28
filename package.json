@@ -5,10 +5,10 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
-    "build": "node build-production.js",
-    "start": "node start.js",
-    "production": "node start.js",
-    "install-all": "npm install --prefix client && npm install --prefix server && npm install"
+    "build": "npm run build --prefix client && npm run build --prefix server",
+    "start": "npm run start --prefix server",
+    "production": "npm run start --prefix server",
+    "install-all": "npm install && npm install --prefix client && npm install --prefix server"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
@@ -18,5 +18,3 @@
     "server"
   ]
 }
-
-
