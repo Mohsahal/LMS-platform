@@ -4,6 +4,8 @@ class TokenManager {
   constructor() {
     this.refreshPromise = null;
     this.isRefreshing = false;
+    this.keepAliveInterval = null;
+    this.startKeepAlive();
   }
 
   // Get current token from localStorage
@@ -59,8 +61,8 @@ class TokenManager {
     }
   }
 
-  // Check if token will expire soon (within 5 minutes)
-  willTokenExpireSoon(token, minutes = 5) {
+  // Check if token will expire soon (within specified minutes)
+  willTokenExpireSoon(token, minutes = 10) {
     if (!token) return true;
     
     const expiration = this.getTokenExpiration(token);
@@ -141,6 +143,39 @@ class TokenManager {
         window.location.href = "/auth";
       }
       throw error;
+    }
+  }
+
+  // Start keep-alive mechanism to prevent session timeout during video watching
+  startKeepAlive() {
+    if (this.keepAliveInterval) {
+      clearInterval(this.keepAliveInterval);
+    }
+
+    // Check token every 5 minutes and refresh if needed
+    this.keepAliveInterval = setInterval(async () => {
+      const token = this.getCurrentToken();
+      if (token && !this.isTokenExpired(token)) {
+        // Token is still valid, no action needed
+        return;
+      }
+      
+      if (token && this.willTokenExpireSoon(token, 15)) {
+        // Token will expire soon, try to refresh
+        try {
+          await this.refreshTokenIfNeeded();
+        } catch (error) {
+          console.warn('Keep-alive token refresh failed:', error);
+        }
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+  }
+
+  // Stop keep-alive mechanism
+  stopKeepAlive() {
+    if (this.keepAliveInterval) {
+      clearInterval(this.keepAliveInterval);
+      this.keepAliveInterval = null;
     }
   }
 }

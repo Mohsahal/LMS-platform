@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import VideoPlayer from "@/components/video-player";
 import { AuthContext } from "@/context/auth-context";
 import { StudentContext } from "@/context/student-context";
+import { useToast } from "@/hooks/use-toast";
 import {
   getCurrentCourseProgressService,
   markLectureAsViewedService,
@@ -29,6 +30,7 @@ function StudentViewCourseProgressPage() {
   const { auth } = useContext(AuthContext);
   const { studentCurrentCourseProgress, setStudentCurrentCourseProgress } =
     useContext(StudentContext);
+  const { toast } = useToast();
   const [lockCourse, setLockCourse] = useState(false);
   const [currentLecture, setCurrentLecture] = useState(null);
   const [showCourseCompleteDialog, setShowCourseCompleteDialog] =
@@ -141,6 +143,7 @@ function StudentViewCourseProgressPage() {
     console.log("Video ended, checking for next lecture");
     
     if (!currentLecture || !studentCurrentCourseProgress?.courseDetails?.curriculum) {
+      console.warn("Missing required data for video completion");
       return;
     }
 
@@ -149,37 +152,72 @@ function StudentViewCourseProgressPage() {
     );
 
     if (currentIndex === -1) {
+      console.warn("Current lecture not found in curriculum");
       return;
     }
 
-    // Show completion notification for current video
-    setCompletedVideoTitle(currentLecture.title);
-    setShowVideoCompleteNotification(true);
+    try {
+      // Show completion notification for current video
+      setCompletedVideoTitle(currentLecture.title);
+      setShowVideoCompleteNotification(true);
 
-    // Mark current lecture as viewed first
-    await markLectureAsViewed(currentLecture._id);
+      // Mark current lecture as viewed first with retry logic
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries) {
+        try {
+          await markLectureAsViewed(currentLecture._id);
+          console.log("Lecture marked as viewed successfully");
+          break;
+        } catch (error) {
+          retryCount++;
+          console.warn(`Failed to mark lecture as viewed (attempt ${retryCount}):`, error);
+          
+          if (retryCount >= maxRetries) {
+            console.error("Failed to mark lecture as viewed after all retries");
+            toast({
+              title: "Progress not saved",
+              description: "There was an issue saving your progress. Please try again.",
+              variant: "destructive"
+            });
+            return;
+          }
+          
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
+      }
 
-    // Check if there's a next lecture
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < studentCurrentCourseProgress.courseDetails.curriculum.length) {
-      // Move to next lecture after a short delay
-      setTimeout(() => {
-        const nextLecture = studentCurrentCourseProgress.courseDetails.curriculum[nextIndex];
-        console.log("Moving to next lecture:", nextLecture.title);
-        setCurrentLecture(nextLecture);
-        setShowVideoCompleteNotification(false);
-      }, 2000); // 2 second delay to show completion notification
-    } else {
-      // This was the last lecture - show final completion
-      setTimeout(() => {
-        console.log("All lectures completed! Showing completion dialog");
-        setShowVideoCompleteNotification(false);
-        setIsCourseCompleted(true);
-        setShowCourseCompleteDialog(true);
-        setShowConfetti(true);
-      }, 2000); // 2 second delay to show completion notification
+      // Check if there's a next lecture
+      const nextIndex = currentIndex + 1;
+      if (nextIndex < studentCurrentCourseProgress.courseDetails.curriculum.length) {
+        // Move to next lecture after a short delay
+        setTimeout(() => {
+          const nextLecture = studentCurrentCourseProgress.courseDetails.curriculum[nextIndex];
+          console.log("Moving to next lecture:", nextLecture.title);
+          setCurrentLecture(nextLecture);
+          setShowVideoCompleteNotification(false);
+        }, 2000); // 2 second delay to show completion notification
+      } else {
+        // This was the last lecture - show final completion
+        setTimeout(() => {
+          console.log("All lectures completed! Showing completion dialog");
+          setShowVideoCompleteNotification(false);
+          setIsCourseCompleted(true);
+          setShowCourseCompleteDialog(true);
+          setShowConfetti(true);
+        }, 2000); // 2 second delay to show completion notification
+      }
+    } catch (error) {
+      console.error("Error in video completion handler:", error);
+      toast({
+        title: "Error",
+        description: "There was an issue processing video completion. Please try again.",
+        variant: "destructive"
+      });
     }
-  }, [currentLecture, studentCurrentCourseProgress, markLectureAsViewed]);
+  }, [currentLecture, studentCurrentCourseProgress, markLectureAsViewed, toast]);
 
 
 

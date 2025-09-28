@@ -130,10 +130,14 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(error);
       }
       
-      if (!isAuthEndpoint) {
-        // Only clear token and redirect for protected, non-auth endpoints
+      // Don't auto-logout for video progress updates or course-related endpoints
+      const isVideoProgress = /\/course-progress\//.test(url) || /\/student\/course/.test(url);
+      const isCourseRelated = /\/course\//.test(url) || /\/student\//.test(url);
+      
+      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated) {
+        // Only clear token and redirect for non-course related endpoints
         tokenManager.removeToken();
-        toast({ title: "Session issue", description: message });
+        toast({ title: "Session expired", description: "Please login again to continue" });
         if (typeof window !== "undefined") {
           // Use React Router navigation instead of window.location.href
           // This will be handled by the RouteGuard component
@@ -143,6 +147,14 @@ axiosInstance.interceptors.response.use(
         // For login failures, do not redirect or clear input; allow caller to handle toast
         // Optionally still surface a toast here if caller doesn't
         // toast({ title: "Login failed", description: message });
+      } else if (isVideoProgress || isCourseRelated) {
+        // For course-related 401/403, just show a warning but don't logout
+        console.warn("Course-related request failed:", message);
+        toast({ 
+          title: "Request failed", 
+          description: "Please try again. If the issue persists, please refresh the page.",
+          variant: "destructive"
+        });
       }
     }
     // CSRF errors - clear token and retry (but not for auth endpoints)
@@ -154,6 +166,7 @@ axiosInstance.interceptors.response.use(
       csrfToken = null;
       lastFetchTime = 0;
       retryCount = 0;
+      
       
       // Don't show CSRF error for auth endpoints - they shouldn't need CSRF
       if (!isAuthEndpoint) {
