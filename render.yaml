@@ -2,7 +2,7 @@ services:
   - type: web
     name: e-learn-platform
     env: node
-    buildCommand: npm run build
+    buildCommand: node build.js
     startCommand: npm start
     healthCheckPath: /health
     envVars:
@@ -10,3 +10,6 @@ services:
         value: production
       - key: PORT
         value: 10000
+    plan: free
+    rootDir: .
+    autoDeploy: true
