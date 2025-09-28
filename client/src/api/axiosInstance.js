@@ -141,6 +141,7 @@ axiosInstance.interceptors.response.use(
     const isSecureContact = /\/secure\/contact($|\?)/.test(url);
     const isAuthEndpoint = isAuthLogin || isAuthRegister || isAuthForgot || isSecureContact;
     const isMediaUpload = /\/media\/(upload|bulk-upload)/.test(url);
+    const isNotifyContact = /\/notify\/contact-admin($|\?|\/)/.test(url);
     const isVideoProgress = /\/course-progress\//.test(url) || /\/student\/course/.test(url);
     const isCourseRelated = /\/course\//.test(url) || /\/student\//.test(url);
     const isInstructorCourse = /\/instructor\/course\//.test(url);
@@ -158,7 +159,7 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(error);
       }
       
-      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated && !isMediaUpload && !isInstructorCourse && !isStudentOrder) {
+      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated && !isMediaUpload && !isInstructorCourse && !isStudentOrder && !isNotifyContact) {
         // Only clear token and redirect for non-course related endpoints
         tokenManager.removeToken();
         toast({ title: "Session expired", description: "Please login again to continue" });
@@ -189,7 +190,7 @@ axiosInstance.interceptors.response.use(
       
       
       // Don't show CSRF error for auth endpoints, course-related requests, media uploads, instructor course, or student order endpoints
-      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated && !isMediaUpload && !isInstructorCourse && !isStudentOrder) {
+      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated && !isMediaUpload && !isInstructorCourse && !isStudentOrder && !isNotifyContact) {
         toast({ 
           title: "Security error", 
           description: "Please refresh the page and try again",
@@ -202,7 +203,7 @@ axiosInstance.interceptors.response.use(
             window.location.reload();
           }
         }, 2000);
-      } else if (isVideoProgress || isCourseRelated || isMediaUpload || isInstructorCourse || isStudentOrder) {
+      } else if (isVideoProgress || isCourseRelated || isMediaUpload || isInstructorCourse || isStudentOrder || isNotifyContact) {
         // For course-related, media upload, instructor course, or student order CSRF errors, just clear token and retry silently
         console.warn("CSRF token issue for course/media/instructor/order request, retrying...");
       }

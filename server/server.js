@@ -811,6 +811,8 @@ app.use((req, res, next) => {
       req.path === '/favicon.ico' ||
       req.path.startsWith('/static/') ||
       req.path.startsWith('/assets/') ||
+      // Skip CSRF for notify contact endpoint (public form submission)
+      req.path === '/notify/contact-admin' ||
       // Skip CSRF for authentication endpoints
       req.path === '/auth/login' ||
       req.path === '/auth/register' ||
