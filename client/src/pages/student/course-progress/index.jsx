@@ -111,11 +111,14 @@ function StudentViewCourseProgressPage() {
 
   const markLectureAsViewed = useCallback(async (lectureId) => {
     try {
+      console.log('Marking lecture as viewed:', lectureId);
       const response = await markLectureAsViewedService(
         auth?.user?._id,
         studentCurrentCourseProgress?.courseDetails?._id,
         lectureId
       );
+
+      console.log('Mark lecture response:', response);
 
       if (response?.success) {
         // Update the progress state
@@ -146,6 +149,8 @@ function StudentViewCourseProgressPage() {
           setShowCourseCompleteDialog(true);
           setShowConfetti(true);
         }
+      } else {
+        console.warn('Failed to mark lecture as viewed:', response?.message);
       }
     } catch (error) {
       console.error('Error marking lecture as viewed:', error);
@@ -238,18 +243,42 @@ function StudentViewCourseProgressPage() {
 
 
   async function handleRewatchCourse() {
-    const response = await resetCourseProgressService(
-      auth?.user?._id,
-      studentCurrentCourseProgress?.courseDetails?._id
-    );
+    try {
+      console.log('Resetting course progress...');
+      const response = await resetCourseProgressService(
+        auth?.user?._id,
+        studentCurrentCourseProgress?.courseDetails?._id
+      );
 
-    if (response?.success) {
-      setCurrentLecture(null);
-      setShowConfetti(false);
-      setShowCourseCompleteDialog(false);
-      setIsCourseCompleted(false);
-      setShowCertificateSidebar(false);
-      fetchCurrentCourseProgress();
+      console.log('Reset course response:', response);
+
+      if (response?.success) {
+        setCurrentLecture(null);
+        setShowConfetti(false);
+        setShowCourseCompleteDialog(false);
+        setIsCourseCompleted(false);
+        setShowCertificateSidebar(false);
+        fetchCurrentCourseProgress();
+        
+        toast({
+          title: "Course Reset",
+          description: "Course progress has been reset. You can start over!",
+        });
+      } else {
+        console.error('Failed to reset course progress:', response?.message);
+        toast({
+          title: "Reset Failed",
+          description: "Failed to reset course progress. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error resetting course progress:', error);
+      toast({
+        title: "Reset Failed",
+        description: "Failed to reset course progress. Please try again.",
+        variant: "destructive"
+      });
     }
   }
 
@@ -258,6 +287,22 @@ function StudentViewCourseProgressPage() {
       console.log('Attempting certificate download...');
       console.log('Course completed status:', isCourseCompleted);
       console.log('Course details:', studentCurrentCourseProgress?.courseDetails);
+      
+      // If course appears completed but progress might be missing, try to mark all lectures as viewed first
+      if (isCourseCompleted && studentCurrentCourseProgress?.courseDetails?.curriculum) {
+        console.log('Course appears completed, ensuring all lectures are marked as viewed...');
+        for (const lecture of studentCurrentCourseProgress.courseDetails.curriculum) {
+          try {
+            await markLectureAsViewedService(
+              auth?.user?._id,
+              studentCurrentCourseProgress?.courseDetails?._id,
+              lecture._id
+            );
+          } catch (error) {
+            console.warn('Failed to mark lecture as viewed:', lecture._id, error);
+          }
+        }
+      }
       
       const res = await downloadCertificateService(
         auth?.user?._id,
