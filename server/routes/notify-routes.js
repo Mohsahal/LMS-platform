@@ -31,7 +31,13 @@ router.post("/contact-admin", async (req, res) => {
     if (!fromEmail) return res.status(400).json({ success: false, message: "fromEmail is required" });
     if (!fromName) return res.status(400).json({ success: false, message: "fromName is required" });
     
-    const result = await sendAdminContactEmail({ 
+    // Promise.race to prevent hanging on SMTP
+    const timeoutMs = Number(process.env.CONTACT_EMAIL_TIMEOUT_MS || 15000);
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Email service timeout")), timeoutMs);
+    });
+
+    const sendPromise = sendAdminContactEmail({ 
       fromEmail, 
       fromName, 
       phoneNumber,
@@ -41,10 +47,12 @@ router.post("/contact-admin", async (req, res) => {
       message, 
       subject 
     });
+
+    const result = await Promise.race([sendPromise, timeoutPromise]);
     res.status(200).json({ success: true, message: "Email sent", data: result });
   } catch (e) {
     console.log("Mailer error:", e);
-    res.status(500).json({ success: false, message: e?.message || "Failed to send email" });
+    res.status(502).json({ success: false, message: e?.message || "Failed to send email" });
   }
 });
 

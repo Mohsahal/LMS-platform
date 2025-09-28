@@ -14,6 +14,10 @@ async function createTransport() {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      // Timeouts to avoid hanging connections
+      connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 10000),
+      greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS || 10000),
+      socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 20000),
     });
     return { transporter, defaultTo: process.env.ADMIN_EMAIL || process.env.SMTP_USER };
   }
