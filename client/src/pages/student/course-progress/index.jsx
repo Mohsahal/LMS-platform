@@ -133,13 +133,26 @@ function StudentViewCourseProgressPage() {
           setShowCourseCompleteDialog(true);
           setShowConfetti(true);
         }
+        
+        // Also check if all lectures are viewed (in case completion status is not updated)
+        const allLecturesViewed = studentCurrentCourseProgress?.courseDetails?.curriculum?.every(lecture => {
+          const progressEntry = response.data.lecturesProgress?.find(p => p.lectureId === lecture._id);
+          return progressEntry && progressEntry.viewed;
+        });
+        
+        if (allLecturesViewed && !isCourseCompleted) {
+          console.log('All lectures completed! Setting completion state...');
+          setIsCourseCompleted(true);
+          setShowCourseCompleteDialog(true);
+          setShowConfetti(true);
+        }
       }
     } catch (error) {
       console.error('Error marking lecture as viewed:', error);
       // Don't show error to user for progress tracking - it's not critical
       // The video completion flow should continue regardless
     }
-  }, [auth?.user?._id, studentCurrentCourseProgress?.courseDetails?._id, setStudentCurrentCourseProgress, isCourseCompleted]);
+  }, [auth?.user?._id, studentCurrentCourseProgress?.courseDetails?._id, setStudentCurrentCourseProgress, isCourseCompleted, studentCurrentCourseProgress?.courseDetails?.curriculum]);
 
   const handleVideoEnded = useCallback(async () => {
     console.log("Video ended, checking for next lecture");
@@ -242,11 +255,9 @@ function StudentViewCourseProgressPage() {
 
   async function handleDownloadCertificate() {
     try {
-      
-      if (!isCourseCompleted) {
-        alert('Course must be completed before downloading certificate.');
-        return;
-      }
+      console.log('Attempting certificate download...');
+      console.log('Course completed status:', isCourseCompleted);
+      console.log('Course details:', studentCurrentCourseProgress?.courseDetails);
       
       const res = await downloadCertificateService(
         auth?.user?._id,
@@ -266,10 +277,21 @@ function StudentViewCourseProgressPage() {
           try {
             const text = await blob.text();
             console.error('Certificate error payload:', text);
-            alert(JSON.parse(text)?.message || 'Failed to generate certificate. Please ensure the course is completed.');
+            const errorData = JSON.parse(text);
+            toast({
+              title: "Certificate Error",
+              description: errorData?.message || 'Failed to generate certificate. Please try again.',
+              variant: "destructive"
+            });
             return;
           } catch (decodeErr) {
             console.warn('Failed to parse certificate error payload', decodeErr);
+            toast({
+              title: "Certificate Error",
+              description: 'Failed to generate certificate. Please try again.',
+              variant: "destructive"
+            });
+            return;
           }
         }
 
@@ -286,17 +308,41 @@ function StudentViewCourseProgressPage() {
         link.click();
         link.remove();
         setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+        
+        toast({
+          title: "Certificate Downloaded",
+          description: "Your certificate has been downloaded successfully!",
+          variant: "default"
+        });
       } else {
         console.error('Certificate download failed with status:', res.status);
-        alert('Failed to download certificate. Please try again.');
+        toast({
+          title: "Download Failed",
+          description: 'Failed to download certificate. Please try again.',
+          variant: "destructive"
+        });
       }
     } catch (e) {
       console.error('Certificate download error:', e);
       if (e.response?.status === 400) {
         const errorMessage = e.response?.data?.message || 'Certificate is only available after course completion.';
-        alert(errorMessage);
+        toast({
+          title: "Certificate Not Available",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      } else if (e.response?.status === 404) {
+        toast({
+          title: "Course Progress Not Found",
+          description: "Please ensure you have started the course and completed all lectures.",
+          variant: "destructive"
+        });
       } else {
-        alert('Failed to download certificate. Please try again.');
+        toast({
+          title: "Download Failed",
+          description: 'Failed to download certificate. Please try again.',
+          variant: "destructive"
+        });
       }
     }
   }

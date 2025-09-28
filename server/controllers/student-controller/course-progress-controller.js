@@ -224,12 +224,34 @@ const generateCompletionCertificate = async (req, res) => {
       return res.status(404).json({ success: false, message: "Course not found" });
     }
     
-    if (!progress || !progress.completed) {
-      console.log(`Certificate not generated: progress.completed is ${progress?.completed}`);
-      return res.status(400).json({
+    if (!progress) {
+      console.log(`Certificate not generated: No progress found for user ${userId} and course ${courseId}`);
+      return res.status(404).json({
         success: false,
-        message: "Certificate available only after course completion",
+        message: "Course progress not found. Please ensure you have started the course.",
       });
+    }
+
+    if (!progress.completed) {
+      console.log(`Certificate not generated: progress.completed is ${progress.completed}`);
+      // Check if all lectures are actually completed
+      const allLecturesViewed = course.curriculum.every(courseLecture => {
+        const progressEntry = progress.lecturesProgress.find(p => p.lectureId.toString() === courseLecture._id.toString());
+        return progressEntry && progressEntry.viewed;
+      });
+      
+      if (allLecturesViewed) {
+        // Update completion status if all lectures are viewed
+        progress.completed = true;
+        progress.completionDate = new Date();
+        await progress.save();
+        console.log('Course completion status updated automatically');
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "Certificate available only after course completion. Please complete all lectures first.",
+        });
+      }
     }
 
     // Check if course has certificate enabled

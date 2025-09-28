@@ -162,11 +162,7 @@ axiosInstance.interceptors.response.use(
       } else if (isVideoProgress || isCourseRelated) {
         // For course-related 401/403, just show a warning but don't logout
         console.warn("Course-related request failed:", message);
-        toast({ 
-          title: "Request failed", 
-          description: "Please try again. Your progress will be saved automatically.",
-          variant: "destructive"
-        });
+        // Don't show toast for course-related errors - they're not critical
       }
     }
     // CSRF errors - clear token and retry (but not for auth endpoints)
