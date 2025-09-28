@@ -823,7 +823,10 @@ app.use((req, res, next) => {
       req.path === '/secure/contact' ||
       // Skip CSRF for course progress endpoints (they handle their own security)
       req.path.startsWith('/student/course-progress/') ||
-      req.path.startsWith('/student/course-progress/certificate/')) {
+      req.path.startsWith('/student/course-progress/certificate/') ||
+      // Skip CSRF for media upload endpoints (they handle their own security)
+      req.path.startsWith('/media/upload') ||
+      req.path.startsWith('/media/bulk-upload')) {
     return next();
   }
   return csrfProtection(req, res, next);

@@ -88,11 +88,14 @@ axiosInstance.interceptors.request.use(
     // Check if this is a course progress endpoint (excluded from CSRF)
     const isCourseProgressEndpoint = /\/student\/course-progress\//.test(url);
     
+    // Check if this is a media upload endpoint (excluded from CSRF)
+    const isMediaUploadEndpoint = /\/media\/(upload|bulk-upload)/.test(url);
+    
     // Check if this is a course-related endpoint
     const isCourseRelated = /\/course\//.test(url) || /\/student\//.test(url) || /\/course-progress\//.test(url);
     
-    // Only attach CSRF token for non-auth and non-course-progress endpoints
-    if (!isAuthEndpoint && !isCourseProgressEndpoint && ["post", "put", "patch", "delete"].includes(method)) {
+    // Only attach CSRF token for non-auth, non-course-progress, and non-media-upload endpoints
+    if (!isAuthEndpoint && !isCourseProgressEndpoint && !isMediaUploadEndpoint && ["post", "put", "patch", "delete"].includes(method)) {
       try {
         const token = await ensureCsrfToken();
         if (token) config.headers["X-CSRF-Token"] = token;
@@ -145,11 +148,12 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(error);
       }
       
-      // Don't auto-logout for video progress updates or course-related endpoints
+      // Don't auto-logout for video progress updates, course-related endpoints, or media uploads
       const isVideoProgress = /\/course-progress\//.test(url) || /\/student\/course/.test(url);
       const isCourseRelated = /\/course\//.test(url) || /\/student\//.test(url);
+      const isMediaUpload = /\/media\/(upload|bulk-upload)/.test(url);
       
-      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated) {
+      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated && !isMediaUpload) {
         // Only clear token and redirect for non-course related endpoints
         tokenManager.removeToken();
         toast({ title: "Session expired", description: "Please login again to continue" });
@@ -179,23 +183,23 @@ axiosInstance.interceptors.response.use(
       retryCount = 0;
       
       
-      // Don't show CSRF error for auth endpoints or course-related requests
-      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated) {
+      // Don't show CSRF error for auth endpoints, course-related requests, or media uploads
+      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated && !isMediaUpload) {
         toast({ 
           title: "Security error", 
           description: "Please refresh the page and try again",
           variant: "destructive"
         });
         
-        // Only refresh page for non-auth, non-course endpoints
+        // Only refresh page for non-auth, non-course, non-media endpoints
         setTimeout(() => {
           if (typeof window !== "undefined") {
             window.location.reload();
           }
         }, 2000);
-      } else if (isVideoProgress || isCourseRelated) {
-        // For course-related CSRF errors, just clear token and retry silently
-        console.warn("CSRF token issue for course request, retrying...");
+      } else if (isVideoProgress || isCourseRelated || isMediaUpload) {
+        // For course-related or media upload CSRF errors, just clear token and retry silently
+        console.warn("CSRF token issue for course/media request, retrying...");
       }
     }
     if (!status) {

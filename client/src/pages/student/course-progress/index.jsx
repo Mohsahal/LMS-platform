@@ -326,6 +326,7 @@ function StudentViewCourseProgressPage() {
             return;
           }
         }
+        
 
         // Force a download regardless of browser PDF viewer
         const url = window.URL.createObjectURL(blob);
