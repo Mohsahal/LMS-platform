@@ -827,24 +827,52 @@ app.get("/health", (req, res) => {
 // ----------------- Serve React SPA -----------------
 app.use(express.static(path.join(__dirname, "..", "client", "dist")));
 
-app.get("*", (req, res, next) => {
+// ----------------- Global Error Handler (must be before catch-all) -----------------
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: process.env.NODE_ENV === "development" ? err.message : "Internal server error",
+  });
+});
+
+// ----------------- SPA Catch-all Route (must be last) -----------------
+app.get("*", (req, res) => {
   const apiPrefixes = [
     "/auth", "/secure", "/media", "/student", "/instructor",
     "/notify", "/csrf-token", "/health", "/favicon.ico"
   ];
 
   const isApi = apiPrefixes.some(prefix => req.path === prefix || req.path.startsWith(prefix + "/"));
-  if (isApi) return next();
+  
+  if (isApi) {
+    return res.status(404).json({
+      success: false,
+      message: "API endpoint not found"
+    });
+  }
 
-  res.sendFile(path.join(__dirname, "..", "client", "dist", "index.html"));
-});
+  // Serve the React app for all other routes
+  const indexPath = path.join(__dirname, "..", "client", "dist", "index.html");
+  
+  // Check if index.html exists
+  const fs = require('fs');
+  if (!fs.existsSync(indexPath)) {
+    console.error('index.html not found at:', indexPath);
+    return res.status(500).json({
+      success: false,
+      message: "Frontend build not found. Please ensure the client is built."
+    });
+  }
 
-// ----------------- Global Error -----------------
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    success: false,
-    message: process.env.NODE_ENV === "development" ? err.message : "Internal server error",
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err);
+      res.status(500).json({
+        success: false,
+        message: "Error serving frontend"
+      });
+    }
   });
 });
 
