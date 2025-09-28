@@ -7,13 +7,18 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node build-and-start.js",
     "dev": "nodemon server.js",
-    "build": "node build-and-start.js"
+    "build": "node build-and-start.js",
+    "production": "node build-and-start.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^3.1.6"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "dependencies": {
     "axios": "^1.11.0",
