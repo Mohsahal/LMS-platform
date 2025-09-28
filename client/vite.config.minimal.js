@@ -21,6 +21,12 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: false,
     minify: 'esbuild', // Use esbuild instead of terser for less memory
+    esbuild: {
+      // Optimize for size
+      minifyIdentifiers: true,
+      minifySyntax: true,
+      minifyWhitespace: true,
+    },
     rollupOptions: {
       output: {
         // Aggressive chunking to reduce memory usage

@@ -2,7 +2,7 @@ services:
   - type: web
     name: e-learn-platform
     env: node
-    buildCommand: node build-ultra-light.js
+    buildCommand: node build-micro.js
     startCommand: npm start
     healthCheckPath: /health
     envVars:
