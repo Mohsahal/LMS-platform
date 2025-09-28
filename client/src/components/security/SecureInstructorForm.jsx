@@ -552,9 +552,30 @@ export const SecureInstructorForm = ({ children, onSubmit, className = '', ...pr
   const [csrfToken, setCsrfToken] = useState('');
 
   useEffect(() => {
-    // Generate CSRF token
-    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    setCsrfToken(token);
+    // Fetch CSRF token from server
+    const fetchCsrfToken = async () => {
+      try {
+        const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+        const response = await fetch(`${base.replace(/\/$/, '')}/csrf-token`, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.csrfToken) {
+            setCsrfToken(data.csrfToken);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch CSRF token:', error);
+      }
+    };
+
+    fetchCsrfToken();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -563,7 +584,9 @@ export const SecureInstructorForm = ({ children, onSubmit, className = '', ...pr
     try {
       // Add CSRF token to form data
       const formData = new FormData(e.target);
-      formData.append('_csrf', csrfToken);
+      if (csrfToken) {
+        formData.append('_csrf', csrfToken);
+      }
       
       await onSubmit(e, formData);
     } catch (error) {
@@ -573,7 +596,7 @@ export const SecureInstructorForm = ({ children, onSubmit, className = '', ...pr
 
   return (
     <form onSubmit={handleSubmit} className={className} {...props}>
-      <input type="hidden" name="_csrf" value={csrfToken} />
+      {csrfToken && <input type="hidden" name="_csrf" value={csrfToken} />}
       {children}
     </form>
   );

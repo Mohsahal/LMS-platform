@@ -789,12 +789,47 @@ app.use((req, res, next) => {
 
 // ----------------- CSRF -----------------
 const csrfProtection = csrf({
-  cookie: { key: "csrfToken", httpOnly: false, sameSite: "lax", secure: process.env.NODE_ENV === "production" },
+  cookie: { 
+    key: "csrfToken", 
+    httpOnly: false, 
+    sameSite: "lax", 
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  },
+  ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
+  value: (req) => {
+    // Check both header and body for CSRF token
+    return req.headers['x-csrf-token'] || req.body._csrf;
+  }
 });
-app.use(csrfProtection);
+
+// Apply CSRF protection to all routes except static files and health checks
+app.use((req, res, next) => {
+  // Skip CSRF for static files, health checks, and CSRF token endpoint
+  if (req.path === '/csrf-token' || 
+      req.path === '/health' || 
+      req.path === '/favicon.ico' ||
+      req.path.startsWith('/static/') ||
+      req.path.startsWith('/assets/')) {
+    return next();
+  }
+  return csrfProtection(req, res, next);
+});
 
 app.get("/csrf-token", (req, res) => {
-  res.status(200).json({ csrfToken: typeof req.csrfToken === "function" ? req.csrfToken() : null });
+  try {
+    const token = typeof req.csrfToken === "function" ? req.csrfToken() : null;
+    res.status(200).json({ 
+      csrfToken: token,
+      success: true 
+    });
+  } catch (error) {
+    console.error('CSRF token generation error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to generate CSRF token" 
+    });
+  }
 });
 
 // ----------------- Database -----------------

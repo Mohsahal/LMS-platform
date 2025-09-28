@@ -11,7 +11,7 @@ const axiosInstance = axios.create({
 let csrfToken = null;
 let csrfFetchInFlight = null;
 let lastFetchTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes (increased for better UX)
 const MAX_RETRIES = 3; 
 let retryCount = 0;
 
@@ -29,34 +29,45 @@ async function ensureCsrfToken() {
   }
 
   if (retryCount >= MAX_RETRIES) {
-    await new Promise(resolve => setTimeout(resolve, 30000)); 
+    console.warn('CSRF token fetch failed after max retries, clearing cache');
+    csrfToken = null;
+    lastFetchTime = 0;
     retryCount = 0;
     return null;
   }
   
   // Start new fetch
   const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
-  // Ensure no double slashes in URL
   const csrfUrl = `${base.replace(/\/$/, '')}/csrf-token`;
+  
   csrfFetchInFlight = axios
     .get(csrfUrl, { 
       withCredentials: true,
-      timeout: 5000 // 5 second timeout
+      timeout: 10000, // Increased timeout
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
     })
     .then((res) => {
-      csrfToken = res?.data?.csrfToken || null;
-      lastFetchTime = now;
-      retryCount = 0; 
-      return csrfToken;
+      if (res.data && res.data.success && res.data.csrfToken) {
+        csrfToken = res.data.csrfToken;
+        lastFetchTime = now;
+        retryCount = 0;
+        console.log('CSRF token refreshed successfully');
+        return csrfToken;
+      } else {
+        throw new Error('Invalid CSRF token response');
+      }
     })
     .catch((error) => {
       console.warn("CSRF token fetch failed:", error.message);
-      retryCount++; 
+      retryCount++;
+      csrfToken = null; // Clear invalid token
       return null;
     })
     .finally(() => {
-      
-      const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 30000); 
+      const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 10000);
       setTimeout(() => {
         csrfFetchInFlight = null;
       }, retryDelay);
@@ -128,9 +139,28 @@ axiosInstance.interceptors.response.use(
         // toast({ title: "Login failed", description: message });
       }
     }
-    // CSRF errors
-    if (status === 419 || error?.response?.data?.message === "invalid csrf token") {
-      toast({ title: "Security error", description: "Please refresh the page and try again" });
+    // CSRF errors - clear token and retry
+    if (status === 419 || 
+        error?.response?.data?.message?.toLowerCase().includes("csrf") ||
+        error?.response?.data?.message?.toLowerCase().includes("invalid token")) {
+      
+      // Clear cached CSRF token to force refresh
+      csrfToken = null;
+      lastFetchTime = 0;
+      retryCount = 0;
+      
+      toast({ 
+        title: "Security error", 
+        description: "Please refresh the page and try again",
+        variant: "destructive"
+      });
+      
+      // Optionally refresh the page after a short delay
+      setTimeout(() => {
+        if (typeof window !== "undefined") {
+          window.location.reload();
+        }
+      }, 2000);
     }
     if (!status) {
       toast({ title: "Network error", description: error?.message || "Request failed" });

@@ -369,15 +369,35 @@ export const useRateLimit = (maxAttempts = 5, windowMs = 15 * 60 * 1000) => {
   return { checkRateLimit, recordAttempt, resetAttempts, isBlocked };
 };
 
-// CSRF Token Hook
+// CSRF Token Hook - Now uses server-generated tokens
 export const useCSRFToken = () => {
   const [csrfToken, setCsrfToken] = useState('');
 
   useEffect(() => {
-    // Generate a simple CSRF token for client-side use
-    const token = Math.random().toString(36).substring(2, 15) + 
-                  Math.random().toString(36).substring(2, 15);
-    setCsrfToken(token);
+    // Fetch CSRF token from server
+    const fetchCsrfToken = async () => {
+      try {
+        const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+        const response = await fetch(`${base.replace(/\/$/, '')}/csrf-token`, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.csrfToken) {
+            setCsrfToken(data.csrfToken);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch CSRF token:', error);
+      }
+    };
+
+    fetchCsrfToken();
   }, []);
 
   return csrfToken;
