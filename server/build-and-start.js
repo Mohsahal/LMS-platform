@@ -24,7 +24,20 @@ try {
     const clientNodeModules = path.join(clientDir, 'node_modules');
     if (!fs.existsSync(clientNodeModules)) {
       console.log('📥 Installing client dependencies...');
-      execSync('npm install', { cwd: clientDir, stdio: 'inherit' });
+      // Force install devDependencies (including vite) even in production
+      const clientEnv = { ...process.env };
+      clientEnv.npm_config_production = 'false';
+      execSync('npm install --include=dev', { cwd: clientDir, stdio: 'inherit', env: clientEnv });
+    }
+    
+    // Verify vite is installed
+    const vitePath = path.join(clientNodeModules, 'vite');
+    if (!fs.existsSync(vitePath)) {
+      console.error('❌ Vite not found in client dependencies');
+      console.log('📥 Reinstalling client dependencies with devDependencies...');
+      const clientEnv = { ...process.env };
+      clientEnv.npm_config_production = 'false';
+      execSync('npm install --include=dev', { cwd: clientDir, stdio: 'inherit', env: clientEnv });
     }
     
     // Build the client

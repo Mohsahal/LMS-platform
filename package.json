@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
-    "build": "node build.js",
+    "build": "node build-production.js",
     "start": "node start.js",
     "production": "node start.js",
     "install-all": "npm install --prefix client && npm install --prefix server && npm install"
@@ -18,4 +18,5 @@
     "server"
   ]
 }
+
 
