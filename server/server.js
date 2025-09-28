@@ -820,7 +820,10 @@ app.use((req, res, next) => {
       req.path === '/secure/register' ||
       req.path === '/secure/forgot-password' ||
       req.path === '/secure/reset-password' ||
-      req.path === '/secure/contact') {
+      req.path === '/secure/contact' ||
+      // Skip CSRF for course progress endpoints (they handle their own security)
+      req.path.startsWith('/student/course-progress/') ||
+      req.path.startsWith('/student/course-progress/certificate/')) {
     return next();
   }
   return csrfProtection(req, res, next);

@@ -85,11 +85,14 @@ axiosInstance.interceptors.request.use(
     const isAuthEndpoint = /\/auth\/(login|register|forgot-password|reset-password)/.test(url) ||
                           /\/secure\/(login|register|forgot-password|reset-password|contact)/.test(url);
     
+    // Check if this is a course progress endpoint (excluded from CSRF)
+    const isCourseProgressEndpoint = /\/student\/course-progress\//.test(url);
+    
     // Check if this is a course-related endpoint
     const isCourseRelated = /\/course\//.test(url) || /\/student\//.test(url) || /\/course-progress\//.test(url);
     
-    // Only attach CSRF token for non-auth endpoints
-    if (!isAuthEndpoint && ["post", "put", "patch", "delete"].includes(method)) {
+    // Only attach CSRF token for non-auth and non-course-progress endpoints
+    if (!isAuthEndpoint && !isCourseProgressEndpoint && ["post", "put", "patch", "delete"].includes(method)) {
       try {
         const token = await ensureCsrfToken();
         if (token) config.headers["X-CSRF-Token"] = token;

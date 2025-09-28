@@ -288,21 +288,8 @@ function StudentViewCourseProgressPage() {
       console.log('Course completed status:', isCourseCompleted);
       console.log('Course details:', studentCurrentCourseProgress?.courseDetails);
       
-      // If course appears completed but progress might be missing, try to mark all lectures as viewed first
-      if (isCourseCompleted && studentCurrentCourseProgress?.courseDetails?.curriculum) {
-        console.log('Course appears completed, ensuring all lectures are marked as viewed...');
-        for (const lecture of studentCurrentCourseProgress.courseDetails.curriculum) {
-          try {
-            await markLectureAsViewedService(
-              auth?.user?._id,
-              studentCurrentCourseProgress?.courseDetails?._id,
-              lecture._id
-            );
-          } catch (error) {
-            console.warn('Failed to mark lecture as viewed:', lecture._id, error);
-          }
-        }
-      }
+      // Server will automatically handle progress creation and completion detection
+      // No need to manually sync progress here
       
       const res = await downloadCertificateService(
         auth?.user?._id,
