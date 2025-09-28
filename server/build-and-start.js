@@ -45,14 +45,16 @@ try {
     console.log('🔧 Development mode - skipping client build');
   }
   
-  // Start the server
-  console.log('🚀 Starting server...');
-  
-  // Set NODE_ENV to production if not set
-  if (!process.env.NODE_ENV) {
-    process.env.NODE_ENV = 'production';
+  // If running in a build phase (Render build), do not start the server
+  const inRenderBuild = process.env.RENDER === 'true' || process.env.CI === 'true';
+  if (inRenderBuild) {
+    console.log('🏗️ Detected build environment; skipping server start.');
+    process.exit(0);
   }
   
+  // Start the server in runtime
+  console.log('🚀 Starting server...');
+  if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
   require('./server.js');
   
 } catch (error) {

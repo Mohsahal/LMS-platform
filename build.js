@@ -15,7 +15,11 @@ try {
   
   // Install client dependencies first
   console.log('📥 Installing client dependencies...');
-  execSync('npm install', { cwd: path.join(__dirname, 'client'), stdio: 'inherit' });
+  // Ensure devDependencies (like vite) are installed during Render builds
+  const clientEnv = { ...process.env };
+  // Render sets NODE_ENV=production for builds; force devDeps install for client
+  clientEnv.npm_config_production = 'false';
+  execSync('npm install --include=dev', { cwd: path.join(__dirname, 'client'), stdio: 'inherit', env: clientEnv });
   
   // Install server dependencies
   console.log('📥 Installing server dependencies...');
@@ -51,3 +55,5 @@ try {
   console.error('❌ Build failed:', error.message);
   process.exit(1);
 }
+
+
