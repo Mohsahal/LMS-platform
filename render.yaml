@@ -12,3 +12,4 @@ services:
         value: "false"
       - key: PORT
         value: 10000
+        
