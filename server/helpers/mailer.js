@@ -125,9 +125,11 @@ This email was sent from the BravyNex Engineering contact form.
     </div>
   `;
 
+  const fromAddress = process.env.ADMIN_EMAIL || defaultTo;
   const info = await transporter.sendMail({
-    from: fromEmail ? `${fromName || fromEmail} <${fromEmail}>` : adminEmail,
+    from: fromAddress,
     to: adminEmail,
+    replyTo: fromEmail && fromEmail.trim() !== '' ? fromEmail : undefined,
     subject: subject || "New contact form submission - BravyNex Engineering",
     text: emailText,
     html: emailHtml,
