@@ -1,6 +1,11 @@
 const nodemailer = require("nodemailer");
+const fetch = require("node-fetch");
 
 async function createTransport() {
+  // Prefer Resend API in production if configured (more reliable on platforms like Render)
+  if (process.env.RESEND_API_KEY && process.env.NODE_ENV === 'production') {
+    return { transporter: null, defaultTo: process.env.ADMIN_EMAIL || "mohammedsahal1243@gmail.com" };
+  }
   if (process.env.USE_JSON_MAIL === "true") {
     const transporter = nodemailer.createTransport({ jsonTransport: true });
     return { transporter, defaultTo: process.env.ADMIN_EMAIL || "mohammedsahal1243@gmail.com" };
@@ -130,6 +135,31 @@ This email was sent from the BravyNex Engineering contact form.
   `;
 
   const fromAddress = process.env.ADMIN_EMAIL || defaultTo;
+  // If we are using Resend in production
+  if (!transporter && process.env.RESEND_API_KEY && process.env.NODE_ENV === 'production') {
+    const resp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: fromAddress,
+        to: [adminEmail],
+        reply_to: fromEmail && fromEmail.trim() !== '' ? fromEmail : undefined,
+        subject: subject || "New contact form submission - BravyNex Engineering",
+        text: emailText,
+        html: emailHtml
+      })
+    });
+    if (!resp.ok) {
+      const body = await resp.text();
+      throw new Error(`Resend API error: ${resp.status} ${body}`);
+    }
+    const data = await resp.json();
+    return { messageId: data?.id || data?.data?.id };
+  }
+
   const info = await transporter.sendMail({
     from: fromAddress,
     to: adminEmail,

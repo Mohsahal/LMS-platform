@@ -720,6 +720,8 @@ const allowedOrigins = [
   ...CORS_ORIGINS,
   "https://lms-platform-client.onrender.com",
   "http://localhost:5173",
+  // Allow any Render app subdomain for both client and server if configured
+  "https://*.onrender.com"
 ];
 
 app.use(cors({
@@ -727,7 +729,8 @@ app.use(cors({
     if (!origin) return callback(null, true);
     const isAllowed = allowedOrigins.some(o => {
       if (o.includes("*")) {
-        const regex = new RegExp("^" + o.replace(/\*/g, ".*") + "$");
+        const escaped = o.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, ".*");
+        const regex = new RegExp("^" + escaped + "$");
         return regex.test(origin);
       }
       return origin === o;
@@ -749,6 +752,7 @@ const dynamicMediaSrc = new Set([...(directives.mediaSrc || [])]);
 CORS_ORIGINS.forEach(o => dynamicConnectSrc.add(o));
 dynamicConnectSrc.add("http://localhost:5000");
 dynamicConnectSrc.add("https://localhost:5000");
+dynamicConnectSrc.add("https://*.onrender.com");
 
 dynamicMediaSrc.add("'self'");
 dynamicMediaSrc.add("https://res.cloudinary.com");
