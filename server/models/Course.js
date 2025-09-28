@@ -23,7 +23,7 @@ const CourseSchema = new mongoose.Schema({
   pricing: Number,
   objectives: String,
   // certificate settings
-  certificateEnabled: Boolean,
+  certificateEnabled: { type: Boolean, default: true },
   certificateTemplateUrl: String, // optional remote/background image
   certificateIssuer: { type: String, default: "Chief Executive Officer" },
   certificateOrganization: { type: String, default: "BRAVYNEX ENGINEERING" },

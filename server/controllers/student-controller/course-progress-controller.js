@@ -221,8 +221,15 @@ const generateCompletionCertificate = async (req, res) => {
     
     const course = await Course.findById(courseId);
     if (!course) {
+      console.log('Course not found for courseId:', courseId);
       return res.status(404).json({ success: false, message: "Course not found" });
     }
+    
+    console.log('Course found:', { 
+      title: course.title, 
+      certificateEnabled: course.certificateEnabled,
+      curriculumLength: course.curriculum?.length 
+    });
     
     if (!progress) {
       console.log(`Certificate not generated: No progress found for user ${userId} and course ${courseId}`);
@@ -254,14 +261,17 @@ const generateCompletionCertificate = async (req, res) => {
       }
     }
 
-    // Check if course has certificate enabled
-    if (!course.certificateEnabled) {
+    // Check if course has certificate enabled (default to true if not set)
+    const certificateEnabled = course.certificateEnabled !== false; // Default to true
+    if (!certificateEnabled) {
       console.log(`Certificate not generated: certificateEnabled is ${course.certificateEnabled}`);
       return res.status(400).json({
         success: false,
         message: "Certificate generation is disabled for this course",
       });
     }
+    
+    console.log('Certificate generation proceeding...');
 
     const user = await User.findById(userId);
     if (!user) {
@@ -270,6 +280,13 @@ const generateCompletionCertificate = async (req, res) => {
 
     const certificateId = randomBytes(8).toString("hex").toUpperCase();
     const issuedOn = new Date(progress.completionDate || Date.now()).toDateString();
+
+    console.log('Generating certificate for:', {
+      userName: user.userName,
+      courseTitle: course.title,
+      certificateId,
+      issuedOn
+    });
 
     // Set headers for optimal PDF compatibility across applications
     res.setHeader("Content-Type", "application/pdf");
@@ -313,44 +330,43 @@ const generateCompletionCertificate = async (req, res) => {
     doc.pipe(res);
 
     // background (optional - URL from course settings or local file)
+    let backgroundApplied = false;
+    
     if (course.certificateTemplateUrl) {
       try {
         const resp = await axios.get(course.certificateTemplateUrl, { responseType: "arraybuffer" });
         const imgBuffer = Buffer.from(resp.data, "binary");
         doc.image(imgBuffer, 0, 0, { width: doc.page.width, height: doc.page.height });
-      } catch (_) {
-        // ignore if failed to fetch
+        backgroundApplied = true;
+        console.log('Certificate template applied from URL');
+      } catch (error) {
+        console.warn('Failed to fetch certificate template from URL:', error.message);
       }
-    } else {
-      // Try multiple local filenames for convenience
-      const uploadsDir = path.join(__dirname, "../../uploads");
-      const candidates = [
-        path.join(uploadsDir, "certificate.png"),
-        
-      ];
-      let appliedBackground = false;
-      for (const p of candidates) {
+    }
     
-
-        if (fs.existsSync(p)) {
-          
-          try {
-            doc.image(p, 0, 0, { width: doc.page.width, height: doc.page.height });
-            appliedBackground = true;
-            break;
-          } catch (_) {}
+    if (!backgroundApplied) {
+      // Try local certificate template
+      const uploadsDir = path.join(__dirname, "../../uploads");
+      const certificatePath = path.join(uploadsDir, "certificate.png");
+      
+      try {
+        if (fs.existsSync(certificatePath)) {
+          doc.image(certificatePath, 0, 0, { width: doc.page.width, height: doc.page.height });
+          backgroundApplied = true;
+          console.log('Certificate template applied from local file');
+        } else {
+          console.warn('Certificate template not found at:', certificatePath);
         }
+      } catch (error) {
+        console.warn('Failed to apply certificate template:', error.message);
       }
-      // As a last resort, pick any .png in uploads
-      if (!appliedBackground) {
-        try {
-          const files = fs.readdirSync(uploadsDir).filter((f) => f.toLowerCase().endsWith(".png"));
-          if (files.length > 0) {
-            const firstPng = path.join(uploadsDir, files[0]);
-            doc.image(firstPng, 0, 0, { width: doc.page.width, height: doc.page.height });
-          }
-        } catch (_) {}
-      }
+    }
+    
+    // If no background was applied, continue without it
+    if (!backgroundApplied) {
+      console.log('No certificate template applied, generating plain certificate');
+      // Add a simple background color
+      doc.rect(0, 0, doc.page.width, doc.page.height).fill('#f8f9fa');
     }
 
     // Overlay text with robust positioning for cross-platform compatibility
@@ -504,8 +520,17 @@ const generateCompletionCertificate = async (req, res) => {
     // Finalize PDF with locked positioning for maximum stability
     doc.end();
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Failed to generate certificate" });
+    console.error('Certificate generation error:', error);
+    console.error('Error stack:', error.stack);
+    
+    // Don't send response if headers already sent
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to generate certificate. Please try again later.",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
   }
 };
 
