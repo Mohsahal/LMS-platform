@@ -5,6 +5,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Specific problematic directories that cause build conflicts
+server/node_modules/typedarray/test/server/
+
 # Production builds
 dist/
 build/

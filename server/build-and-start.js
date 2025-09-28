@@ -5,6 +5,13 @@ const fs = require('fs');
 console.log('🚀 Starting build process...');
 
 try {
+  // Run pre-build cleanup to remove problematic directories
+  console.log('🔧 Running pre-build cleanup...');
+  const buildScriptPath = path.join(__dirname, '..', 'build-script.js');
+  if (fs.existsSync(buildScriptPath)) {
+    execSync(`node ${buildScriptPath}`, { stdio: 'inherit' });
+  }
+
   // Check if we're in production or if NODE_ENV is not set (default to production for deployment)
   const isProduction = process.env.NODE_ENV === 'production' || !process.env.NODE_ENV;
   
