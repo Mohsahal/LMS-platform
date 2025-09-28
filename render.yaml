@@ -2,7 +2,7 @@ services:
   - type: web
     name: e-learn-platform
     env: node
-    buildCommand: node build-production.js
+    buildCommand: node build-ultra-light.js
     startCommand: npm start
     healthCheckPath: /health
     envVars:
@@ -10,8 +10,6 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: NODE_OPTIONS
-        value: --max-old-space-size=4096
     plan: free
     rootDir: .
     autoDeploy: true
