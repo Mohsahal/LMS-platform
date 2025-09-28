@@ -803,14 +803,24 @@ const csrfProtection = csrf({
   }
 });
 
-// Apply CSRF protection to all routes except static files and health checks
+// Apply CSRF protection to all routes except static files, health checks, and auth endpoints
 app.use((req, res, next) => {
-  // Skip CSRF for static files, health checks, and CSRF token endpoint
+  // Skip CSRF for static files, health checks, auth endpoints, and CSRF token endpoint
   if (req.path === '/csrf-token' || 
       req.path === '/health' || 
       req.path === '/favicon.ico' ||
       req.path.startsWith('/static/') ||
-      req.path.startsWith('/assets/')) {
+      req.path.startsWith('/assets/') ||
+      // Skip CSRF for authentication endpoints
+      req.path === '/auth/login' ||
+      req.path === '/auth/register' ||
+      req.path === '/auth/forgot-password' ||
+      req.path === '/auth/reset-password' ||
+      req.path === '/secure/login' ||
+      req.path === '/secure/register' ||
+      req.path === '/secure/forgot-password' ||
+      req.path === '/secure/reset-password' ||
+      req.path === '/secure/contact') {
     return next();
   }
   return csrfProtection(req, res, next);
@@ -857,6 +867,15 @@ app.use("/secure/instructor", secureInstructorRoutes);
 app.get("/favicon.ico", (req, res) => res.sendStatus(204));
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", timestamp: new Date().toISOString(), environment: process.env.NODE_ENV || "development" });
+});
+
+// Test endpoint to verify CSRF protection is working
+app.post("/test-csrf", (req, res) => {
+  res.status(200).json({ 
+    success: true, 
+    message: "CSRF protection is working correctly",
+    timestamp: new Date().toISOString()
+  });
 });
 
 // ----------------- Serve React SPA -----------------

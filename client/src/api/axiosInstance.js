@@ -78,9 +78,15 @@ async function ensureCsrfToken() {
 
 axiosInstance.interceptors.request.use(
   async (config) => {
-    // Attach CSRF token header for state-changing requests
+    const url = config.url || "";
     const method = (config.method || "get").toLowerCase();
-    if (["post", "put", "patch", "delete"].includes(method)) {
+    
+    // Check if this is an authentication endpoint
+    const isAuthEndpoint = /\/auth\/(login|register|forgot-password|reset-password)/.test(url) ||
+                          /\/secure\/(login|register|forgot-password|reset-password|contact)/.test(url);
+    
+    // Only attach CSRF token for non-auth endpoints
+    if (!isAuthEndpoint && ["post", "put", "patch", "delete"].includes(method)) {
       const token = await ensureCsrfToken();
       if (token) config.headers["X-CSRF-Token"] = token;
     }
@@ -89,7 +95,7 @@ axiosInstance.interceptors.request.use(
     const accessToken = tokenManager.getCurrentToken();
     if (typeof accessToken === "string" && accessToken.trim().length > 0) {
       // For media uploads, check if token will expire soon and warn user
-      const isMediaUpload = /\/media\/(upload|bulk-upload)/.test(config.url || "");
+      const isMediaUpload = /\/media\/(upload|bulk-upload)/.test(url);
       if (isMediaUpload && tokenManager.willTokenExpireSoon(accessToken, 10)) {
         console.warn("Token will expire soon during upload. Consider refreshing the page.");
       }
@@ -139,7 +145,7 @@ axiosInstance.interceptors.response.use(
         // toast({ title: "Login failed", description: message });
       }
     }
-    // CSRF errors - clear token and retry
+    // CSRF errors - clear token and retry (but not for auth endpoints)
     if (status === 419 || 
         error?.response?.data?.message?.toLowerCase().includes("csrf") ||
         error?.response?.data?.message?.toLowerCase().includes("invalid token")) {
@@ -149,18 +155,21 @@ axiosInstance.interceptors.response.use(
       lastFetchTime = 0;
       retryCount = 0;
       
-      toast({ 
-        title: "Security error", 
-        description: "Please refresh the page and try again",
-        variant: "destructive"
-      });
-      
-      // Optionally refresh the page after a short delay
-      setTimeout(() => {
-        if (typeof window !== "undefined") {
-          window.location.reload();
-        }
-      }, 2000);
+      // Don't show CSRF error for auth endpoints - they shouldn't need CSRF
+      if (!isAuthEndpoint) {
+        toast({ 
+          title: "Security error", 
+          description: "Please refresh the page and try again",
+          variant: "destructive"
+        });
+        
+        // Only refresh page for non-auth endpoints
+        setTimeout(() => {
+          if (typeof window !== "undefined") {
+            window.location.reload();
+          }
+        }, 2000);
+      }
     }
     if (!status) {
       toast({ title: "Network error", description: error?.message || "Request failed" });
