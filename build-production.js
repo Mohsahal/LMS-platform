@@ -42,12 +42,25 @@ try {
   }
   console.log('✅ Vite found');
   
-  // Build client
-  console.log('🔨 Building client...');
-  execSync('npm run build', { 
-    cwd: path.join(__dirname, 'client'), 
-    stdio: 'inherit' 
-  });
+  // Build client with memory optimization
+  console.log('🔨 Building client with memory optimization...');
+  try {
+    execSync('node build-memory-optimized.js', { 
+      cwd: path.join(__dirname, 'client'), 
+      stdio: 'inherit'
+    });
+  } catch (error) {
+    console.log('⚠️ Memory-optimized build failed, trying standard build with increased memory...');
+    const buildEnv = { 
+      ...process.env,
+      NODE_OPTIONS: '--max-old-space-size=6144'
+    };
+    execSync('npm run build', { 
+      cwd: path.join(__dirname, 'client'), 
+      stdio: 'inherit',
+      env: buildEnv
+    });
+  }
   
   // Verify client build
   const distPath = path.join(__dirname, 'client', 'dist');

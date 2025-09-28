@@ -40,9 +40,13 @@ try {
       execSync('npm install --include=dev', { cwd: clientDir, stdio: 'inherit', env: clientEnv });
     }
     
-    // Build the client
+    // Build the client with increased memory limit
     console.log('🔨 Building React app...');
-    execSync('npm run build', { cwd: clientDir, stdio: 'inherit' });
+    const buildEnv = { 
+      ...process.env,
+      NODE_OPTIONS: '--max-old-space-size=4096'
+    };
+    execSync('npm run build', { cwd: clientDir, stdio: 'inherit', env: buildEnv });
     
     // Verify build output
     const distPath = path.join(clientDir, 'dist');
