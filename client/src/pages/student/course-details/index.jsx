@@ -33,6 +33,7 @@ function loadRazorpayScript() {
 }
 import { useContext, useEffect, useState, useCallback } from "react";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
+import { useRef } from "react";
 
 function StudentViewCourseDetailsPage() {
   const {
@@ -47,6 +48,25 @@ function StudentViewCourseDetailsPage() {
   const { auth } = useContext(AuthContext);
   const [isPurchased, setIsPurchased] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const enrollCardRef = useRef(null);
+  const hasInitialScrolledRef = useRef(false);
+
+  // Prevent browser from restoring previous scroll position on navigation
+  useEffect(() => {
+    const prev = typeof window !== 'undefined' && 'scrollRestoration' in window.history ? window.history.scrollRestoration : null;
+    try {
+      if (prev !== null) window.history.scrollRestoration = 'manual';
+    } catch {
+      /* ignore */
+    }
+    return () => {
+      try {
+        if (prev !== null) window.history.scrollRestoration = prev;
+      } catch {
+        /* ignore */
+      }
+    };
+  }, []);
 
   const [displayCurrentVideoFreePreview, setDisplayCurrentVideoFreePreview] =
     useState(null);
@@ -79,6 +99,10 @@ function StudentViewCourseDetailsPage() {
     if (isPurchased) return navigate(`/course-progress/${studentViewCourseDetails?._id}`);
     
     setIsEnrolling(true);
+    // Keep viewport anchored to the enroll card
+    if (enrollCardRef.current) {
+      enrollCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     
     try {
       const paymentPayload = {
@@ -155,6 +179,27 @@ function StudentViewCourseDetailsPage() {
       fetchStudentViewCourseDetails();
     }
   }, [id, setCurrentCourseDetailsId, fetchStudentViewCourseDetails]);
+
+  // On first load of course details, keep viewport focused on enroll card/top
+  useEffect(() => {
+    if (!hasInitialScrolledRef.current && studentViewCourseDetails) {
+      hasInitialScrolledRef.current = true;
+      const scrollToEnroll = () => {
+        if (!enrollCardRef.current) return;
+        const rect = enrollCardRef.current.getBoundingClientRect();
+        const absoluteTop = rect.top + window.pageYOffset - 80; // offset for sticky header
+        try {
+          window.scrollTo({ top: absoluteTop, behavior: "instant" });
+        } catch {
+          window.scrollTo(0, absoluteTop);
+        }
+      };
+      // Use raf to ensure layout has settled
+      requestAnimationFrame(() => {
+        requestAnimationFrame(scrollToEnroll);
+      });
+    }
+  }, [studentViewCourseDetails]);
 
   // Check purchase status to toggle CTA
   useEffect(() => {
@@ -364,7 +409,7 @@ function StudentViewCourseDetailsPage() {
                 </Card>
               </main>
               <aside className="w-full lg:w-[380px] lg:min-w-[380px] order-1 lg:order-2 lg:self-start">
-                <Card className="border border-gray-200 bg-white lg:sticky lg:top-24 rounded-xl shadow-md">
+                <Card ref={enrollCardRef} className="border border-gray-200 bg-white lg:sticky lg:top-24 rounded-xl shadow-md">
                   <CardHeader className="bg-gray-50 border-b border-gray-200 p-4 sm:p-6 rounded-t-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">

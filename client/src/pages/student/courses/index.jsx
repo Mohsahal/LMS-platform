@@ -17,13 +17,10 @@ import {
   checkCoursePurchaseInfoService,
   fetchStudentViewCourseListService,
 } from "@/services";
-import { ArrowUpDownIcon, BookOpen, Star } from "lucide-react";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUpDownIcon, BookOpen } from "lucide-react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
+// Removed GSAP animations for cleaner mobile stacking UX
 
 function createSearchParamsHelper(filterParams) {
   const queryParams = [];
@@ -59,52 +56,7 @@ function StudentViewCoursesPage() {
   const [visibleResults, setVisibleResults] = useState(INITIAL_RESULTS);
   const canLoadMoreResults = (studentViewCoursesList?.length || 0) > visibleResults;
 
-  const cardRefs = useRef([]);
-
-  useEffect(() => {
-    cardRefs.current = [];
-  }, [studentViewCoursesList]);
-
-  useEffect(() => {
-    ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-
-    const validCardElements = cardRefs.current.filter(Boolean);
-
-    validCardElements.forEach((card, index) => {
-      gsap.set(card, {
-        y: index * 25,
-        scale: 1 - (index * 0.07),
-        opacity: 0.4 + (index * 0.15),
-        zIndex: validCardElements.length - index,
-        filter: `blur(${index * 1.5}px)`,
-        transformOrigin: "center bottom",
-        rotationX: index * 5,
-        transformPerspective: 1000,
-      });
-
-      gsap.to(card, {
-        y: 0,
-        scale: 1,
-        opacity: 1,
-        filter: "blur(0px)",
-        rotationX: 0,
-        duration: 0.8,
-        delay: index * 0.1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: card,
-          start: "top 85%",
-          end: "bottom center",
-          toggleActions: "play none none reverse",
-          // markers: true,
-        },
-      });
-    });
-
-    return () => {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
-  }, [studentViewCoursesList, visibleResults]);
+  // No animation refs or effects; keep rendering simple for mobile stacking
 
   useEffect(() => {
     // reset visible results when new data arrives
@@ -281,9 +233,10 @@ function StudentViewCoursesPage() {
                     onChange={(event) => {
                       const val = event.target.value;
                       if (!val) {
-                        const { category, ...rest } = filters;
-                        setFilters(rest);
-                        sessionStorage.setItem("filters", JSON.stringify(rest));
+                        const next = { ...filters };
+                        delete next.category;
+                        setFilters(next);
+                        sessionStorage.setItem("filters", JSON.stringify(next));
                       } else {
                         const next = { ...filters, category: [val] };
                         setFilters(next);
@@ -326,15 +279,12 @@ function StudentViewCoursesPage() {
             {/* Cards Grid */}
             {studentViewCoursesList && studentViewCoursesList.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6">
-                  {studentViewCoursesList.slice(0, visibleResults).map((courseItem, index) => (
+                <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6">
+                  {studentViewCoursesList.slice(0, visibleResults).map((courseItem) => (
                     <div
                       key={courseItem?._id}
-                      ref={el => {
-                        if (el) cardRefs.current[index] = el;
-                      }}
                       onClick={() => handleCourseNavigate(courseItem?._id)}
-                      className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-200"
+                      className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-colors duration-200 cursor-pointer border border-gray-200"
                     >
                       <div className="relative h-36 sm:h-44 overflow-hidden">
                         <img src={courseItem?.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={courseItem?.title} />

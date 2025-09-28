@@ -20,7 +20,7 @@ import {
   resetCourseProgressService,
   downloadCertificateService,
 } from "@/services";
-import { Check, ChevronLeft, ChevronRight, Play, Award, Download, Lock, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Play, Award, Download, Lock, X, Loader2 } from "lucide-react";
 import { useContext, useEffect, useState, useCallback } from "react";
 import Confetti from "react-confetti";
 import { useNavigate, useParams } from "react-router-dom";
@@ -41,6 +41,7 @@ function StudentViewCourseProgressPage() {
   const [showCertificateSidebar, setShowCertificateSidebar] = useState(false);
   const [showVideoCompleteNotification, setShowVideoCompleteNotification] = useState(false);
   const [completedVideoTitle, setCompletedVideoTitle] = useState("");
+  const [isCertificateDownloading, setIsCertificateDownloading] = useState(false);
   const { id } = useParams();
 
 
@@ -284,6 +285,7 @@ function StudentViewCourseProgressPage() {
 
   async function handleDownloadCertificate() {
     try {
+      setIsCertificateDownloading(true);
       console.log('Attempting certificate download...');
       console.log('Course completed status:', isCourseCompleted);
       console.log('Course details:', studentCurrentCourseProgress?.courseDetails);
@@ -377,6 +379,8 @@ function StudentViewCourseProgressPage() {
           variant: "destructive"
         });
       }
+    } finally {
+      setIsCertificateDownloading(false);
     }
   }
 
@@ -674,9 +678,19 @@ function StudentViewCourseProgressPage() {
                   {studentCurrentCourseProgress?.courseDetails?.certificateEnabled ? (
                     <Button
                       onClick={handleDownloadCertificate}
-                      className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center w-full mb-2 sm:mb-3 text-sm sm:text-base py-3 sm:py-4 touch-manipulation"
+                      disabled={isCertificateDownloading}
+                      className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center w-full mb-2 sm:mb-3 text-sm sm:text-base py-3 sm:py-4 touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Download Certificate
+                      {isCertificateDownloading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 animate-spin" />
+                          Preparing Certificate...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Download Certificate
+                        </>
+                      )}
                     </Button>
                   ) : (
                     <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
@@ -768,9 +782,18 @@ function StudentViewCourseProgressPage() {
               {studentCurrentCourseProgress?.courseDetails?.certificateEnabled ? (
                 <Button
                   onClick={handleDownloadCertificate}
-                  className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center py-3 sm:py-3 text-sm sm:text-base w-full touch-manipulation"
+                  disabled={isCertificateDownloading}
+                  className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center py-3 sm:py-3 text-sm sm:text-base w-full touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Download Certificate
+                  {isCertificateDownloading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 animate-spin" /> Preparing Certificate...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Download Certificate
+                    </>
+                  )}
                 </Button>
               ) : (
                 <div className="p-3 sm:p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
