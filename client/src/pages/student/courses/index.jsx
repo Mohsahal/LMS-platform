@@ -243,6 +243,7 @@ function StudentViewCoursesPage() {
                         sessionStorage.setItem("filters", JSON.stringify(next));
                       }
                     }}
+                    
                     className="border-gray-300 rounded-md text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 bg-white hover:border-gray-400 w-full sm:w-auto"
                   >
                     <option value="">All Categories</option>

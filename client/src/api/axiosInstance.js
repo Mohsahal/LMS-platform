@@ -137,7 +137,9 @@ axiosInstance.interceptors.response.use(
     const url = (error?.config?.url || "").toString();
     const isAuthLogin = /\/auth\/login($|\?)/.test(url);
     const isAuthRegister = /\/auth\/register($|\?)/.test(url);
-    const isAuthEndpoint = isAuthLogin || isAuthRegister;
+    const isAuthForgot = /\/(auth|secure)\/(forgot-password|reset-password)($|\?)/.test(url);
+    const isSecureContact = /\/secure\/contact($|\?)/.test(url);
+    const isAuthEndpoint = isAuthLogin || isAuthRegister || isAuthForgot || isSecureContact;
     const isMediaUpload = /\/media\/(upload|bulk-upload)/.test(url);
     const isVideoProgress = /\/course-progress\//.test(url) || /\/student\/course/.test(url);
     const isCourseRelated = /\/course\//.test(url) || /\/student\//.test(url);
