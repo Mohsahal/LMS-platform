@@ -136,6 +136,8 @@ function StudentViewCourseProgressPage() {
       }
     } catch (error) {
       console.error('Error marking lecture as viewed:', error);
+      // Don't show error to user for progress tracking - it's not critical
+      // The video completion flow should continue regardless
     }
   }, [auth?.user?._id, studentCurrentCourseProgress?.courseDetails?._id, setStudentCurrentCourseProgress, isCourseCompleted]);
 
@@ -178,10 +180,10 @@ function StudentViewCourseProgressPage() {
             console.error("Failed to mark lecture as viewed after all retries");
             toast({
               title: "Progress not saved",
-              description: "There was an issue saving your progress. Please try again.",
+              description: "There was an issue saving your progress. Don't worry, you can continue watching.",
               variant: "destructive"
             });
-            return;
+            // Don't return here - still allow navigation to next video
           }
           
           // Wait before retry
@@ -213,9 +215,10 @@ function StudentViewCourseProgressPage() {
       console.error("Error in video completion handler:", error);
       toast({
         title: "Error",
-        description: "There was an issue processing video completion. Please try again.",
+        description: "There was an issue processing video completion. You can continue watching.",
         variant: "destructive"
       });
+      // Still allow navigation to next video even if there was an error
     }
   }, [currentLecture, studentCurrentCourseProgress, markLectureAsViewed, toast]);
 

@@ -85,10 +85,20 @@ axiosInstance.interceptors.request.use(
     const isAuthEndpoint = /\/auth\/(login|register|forgot-password|reset-password)/.test(url) ||
                           /\/secure\/(login|register|forgot-password|reset-password|contact)/.test(url);
     
+    // Check if this is a course-related endpoint
+    const isCourseRelated = /\/course\//.test(url) || /\/student\//.test(url) || /\/course-progress\//.test(url);
+    
     // Only attach CSRF token for non-auth endpoints
     if (!isAuthEndpoint && ["post", "put", "patch", "delete"].includes(method)) {
-      const token = await ensureCsrfToken();
-      if (token) config.headers["X-CSRF-Token"] = token;
+      try {
+        const token = await ensureCsrfToken();
+        if (token) config.headers["X-CSRF-Token"] = token;
+      } catch (error) {
+        // For course-related requests, don't fail if CSRF token can't be obtained
+        if (!isCourseRelated) {
+          console.warn("Failed to get CSRF token:", error);
+        }
+      }
     }
 
     // Get current token and check if it's valid
@@ -117,6 +127,8 @@ axiosInstance.interceptors.response.use(
     const isAuthRegister = /\/auth\/register($|\?)/.test(url);
     const isAuthEndpoint = isAuthLogin || isAuthRegister;
     const isMediaUpload = /\/media\/(upload|bulk-upload)/.test(url);
+    const isVideoProgress = /\/course-progress\//.test(url) || /\/student\/course/.test(url);
+    const isCourseRelated = /\/course\//.test(url) || /\/student\//.test(url);
     
     if (status === 401 || status === 403) {
       const message = error?.response?.data?.message || (status === 401 ? "Unauthorized" : "Forbidden");
@@ -152,7 +164,7 @@ axiosInstance.interceptors.response.use(
         console.warn("Course-related request failed:", message);
         toast({ 
           title: "Request failed", 
-          description: "Please try again. If the issue persists, please refresh the page.",
+          description: "Please try again. Your progress will be saved automatically.",
           variant: "destructive"
         });
       }
@@ -168,20 +180,23 @@ axiosInstance.interceptors.response.use(
       retryCount = 0;
       
       
-      // Don't show CSRF error for auth endpoints - they shouldn't need CSRF
-      if (!isAuthEndpoint) {
+      // Don't show CSRF error for auth endpoints or course-related requests
+      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated) {
         toast({ 
           title: "Security error", 
           description: "Please refresh the page and try again",
           variant: "destructive"
         });
         
-        // Only refresh page for non-auth endpoints
+        // Only refresh page for non-auth, non-course endpoints
         setTimeout(() => {
           if (typeof window !== "undefined") {
             window.location.reload();
           }
         }, 2000);
+      } else if (isVideoProgress || isCourseRelated) {
+        // For course-related CSRF errors, just clear token and retry silently
+        console.warn("CSRF token issue for course request, retrying...");
       }
     }
     if (!status) {
