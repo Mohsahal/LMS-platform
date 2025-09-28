@@ -5,8 +5,8 @@ const fs = require('fs');
 console.log('🚀 Starting build process...');
 
 try {
-  // Check if we're in production
-  const isProduction = process.env.NODE_ENV === 'production';
+  // Check if we're in production or if NODE_ENV is not set (default to production for deployment)
+  const isProduction = process.env.NODE_ENV === 'production' || !process.env.NODE_ENV;
   
   if (isProduction) {
     console.log('📦 Building client for production...');

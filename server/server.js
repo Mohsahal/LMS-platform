@@ -826,7 +826,11 @@ app.use((req, res, next) => {
       req.path.startsWith('/student/course-progress/certificate/') ||
       // Skip CSRF for media upload endpoints (they handle their own security)
       req.path.startsWith('/media/upload') ||
-      req.path.startsWith('/media/bulk-upload')) {
+      req.path.startsWith('/media/bulk-upload') ||
+      // Skip CSRF for instructor course endpoints (they handle their own security)
+      req.path.startsWith('/instructor/course/') ||
+      // Skip CSRF for student order endpoints (they handle their own security)
+      req.path.startsWith('/student/order/')) {
     return next();
   }
   return csrfProtection(req, res, next);
@@ -896,6 +900,17 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ----------------- Static Files -----------------
+// Serve static files from client dist directory
+const fs = require('fs');
+const clientDistPath = path.join(__dirname, "..", "client", "dist");
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  console.log('✅ Serving static files from:', clientDistPath);
+} else {
+  console.warn('⚠️ Client dist directory not found at:', clientDistPath);
+}
+
 // ----------------- SPA Catch-all Route (must be last) -----------------
 app.get("*", (req, res) => {
   const apiPrefixes = [
@@ -916,12 +931,12 @@ app.get("*", (req, res) => {
   const indexPath = path.join(__dirname, "..", "client", "dist", "index.html");
   
   // Check if index.html exists
-  const fs = require('fs');
   if (!fs.existsSync(indexPath)) {
     console.error('index.html not found at:', indexPath);
     return res.status(500).json({
       success: false,
-      message: "Frontend build not found. Please ensure the client is built."
+      message: "Frontend build not found. Please ensure the client is built.",
+      path: indexPath
     });
   }
 
