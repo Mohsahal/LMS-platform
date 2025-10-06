@@ -12,10 +12,11 @@ import StudentViewCourseDetailsPage from "./pages/student/course-details";
 import PaypalPaymentReturnPage from "./pages/student/payment-return/index.jsx";
 import StudentCoursesPage from "./pages/student/student-courses";
 import StudentViewCourseProgressPage from "./pages/student/course-progress";
-// import AboutPage from "./pages/student/about";
+import AboutPage from "./pages/student/about";
 import StudentAnalyticsPage from "./pages/student/analytics";
 import AnimationProvider from "./context/animation-context";
 import PageTransition from "./components/page-transition";
+
 
 function App() {
   return (
@@ -71,7 +72,7 @@ function App() {
         >
           <Route path="" element={<StudentHomePage />} />
           <Route path="home" element={<StudentHomePage />} />
-          {/* <Route path="about" element={<AboutPage />} /> */}
+          <Route path="about" element={<AboutPage />} />
           <Route path="courses" element={<StudentViewCoursesPage />} />
           <Route
             path="course/details/:id"
