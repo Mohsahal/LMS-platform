@@ -401,7 +401,7 @@ function StudentViewCourseProgressPage() {
       
       
       {/* Video Completion Notification */}
-      {showVideoCompleteNotification && (
+      {/* {showVideoCompleteNotification && (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-green-600 text-white p-4 sm:p-6 rounded-lg shadow-2xl border-2 border-green-400 animate-pulse mx-2 sm:mx-4 max-w-[90vw] sm:max-w-md">
           <div className="flex items-center space-x-2 sm:space-x-3">
             <Check className="h-6 w-6 sm:h-8 sm:w-8 text-green-200 flex-shrink-0" />
@@ -411,7 +411,7 @@ function StudentViewCourseProgressPage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
       
       {/* Header */}
       <div className="flex items-center justify-between p-3 sm:p-4 bg-[#1c1d1f] border-b border-gray-700">
@@ -662,7 +662,7 @@ function StudentViewCourseProgressPage() {
                         'Recently'}
                     </p>
                   </div>
-                  
+{/*                   
                   {studentCurrentCourseProgress?.courseDetails?.certificateEnabled ? (
                     <Button
                       onClick={handleDownloadCertificate}
@@ -686,7 +686,7 @@ function StudentViewCourseProgressPage() {
                         Certificate generation is disabled for this course
                       </p>
                     </div>
-                  )}
+                  )} */}
                   
                   <Button
                     onClick={handleRewatchCourse}
@@ -767,7 +767,7 @@ function StudentViewCourseProgressPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="mt-4 sm:mt-6 flex flex-col space-y-3 sm:space-y-3">
-              {studentCurrentCourseProgress?.courseDetails?.certificateEnabled ? (
+              {/* {studentCurrentCourseProgress?.courseDetails?.certificateEnabled ? (
                 <Button
                   onClick={handleDownloadCertificate}
                   disabled={isCertificateDownloading}
@@ -789,7 +789,7 @@ function StudentViewCourseProgressPage() {
                     Certificate generation is disabled for this course
                   </p>
                 </div>
-              )}
+              )} */}
               <Button
                 onClick={handleRewatchCourse}
                 variant="outline"
