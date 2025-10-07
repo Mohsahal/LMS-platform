@@ -241,4 +241,84 @@ export async function fetchInstructorAnalyticsService(instructorId) {
   }
 }
 
+// Certificate approvals (secure instructor)
+export async function approveCertificateService({ courseId, studentId, approverId }) {
+  const { data } = await axiosInstance.post(`/secure/instructor/certificates/approve`, { courseId, studentId, approverId });
+  return data;
+}
+
+export async function revokeCertificateService({ courseId, studentId }) {
+  const { data } = await axiosInstance.post(`/secure/instructor/certificates/revoke`, { courseId, studentId });
+  return data;
+}
+
+export async function listApprovedCertificatesService(courseId) {
+  const { data } = await axiosInstance.get(`/secure/instructor/certificates/approved/${courseId}`);
+  return data;
+}
+
+export async function checkCertificateEligibilityService(courseId, studentId) {
+  const { data } = await axiosInstance.get(`/secure/instructor/certificates/eligibility/${courseId}/${studentId}`);
+  return data;
+}
+
+// Internship programs - instructor
+export async function createInternshipProgramService(payload) {
+  const { data } = await axiosInstance.post(`/instructor/internships/create`, payload);
+  return data;
+}
+
+export async function listInstructorProgramsService(instructorId) {
+  const { data } = await axiosInstance.get(`/instructor/internships/list/${instructorId}`);
+  return data;
+}
+
+// Live sessions - instructor
+export async function scheduleLiveSessionService(payload) {
+  const { data } = await axiosInstance.post(`/instructor/live-sessions/schedule`, payload);
+  return data;
+}
+
+export async function addLiveSessionRecordingService(sessionId, recordingUrl) {
+  const { data } = await axiosInstance.post(`/instructor/live-sessions/${sessionId}/recording`, { recordingUrl });
+  return data;
+}
+
+export async function addLiveSessionResourceService(sessionId, { title, url }) {
+  const { data } = await axiosInstance.post(`/instructor/live-sessions/${sessionId}/resources`, { title, url });
+  return data;
+}
+
+export async function listProgramSessionsInstructorService(programId) {
+  const { data } = await axiosInstance.get(`/instructor/live-sessions/program/${programId}`);
+  return data;
+}
+
+export async function deleteLiveSessionService(sessionId, instructorId) {
+  const { data } = await axiosInstance.delete(`/instructor/live-sessions/${sessionId}` + (instructorId ? `?instructorId=${instructorId}` : ""));
+  return data;
+}
+
+export async function getSessionAttendanceService(sessionId) {
+  const { data } = await axiosInstance.get(`/instructor/live-sessions/${sessionId}/attendance`);
+  return data;
+}
+// Live sessions - student
+export async function listProgramSessionsStudentService(programId) {
+  const { data } = await axiosInstance.get(`/student/live-sessions/program/${programId}`);
+  return data;
+}
+
+export async function getLiveSessionDetailsService(sessionId) {
+  const { data } = await axiosInstance.get(`/student/live-sessions/${sessionId}`);
+  return data;
+}
+
+export async function joinLiveSessionService(sessionId, { studentId, studentName, studentEmail }) {
+  const { data } = await axiosInstance.post(`/student/live-sessions/${sessionId}/join`, { studentId, studentName, studentEmail });
+  return data;
+}
+
+
+
 

@@ -92,16 +92,20 @@ axiosInstance.interceptors.request.use(
     const isMediaUploadEndpoint = /\/media\/(upload|bulk-upload)/.test(url);
     
     // Check if this is an instructor course endpoint (excluded from CSRF)
-    const isInstructorCourseEndpoint = /\/instructor\/course\//.test(url);
+    const isInstructorCourseEndpoint = /\/instructor\/course\//.test(url) || /\/instructor\/live-sessions\//.test(url);
     
     // Check if this is a student order endpoint (excluded from CSRF)
     const isStudentOrderEndpoint = /\/student\/order\//.test(url);
     
+    // Check if this is a secure instructor endpoint (excluded from CSRF)
+    const isSecureInstructorEndpoint = /\/secure\/instructor\//.test(url);
+    
     // Check if this is a course-related endpoint
     const isCourseRelated = /\/course\//.test(url) || /\/student\//.test(url) || /\/course-progress\//.test(url);
     
-    // Only attach CSRF token for non-auth, non-course-progress, non-media-upload, non-instructor-course, and non-student-order endpoints
-    if (!isAuthEndpoint && !isCourseProgressEndpoint && !isMediaUploadEndpoint && !isInstructorCourseEndpoint && !isStudentOrderEndpoint && ["post", "put", "patch", "delete"].includes(method)) {
+    // Only attach CSRF token for non-auth, non-course-progress, non-media-upload, non-instructor-course, non-student-order, and non-secure-instructor endpoints
+    const shouldAttachCsrf = !isAuthEndpoint && !isCourseProgressEndpoint && !isMediaUploadEndpoint && !isInstructorCourseEndpoint && !isStudentOrderEndpoint && !isSecureInstructorEndpoint && ["post", "put", "patch", "delete"].includes(method);
+    if (shouldAttachCsrf) {
       try {
         const token = await ensureCsrfToken();
         if (token) config.headers["X-CSRF-Token"] = token;
@@ -144,8 +148,10 @@ axiosInstance.interceptors.response.use(
     const isNotifyContact = /\/notify\/contact-admin($|\?|\/)/.test(url);
     const isVideoProgress = /\/course-progress\//.test(url) || /\/student\/course/.test(url);
     const isCourseRelated = /\/course\//.test(url) || /\/student\//.test(url);
-    const isInstructorCourse = /\/instructor\/course\//.test(url);
+    const isInstructorCourse = /\/instructor\/course\//.test(url) || /\/instructor\/live-sessions\//.test(url);
     const isStudentOrder = /\/student\/order\//.test(url);
+    const isSecureInstructor = /\/secure\/instructor\//.test(url);
+    
     
     if (status === 401 || status === 403) {
       const message = error?.response?.data?.message || (status === 401 ? "Unauthorized" : "Forbidden");
@@ -159,53 +165,42 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(error);
       }
       
-      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated && !isMediaUpload && !isInstructorCourse && !isStudentOrder && !isNotifyContact) {
+      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated && !isMediaUpload && !isInstructorCourse && !isStudentOrder && !isNotifyContact && !isSecureInstructor) {
         // Only clear token and redirect for non-course related endpoints
         tokenManager.removeToken();
         toast({ title: "Session expired", description: "Please login again to continue" });
         if (typeof window !== "undefined") {
-          // Use React Router navigation instead of window.location.href
-          // This will be handled by the RouteGuard component
           window.location.href = "/auth";
         }
       } else if (isAuthLogin) {
         // For login failures, do not redirect or clear input; allow caller to handle toast
-        // Optionally still surface a toast here if caller doesn't
-        // toast({ title: "Login failed", description: message });
-      } else if (isVideoProgress || isCourseRelated || isInstructorCourse || isStudentOrder) {
-        // For course-related 401/403, just show a warning but don't logout
-        console.warn("Course-related request failed:", message);
-        // Don't show toast for course-related errors - they're not critical
+      } else if (isVideoProgress || isCourseRelated || isInstructorCourse || isStudentOrder || isSecureInstructor) {
+        console.warn("Course/instructor-related request failed:", message);
       }
     }
     // CSRF errors - clear token and retry (but not for auth endpoints)
     if (status === 419 || 
         error?.response?.data?.message?.toLowerCase().includes("csrf") ||
         error?.response?.data?.message?.toLowerCase().includes("invalid token")) {
-      
       // Clear cached CSRF token to force refresh
       csrfToken = null;
       lastFetchTime = 0;
       retryCount = 0;
       
-      
-      // Don't show CSRF error for auth endpoints, course-related requests, media uploads, instructor course, or student order endpoints
-      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated && !isMediaUpload && !isInstructorCourse && !isStudentOrder && !isNotifyContact) {
+      // Don't show CSRF error for auth endpoints, course-related requests, media uploads, instructor course, secure instructor, or student order endpoints
+      if (!isAuthEndpoint && !isVideoProgress && !isCourseRelated && !isMediaUpload && !isInstructorCourse && !isStudentOrder && !isNotifyContact && !isSecureInstructor) {
         toast({ 
           title: "Security error", 
           description: "Please refresh the page and try again",
           variant: "destructive"
         });
-        
-        // Only refresh page for non-auth, non-course, non-media, non-instructor, non-student-order endpoints
         setTimeout(() => {
           if (typeof window !== "undefined") {
             window.location.reload();
           }
         }, 2000);
-      } else if (isVideoProgress || isCourseRelated || isMediaUpload || isInstructorCourse || isStudentOrder || isNotifyContact) {
-        // For course-related, media upload, instructor course, or student order CSRF errors, just clear token and retry silently
-        console.warn("CSRF token issue for course/media/instructor/order request, retrying...");
+      } else {
+        console.warn("CSRF token issue for request, token cleared for retry.");
       }
     }
     if (!status) {

@@ -52,7 +52,7 @@ function StudentHomePage() {
 
     if (response?.success) {
       if (response?.data) {
-        navigate(`/course-progress/${getCurrentCourseId}`);
+        navigate(`/student-courses`);
       } else {
         navigate(`/course/details/${getCurrentCourseId}`);
       }

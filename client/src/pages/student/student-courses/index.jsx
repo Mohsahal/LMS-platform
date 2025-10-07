@@ -109,12 +109,12 @@ function StudentCoursesPage() {
                 <CardFooter className="p-5 pt-0">
                 <Button
                   onClick={() =>
-                    navigate(`/course-progress/${course?.courseId}`)
+                    navigate(`/learn/${course?.courseId}`)
                   }
                     className="w-full bg-gradient-to-r from-gray-800 to-black hover:from-black hover:to-gray-900 text-white font-semibold shadow-md hover:shadow-lg transition-transform duration-200 hover:-translate-y-0.5"
                 >
                   <Watch className="mr-2 h-4 w-4" />
-                    Continue Learning
+                    Go to Learning Page
                 </Button>
               </CardFooter>
             </Card>

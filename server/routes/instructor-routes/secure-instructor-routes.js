@@ -1,13 +1,14 @@
 const express = require("express");
 const multer = require("multer");
 const authenticate = require("../../middleware/auth-middleware");
-const { csrfProtection } = require("../../middleware/security-middleware");
+// const { csrfProtection } = require("../../middleware/security-middleware");
 const { moderateActionLimiter, strictAuthLimiter } = require("../../middleware/rate-limiters");
 const { 
   createSecureUpload, 
   validateUploadedFiles, 
   uploadRateLimit 
 } = require("../../middleware/secure-upload-middleware");
+const { approveCertificate, revokeCertificate, listApprovedForCourse, checkEligibility } = require("../../controllers/instructor-controller/certificate-controller");
 const {
   secureCreateCourse,
   secureUpdateCourse,
@@ -21,8 +22,8 @@ const router = express.Router();
 // Apply authentication middleware to all routes
 router.use(authenticate);
 
-// Apply CSRF protection to all routes
-router.use(csrfProtection);
+// Remove router-level CSRF; app-level middleware already handles skips/security
+// router.use(csrfProtection);
 
 // Course routes with comprehensive security
 router.post("/courses", 
@@ -165,6 +166,12 @@ router.post("/media/upload-audio",
   validateUploadedFiles,
   secureBulkMediaUpload
 );
+
+// Certificate approval routes (instructor/admin)
+router.post("/certificates/approve", moderateActionLimiter, approveCertificate);
+router.post("/certificates/revoke", moderateActionLimiter, revokeCertificate);
+router.get("/certificates/approved/:courseId", listApprovedForCourse);
+router.get("/certificates/eligibility/:courseId/:studentId", checkEligibility);
 
 // Error handling middleware for upload routes
 router.use((error, req, res, next) => {

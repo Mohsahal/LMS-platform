@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { initialSignInFormData, initialSignUpFormData } from "@/config";
 import { checkAuthService, loginService, registerService } from "@/services";
-import { createContext, useEffect, useState, useCallback } from "react";
+import { createContext, useEffect, useState, useCallback, useContext } from "react";
 import PropTypes from "prop-types";
 import validator from "validator";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +9,14 @@ import axiosInstance from "@/api/axiosInstance"; // 使用配置好的axiosInsta
 import { useNavigate } from "react-router-dom";
 
 export const AuthContext = createContext(null);
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}
 
 export default function AuthProvider({ children }) {
   const { toast } = useToast();

@@ -96,7 +96,7 @@ function StudentViewCourseDetailsPage() {
   }
 
   async function handleCreatePayment() {
-    if (isPurchased) return navigate(`/course-progress/${studentViewCourseDetails?._id}`);
+    if (isPurchased) return navigate(`/learn/${studentViewCourseDetails?._id}`);
     
     setIsEnrolling(true);
     // Keep viewport anchored to the enroll card
@@ -153,7 +153,7 @@ function StudentViewCourseDetailsPage() {
           );
           if (finalize?.success) {
             setIsPurchased(true);
-            navigate(`/course-progress/${studentViewCourseDetails?._id}`);
+            navigate(`/learn/${studentViewCourseDetails?._id}`);
           } else {
             alert("Payment captured but order finalize failed");
           }

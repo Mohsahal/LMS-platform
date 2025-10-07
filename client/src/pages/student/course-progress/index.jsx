@@ -313,16 +313,16 @@ function StudentViewCourseProgressPage() {
             console.error('Certificate error payload:', text);
             const errorData = JSON.parse(text);
             toast({
-              title: "Certificate Error",
-              description: errorData?.message || 'Failed to generate certificate. Please try again.',
+              title: "Certificate Unavailable",
+              description: errorData?.message || 'Your instructor has not enabled your certificate yet.',
               variant: "destructive"
             });
             return;
           } catch (decodeErr) {
             console.warn('Failed to parse certificate error payload', decodeErr);
             toast({
-              title: "Certificate Error",
-              description: 'Failed to generate certificate. Please try again.',
+              title: "Certificate Unavailable",
+              description: 'Your instructor has not enabled your certificate yet.',
               variant: "destructive"
             });
             return;
@@ -447,19 +447,7 @@ function StudentViewCourseProgressPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            onClick={() => setShowCertificateSidebar(!showCertificateSidebar)}
-            className={`${
-              isCourseCompleted 
-                ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800" 
-                : "bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700"
-            } text-white text-xs sm:text-sm px-2 sm:px-3`}
-            size="sm"
-          >
-            <Award className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
-            <span className="hidden sm:inline">{isCourseCompleted ? "Certificate Ready" : "Certificate"}</span>
-            <span className="sm:hidden">Cert</span>
-          </Button>
+          {/* Certificate button removed as per new policy */}
           <Button 
             onClick={() => setIsSideBarOpen(!isSideBarOpen)}
             className="bg-gray-600 hover:bg-gray-700 text-white"

@@ -115,7 +115,7 @@ function InstructorDashboardpage() {
             </button>
           </div>
 
-        
+      
      
           {/* Navigation Menu */}
           <nav className="flex-1 px-3 py-6">
@@ -171,6 +171,34 @@ function InstructorDashboardpage() {
                   {currentView === "courses" && (
                     <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full"></div>
                   )}
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    navigate("/instructor/live-sessions");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100`}>
+                    <span className="w-4 h-4 rounded-full bg-green-500 inline-block" />
+                  </div>
+                  <span className="font-medium">Live Sessions</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    navigate("/instructor/certificates");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100`}>
+                    <span className="w-4 h-4 rounded-full bg-purple-600 inline-block" />
+                  </div>
+                  <span className="font-medium">Certificates</span>
                 </button>
               </li>
               <li>
@@ -327,3 +355,4 @@ function InstructorDashboardpage() {
 }
 
 export default InstructorDashboardpage;
+

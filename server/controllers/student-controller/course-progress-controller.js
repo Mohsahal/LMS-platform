@@ -306,14 +306,11 @@ const generateCompletionCertificate = async (req, res) => {
       }
     }
 
-    // Check if course has certificate enabled (default to true if not set)
-    const certificateEnabled = course.certificateEnabled !== false; // Default to true
-    if (!certificateEnabled) {
-      console.log(`Certificate not generated: certificateEnabled is ${course.certificateEnabled}`);
-      return res.status(400).json({
-        success: false,
-        message: "Certificate generation is disabled for this course",
-      });
+    // Require explicit instructor/admin approval before generating certificate
+    const CertificateApproval = require("../../models/CertificateApproval");
+    const approval = await CertificateApproval.findOne({ courseId, studentId: userId, revoked: { $ne: true } });
+    if (!approval) {
+      return res.status(403).json({ success: false, message: "Certificate not enabled for this student. Please contact your instructor." });
     }
     
     console.log('Certificate generation proceeding...');
@@ -323,19 +320,25 @@ const generateCompletionCertificate = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
+    // Prefer snapshot details from approval record
+    const studentNameToPrint = approval.studentName || user.userName || user.userEmail || userId;
+    const fatherNameToPrint = approval.studentFatherName || user.guardianName || user.guardianDetails || "";
+    const courseNameToPrint = approval.courseTitle || course.certificateCourseName || course.title;
+    const printedGrade = approval.grade || course.defaultCertificateGrade || "A";
+
     const certificateId = randomBytes(8).toString("hex").toUpperCase();
     const issuedOn = new Date(progress.completionDate || Date.now()).toDateString();
 
     console.log('Generating certificate for:', {
-      userName: user.userName,
-      courseTitle: course.title,
+      userName: studentNameToPrint,
+      courseTitle: courseNameToPrint,
       certificateId,
       issuedOn
     });
 
     // Set headers for optimal PDF compatibility across applications
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=certificate_${(user.userName || "student").replace(/\s+/g, "_")}_${(course.title || "course").replace(/\s+/g, "_")}.pdf`);
+    res.setHeader("Content-Disposition", `attachment; filename=certificate_${(studentNameToPrint || "student").replace(/\s+/g, "_")}_${(courseNameToPrint || "course").replace(/\s+/g, "_")}.pdf`);
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
@@ -492,9 +495,9 @@ const generateCompletionCertificate = async (req, res) => {
     };
 
     // Ms./Mr. [Name] .......... Student ID [id]
-    const displayName = `${user.userName || user.userEmail}`;
+    const displayName = `${studentNameToPrint}`;
     // Guardian name support (renamed from guardianDetails)
-    const guardianValue = user.guardianName || user.guardianDetails;
+    const guardianValue = fatherNameToPrint;
     const guardianLine = guardianValue ? `${guardianValue}` : "";
     
     // Add all certificate text using robust positioning with fallback
@@ -509,12 +512,10 @@ const generateCompletionCertificate = async (req, res) => {
     renderTextWithFallback(userId, textPositions.studentId);
 
     // has successfully completed the [Course] Course
-    const courseNameToPrint = course.certificateCourseName || course.title;
     renderTextWithFallback(courseNameToPrint, textPositions.courseName);
 
     // with Grade ___ from ___
     const printedFrom = course.certificateFrom || "BRAVYNEX ENGINEERING";
-    const printedGrade = course.defaultCertificateGrade || "A";
     
     // Grade and Institution
     renderTextWithFallback(printedGrade, textPositions.grade);
