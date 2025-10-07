@@ -30,8 +30,11 @@ const joinSession = async (req, res) => {
     const session = await LiveSession.findById(sessionId);
     if (!session) return res.status(404).json({ success: false, message: "Session not found" });
     const now = new Date();
-    session.attendance.push({ studentId, studentName, studentEmail, joinedAt: now });
-    await session.save();
+    const alreadyJoined = (session.attendance || []).find(a => a.studentId === studentId);
+    if (!alreadyJoined) {
+      session.attendance.push({ studentId, studentName, studentEmail, joinedAt: now });
+      await session.save();
+    }
     res.status(200).json({ success: true, meetingLink: session.meetingLink });
   } catch (error) {
     console.error("joinSession error", error);

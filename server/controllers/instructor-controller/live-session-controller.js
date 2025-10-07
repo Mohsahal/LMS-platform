@@ -1,9 +1,9 @@
 const LiveSession = require("../../models/LiveSession");
 const Course = require("../../models/Course");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("node:crypto");
 
 function generateJitsiLink(topic) {
-  const room = `${topic || "Session"}-${uuidv4()}`.replace(/[^a-zA-Z0-9-]/g, "");
+  const room = `${topic || "Session"}-${randomUUID()}`.replace(/[^a-zA-Z0-9-]/g, "");
   return `https://meet.jit.si/${room}`;
 }
 
@@ -113,7 +113,17 @@ const getAttendance = async (req, res) => {
     const { sessionId } = req.params;
     const session = await LiveSession.findById(sessionId);
     if (!session) return res.status(404).json({ success: false, message: "Session not found" });
-    res.status(200).json({ success: true, data: session.attendance || [] });
+    const rows = Array.isArray(session.attendance) ? session.attendance : [];
+    const seen = new Set();
+    const unique = [];
+    for (const entry of rows) {
+      const key = entry?.studentId || entry?._id?.toString();
+      if (!key) continue;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(entry);
+    }
+    res.status(200).json({ success: true, data: unique });
   } catch (error) {
     console.error("getAttendance error", error);
     res.status(500).json({ success: false, message: "Failed to fetch attendance" });

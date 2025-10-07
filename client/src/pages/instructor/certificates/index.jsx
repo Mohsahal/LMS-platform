@@ -11,6 +11,8 @@ import {
 import { useNavigate } from "react-router-dom";
 
 function InstructorCertificatesPage() {
+
+  
   const navigate = useNavigate();
   const { auth } = useAuth();
   const [courses, setCourses] = useState([]);
