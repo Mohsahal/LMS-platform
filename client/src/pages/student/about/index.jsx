@@ -177,13 +177,13 @@ function AboutPage() {
   return (
     <div ref={pageRef} className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       {/* Hero Section */}
-      <section ref={heroRef} className="relative px-4 lg:px-8 py-20 overflow-hidden">
+      <section ref={heroRef} className="relative px-6 lg:px-8 py-20 overflow-hidden">
         {/* Background Elements */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-cyan-600/5"></div>
         <div className="floating-bg-1 absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl"></div>
         <div className="floating-bg-2 absolute bottom-20 right-10 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl"></div>
         
-        <div className="relative max-w-7xl mx-auto text-center">
+        <div className="relative max-w-5xl md:max-w-6xl lg:max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center gap-4 mb-8">
             <div className="hero-logo w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
               <BookOpen className="w-8 h-8 text-white animated-icon" />
@@ -192,42 +192,54 @@ function AboutPage() {
               About BRAVYNEX
             </h1>
           </div>
-          <p ref={subtitleRef} className="hero-subtitle text-2xl text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed">
+          <p ref={subtitleRef} className="hero-subtitle text-xl md:text-2xl text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed">
             Welcome to Bravynex Online Courses, where learning meets convenience!<br/>
             Explore engaging courses tailored to all skill levels and interests—from professional growth to creative hobbies. 
             Our expert-led programs deliver practical knowledge for immediate use. With flexible schedules, an easy-to-use platform, 
             and personalized support, Bravynex makes learning enjoyable and accessible. Unlock your potential and grow with us, 
             all from the comfort of your home!
           </p>
-          
-          {/* Company Affiliations
-          <div className="mb-12">
-            <p className="text-lg text-gray-600 mb-8">
-              Our company, started in 2024, is affiliated with VTU, MSME, NSDC and registered under Startup India.
-            </p>
-            <div className="flex flex-wrap justify-center items-center gap-8 opacity-80">
-              <div className="bg-white rounded-lg p-4 shadow-lg">
-                <div className="w-24 h-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">VTU</span>
-                </div>
+
+          {/* Affiliations & Recognitions
+          <div className="mb-16">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">Affiliations & Recognitions</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 place-items-center">
+              <div className="flex items-center justify-center h-28 w-full max-w-[260px] bg-white/80 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <img
+                  src="/images/nsdc.png"
+                  alt="NSDC — National Skill Development Corporation"
+                  className="h-full w-full object-contain"
+                  loading="lazy"
+                />
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-lg">
-                <div className="w-24 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">MSME</span>
-                </div>
+              <div className="flex items-center justify-center h-28 w-full max-w-[260px] bg-white/80 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <img
+                  src="/images/msme.png"
+                  alt="MSME — Micro, Small & Medium Enterprises"
+                  className="h-full w-full object-contain"
+                  loading="lazy"
+                />
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-lg">
-                <div className="w-24 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">NSDC</span>
-                </div>
+              <div className="flex items-center justify-center h-28 w-full max-w-[260px] bg-white/80 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <img
+                  src="/images/skill-india.png"
+                  alt="Skill India"
+                  className="h-full w-full object-contain"
+                  loading="lazy"
+                />
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-lg">
-                <div className="w-24 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">Startup India</span>
-                </div>
+              <div className="flex items-center justify-center h-28 w-full max-w-[260px] bg-white/80 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <img
+                  src="/images/vtu.png"
+                  alt="Visvesvaraya Technological University (VTU)"
+                  className="h-full w-full object-contain"
+                  loading="lazy"
+                />
               </div>
             </div>
           </div> */}
+          
+         
           
           {/* Stats Cards */}
           <div ref={statsRef} className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
