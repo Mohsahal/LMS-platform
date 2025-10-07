@@ -87,9 +87,9 @@ function Footer() {
           </div>
           <div className="flex items-center gap-4 mt-4">
             <a className="text-blue-400 hover:text-blue-500 transition-colors duration-200" href="#" aria-label="Twitter"><Twitter className="h-5 w-5" /></a>
-            <a className="text-blue-600 hover:text-blue-700 transition-colors duration-200" href="#" aria-label="Facebook"><Facebook className="h-5 w-5" /></a>
-            <a className="text-pink-500 hover:text-pink-600 transition-colors duration-200" href="#" aria-label="Instagram"><Instagram className="h-5 w-5" /></a>
-            <a className="text-blue-700 hover:text-blue-800 transition-colors duration-200" href="#" aria-label="LinkedIn"><Linkedin className="h-5 w-5" /></a>
+            <a className="text-blue-600 hover:text-blue-700 transition-colors duration-200" href="https://www.facebook.com/share/1Jp7Lpocmd/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><Facebook className="h-5 w-5" /></a>
+            <a className="text-pink-500 hover:text-pink-600 transition-colors duration-200" href="https://www.instagram.com/bravynexengineering?igsh=MTdnbmVyaGR0amExcA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><Instagram className="h-5 w-5" /></a>
+            <a className="text-blue-700 hover:text-blue-800 transition-colors duration-200" href="https://www.linkedin.com/in/bravynex-engineering-a8211836b?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin className="h-5 w-5" /></a>
           </div>
         </div>
 
