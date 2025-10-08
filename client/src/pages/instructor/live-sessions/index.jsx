@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
-import { scheduleLiveSessionService, listProgramSessionsInstructorService, fetchInstructorCourseListService, deleteLiveSessionService, getSessionAttendanceService, getInstructorCourseQuizService, listQuizSubmissionsService } from "@/services";
+import { scheduleLiveSessionService, listProgramSessionsInstructorService, fetchInstructorCourseListService, deleteLiveSessionService, getSessionAttendanceService, getInstructorCourseQuizService, listQuizSubmissionsService, getGoogleAuthUrlService, getGoogleStatusService, setLiveSessionMeetingLinkService } from "@/services";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,7 @@ function InstructorLiveSessionsPage() {
   const [startTime, setStartTime] = useState("");
   const [sessions, setSessions] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [googleConnected, setGoogleConnected] = useState(false);
   const [quiz, setQuiz] = useState(null);
   const [quizSubs, setQuizSubs] = useState([]);
   const upcomingSessions = useMemo(() => {
@@ -88,6 +89,10 @@ function InstructorLiveSessionsPage() {
     (async () => {
       const res = await fetchInstructorCourseListService();
       if (res?.success) setCourses(res.data || []);
+      try {
+        const g = await getGoogleStatusService();
+        setGoogleConnected(!!g?.data?.connected);
+      } catch {}
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [programId]);
@@ -118,14 +123,31 @@ function InstructorLiveSessionsPage() {
                 <option key={c._id} value={c._id}>{c.title}</option>
               ))}
             </select>
+            {!googleConnected && (
+              <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                Google is not connected. You must connect to schedule Meet links.
+                <div className="mt-2">
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const resp = await getGoogleAuthUrlService();
+                        const url = resp?.data?.url;
+                        if (url) window.location.href = url;
+                      } catch {}
+                    }}
+                  >Connect Google</Button>
+                </div>
+              </div>
+            )}
             <label className="text-sm font-medium text-gray-700 mt-2">Topic</label>
             <input className="border p-2 rounded" placeholder="e.g. Orientation / Sprint Planning" value={topic} onChange={(e) => setTopic(e.target.value)} />
             <label className="text-sm font-medium text-gray-700 mt-2">Date & Time</label>
             <input className="border p-2 rounded" type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             <div className="pt-2">
-              <Button onClick={handleCreate} disabled={!programId || !topic || !startTime} className="w-full">Create Session</Button>
+              <Button onClick={handleCreate} disabled={!programId || !topic || !startTime || !googleConnected} className="w-full">Create Session</Button>
             </div>
-            <p className="text-xs text-gray-500">A Jitsi meeting link will be generated automatically.</p>
+            <p className="text-xs text-gray-500">A Google Meet link will be generated automatically.</p>
           </div>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
@@ -145,16 +167,37 @@ function InstructorLiveSessionsPage() {
                     <p className="text-xs text-gray-600">{new Date(s.startTime).toLocaleString()}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {s.meetingLink && (
+                    {/* Always provide Start (opens Meet landing) */}
+                    <button
+                      type="button"
+                      onClick={() => window.open('https://meet.google.com/landing?authuser=0', '_blank', 'noopener,noreferrer')}
+                      className="text-xs text-green-700 border border-green-300 px-2 py-1 rounded hover:bg-green-50"
+                    >Start</button>
+
+                    {/* Open / Copy existing link (Zoom or Meet or any) */}
+                    {/* {s.meetingLink && (
                       <>
-                        <a className="text-blue-600 text-sm underline" href={s.meetingLink} target="_blank" rel="noreferrer">Open</a>
+                        <a className="text-blue-600 text-sm underline" href={s.meetingLink} target="_blank" rel="noreferrer">Open Link</a>
                         <button
                           type="button"
                           onClick={() => navigator.clipboard.writeText(s.meetingLink)}
                           className="text-xs text-gray-700 border px-2 py-1 rounded hover:bg-gray-50"
                         >Copy</button>
                       </>
-                    )}
+                    )} */}
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const url = prompt('Paste the meeting link (Zoom, Meet, etc.)');
+                        if (url && /^https?:\/\//i.test(url)) {
+                          try {
+                            const resp = await setLiveSessionMeetingLinkService(s._id, url.trim());
+                            if (resp?.success) fetchSessions();
+                          } catch {}
+                        }
+                      }}
+                      className="text-xs text-gray-700 border px-2 py-1 rounded hover:bg-gray-50"
+                    >Set Link</button>
                     <button
                       type="button"
                       onClick={async () => {

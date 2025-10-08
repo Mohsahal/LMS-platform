@@ -6,6 +6,7 @@ const {
   listSessionsForProgram,
   getAttendance,
   deleteSession,
+  setMeetingLink,
 } = require("../../controllers/instructor-controller/live-session-controller");
 
 // Schedule a live session
@@ -25,6 +26,9 @@ router.get("/:sessionId/attendance", getAttendance);
 
 // Delete a session
 router.delete("/:sessionId", deleteSession);
+
+// Manually set/update meeting link
+router.post("/:sessionId/meeting-link", setMeetingLink);
 
 module.exports = router;
 

@@ -1,11 +1,9 @@
 const LiveSession = require("../../models/LiveSession");
 const Course = require("../../models/Course");
+const User = require("../../models/User");
 const { randomUUID } = require("node:crypto");
 
-function generateJitsiLink(topic) {
-  const room = `${topic || "Session"}-${randomUUID()}`.replace(/[^a-zA-Z0-9-]/g, "");
-  return `https://meet.jit.si/${room}`;
-}
+// Jitsi removed; Google Meet is the only provider now
 
 const scheduleSession = async (req, res) => {
   try {
@@ -18,7 +16,7 @@ const scheduleSession = async (req, res) => {
       description,
       startTime,
       durationMinutes = 60,
-      meetingProvider = "jitsi",
+      meetingProvider = "google",
     } = req.body;
 
     if (!instructorId || !topic || !startTime || !(courseId || internshipProgramId)) {
@@ -44,7 +42,62 @@ const scheduleSession = async (req, res) => {
       return res.status(403).json({ success: false, message: "You are not the instructor of this course" });
     }
 
-    const meetingLink = meetingProvider === "jitsi" ? generateJitsiLink(topic) : "";
+    let meetingLink = "";
+    let moderatorLink = "";
+    if (meetingProvider === "google") {
+      // Use Google Calendar API to create an event with Meet link
+      const instructor = await User.findById(instructorId);
+      if (!instructor?.google?.connected || !instructor.google.refresh_token) {
+        return res.status(400).json({ success: false, message: "Google not connected for instructor" });
+      }
+      try {
+        const { google } = require("googleapis");
+        const oauth2Client = new (google.auth.OAuth2)(
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_CLIENT_SECRET,
+          process.env.GOOGLE_REDIRECT_URI
+        );
+        oauth2Client.setCredentials({
+          access_token: instructor.google.access_token,
+          refresh_token: instructor.google.refresh_token,
+          scope: instructor.google.scope,
+          token_type: instructor.google.token_type,
+          expiry_date: instructor.google.expiry_date,
+        });
+
+        // refresh token if needed
+        if (instructor.google.expiry_date && instructor.google.expiry_date < Date.now()) {
+          const { credentials } = await oauth2Client.refreshAccessToken();
+          instructor.google = { connected: true, ...credentials };
+          await instructor.save();
+          oauth2Client.setCredentials(credentials);
+        }
+
+        const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+        const end = new Date(start.getTime() + durationMinutes * 60000);
+        const event = await calendar.events.insert({
+          calendarId: "primary",
+          requestBody: {
+            summary: topic,
+            description: description || `Course ${course.title}`,
+            start: { dateTime: start.toISOString() },
+            end: { dateTime: end.toISOString() },
+            conferenceData: {
+              createRequest: { requestId: `${Date.now()}-${Math.random()}` },
+            },
+          },
+          conferenceDataVersion: 1,
+        });
+        const hangoutLink = event?.data?.hangoutLink;
+        meetingLink = hangoutLink || "";
+        moderatorLink = hangoutLink || "";
+      } catch (err) {
+        console.error("Google create event error", err?.response?.data || err);
+        return res.status(500).json({ success: false, message: "Failed to create Google Meet event" });
+      }
+    } else {
+      return res.status(400).json({ success: false, message: "Unsupported meeting provider" });
+    }
 
     const session = await LiveSession.create({
       internshipProgramId: courseRefId,
@@ -56,6 +109,7 @@ const scheduleSession = async (req, res) => {
       durationMinutes,
       meetingProvider,
       meetingLink,
+      moderatorLink,
     });
 
     res.status(201).json({ success: true, data: session });
@@ -147,6 +201,26 @@ const deleteSession = async (req, res) => {
   }
 };
 
+// Allow instructor to update meeting link manually (e.g., after creating ad-hoc Meet)
+const setMeetingLink = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { meetingLink } = req.body;
+    if (!meetingLink || typeof meetingLink !== "string") {
+      return res.status(400).json({ success: false, message: "Invalid meeting link" });
+    }
+    const session = await LiveSession.findById(sessionId);
+    if (!session) return res.status(404).json({ success: false, message: "Session not found" });
+    session.meetingLink = meetingLink;
+    session.moderatorLink = meetingLink;
+    await session.save();
+    res.status(200).json({ success: true, data: session });
+  } catch (error) {
+    console.error("setMeetingLink error", error);
+    res.status(500).json({ success: false, message: "Failed to set meeting link" });
+  }
+};
+
 module.exports = {
   scheduleSession,
   addRecording,
@@ -154,6 +228,7 @@ module.exports = {
   listSessionsForProgram,
   getAttendance,
   deleteSession,
+  setMeetingLink,
 };
 
 

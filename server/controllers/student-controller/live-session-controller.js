@@ -35,6 +35,10 @@ const joinSession = async (req, res) => {
       session.attendance.push({ studentId, studentName, studentEmail, joinedAt: now });
       await session.save();
     }
+    // Block legacy Jitsi links
+    if (session.meetingLink && /jit\.si/i.test(session.meetingLink)) {
+      return res.status(400).json({ success: false, message: "Meeting link is not available" });
+    }
     res.status(200).json({ success: true, meetingLink: session.meetingLink });
   } catch (error) {
     console.error("joinSession error", error);

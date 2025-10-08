@@ -122,6 +122,15 @@ const UserSchema = new mongoose.Schema({
       type: Boolean,
       default: false
     }
+  },
+  // Google OAuth
+  google: {
+    connected: { type: Boolean, default: false },
+    access_token: String,
+    refresh_token: String,
+    scope: String,
+    token_type: String,
+    expiry_date: Number
   }
 }, {
   timestamps: true, // Adds createdAt and updatedAt

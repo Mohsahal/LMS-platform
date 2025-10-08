@@ -289,6 +289,11 @@ export async function addLiveSessionResourceService(sessionId, { title, url }) {
   return data;
 }
 
+export async function setLiveSessionMeetingLinkService(sessionId, meetingLink) {
+  const { data } = await axiosInstance.post(`/instructor/live-sessions/${sessionId}/meeting-link`, { meetingLink });
+  return data;
+}
+
 export async function listProgramSessionsInstructorService(programId) {
   const { data } = await axiosInstance.get(`/instructor/live-sessions/program/${programId}`);
   return data;
@@ -316,6 +321,22 @@ export async function getLiveSessionDetailsService(sessionId) {
 
 export async function joinLiveSessionService(sessionId, { studentId, studentName, studentEmail }) {
   const { data } = await axiosInstance.post(`/student/live-sessions/${sessionId}/join`, { studentId, studentName, studentEmail });
+  return data;
+}
+
+// Google - instructor
+export async function getGoogleAuthUrlService() {
+  const { data } = await axiosInstance.get(`/instructor/google/auth-url`);
+  return data;
+}
+
+export async function getGoogleStatusService() {
+  const { data } = await axiosInstance.get(`/instructor/google/status`);
+  return data;
+}
+
+export async function disconnectGoogleService() {
+  const { data } = await axiosInstance.post(`/instructor/google/disconnect`);
   return data;
 }
 
