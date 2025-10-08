@@ -21,6 +21,7 @@ import StudentAnalyticsPage from "./pages/student/analytics";
 import AnimationProvider from "./context/animation-context";
 import PageTransition from "./components/page-transition";
 import InstructorCertificatesPage from "./pages/instructor/certificates";
+import InstructorQuizEditorPage from "./pages/instructor/quiz-editor";
 
 function App() {
   return (
@@ -85,6 +86,14 @@ function App() {
           element={
             <InstructorRouteGuard>
               <InstructorCertificatesPage />
+            </InstructorRouteGuard>
+          }
+        />
+        <Route
+          path="/instructor/quiz/:courseId"
+          element={
+            <InstructorRouteGuard>
+              <InstructorQuizEditorPage />
             </InstructorRouteGuard>
           }
         />

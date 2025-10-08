@@ -1,6 +1,8 @@
 import InstructorCourses from "@/components/instructor-view/courses";
 import InstructorDashboard from "@/components/instructor-view/dashboard";
 import RevenueAnalysis from "@/components/instructor-view/revenue-analysis/real-time";
+import InstructorLiveSessionsPage from "@/pages/instructor/live-sessions";
+import InstructorCertificatesPage from "@/pages/instructor/certificates";
 import { AuthContext } from "@/context/auth-context";
 import { InstructorContext } from "@/context/instructor-context";
 import { fetchInstructorCourseListService } from "@/services";
@@ -71,6 +73,10 @@ function InstructorDashboardpage() {
         return <InstructorDashboard listOfCourses={filteredCourses} />;
       case "courses":
         return <InstructorCourses listOfCourses={filteredCourses} />;
+      case "live":
+        return <InstructorLiveSessionsPage />;
+      case "certificates":
+        return <InstructorCertificatesPage />;
       case "revenue":
         return <RevenueAnalysis listOfCourses={filteredCourses} />;
       default:
@@ -176,12 +182,18 @@ function InstructorDashboardpage() {
               <li>
                 <button
                   onClick={() => {
-                    navigate("/instructor/live-sessions");
+                    setCurrentView("live");
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm`}
+                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 ${
+                    currentView === "live"
+                      ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300 shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                  }`}
                 >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100`}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    currentView === "live" ? 'bg-gray-200' : 'bg-gray-100'
+                  }`}>
                     <span className="w-4 h-4 rounded-full bg-green-500 inline-block" />
                   </div>
                   <span className="font-medium">Live Sessions</span>
@@ -190,12 +202,18 @@ function InstructorDashboardpage() {
               <li>
                 <button
                   onClick={() => {
-                    navigate("/instructor/certificates");
+                    setCurrentView("certificates");
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm`}
+                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200 ${
+                    currentView === "certificates"
+                      ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300 shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                  }`}
                 >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100`}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    currentView === "certificates" ? 'bg-gray-200' : 'bg-gray-100'
+                  }`}>
                     <span className="w-4 h-4 rounded-full bg-purple-600 inline-block" />
                   </div>
                   <span className="font-medium">Certificates</span>
@@ -262,6 +280,8 @@ function InstructorDashboardpage() {
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
                   {currentView === "dashboard" ? "Dashboard" : 
                    currentView === "courses" ? "My Courses" : 
+                   currentView === "live" ? "Live Sessions" :
+                   currentView === "certificates" ? "Certificates" :
                    currentView === "revenue" ? "Revenue Analysis" : "Dashboard"}
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-500 truncate">
@@ -269,6 +289,10 @@ function InstructorDashboardpage() {
                     ? "Monitor your courses and student progress" 
                     : currentView === "courses"
                     ? "Manage your course portfolio"
+                    : currentView === "live"
+                    ? "Schedule sessions and review attendance"
+                    : currentView === "certificates"
+                    ? "Approve or revoke student certificates"
                     : currentView === "revenue"
                     ? "Analyze revenue trends and performance metrics"
                     : "Monitor your courses and student progress"

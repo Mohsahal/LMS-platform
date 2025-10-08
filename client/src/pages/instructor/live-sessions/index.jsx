@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
-import { scheduleLiveSessionService, listProgramSessionsInstructorService, fetchInstructorCourseListService, deleteLiveSessionService, getSessionAttendanceService } from "@/services";
+import { scheduleLiveSessionService, listProgramSessionsInstructorService, fetchInstructorCourseListService, deleteLiveSessionService, getSessionAttendanceService, getInstructorCourseQuizService, listQuizSubmissionsService } from "@/services";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,8 @@ function InstructorLiveSessionsPage() {
   const [startTime, setStartTime] = useState("");
   const [sessions, setSessions] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [quiz, setQuiz] = useState(null);
+  const [quizSubs, setQuizSubs] = useState([]);
   const upcomingSessions = useMemo(() => {
     return (sessions || []).slice().sort((a,b) => new Date(a.startTime) - new Date(b.startTime));
   }, [sessions]);
@@ -88,6 +90,16 @@ function InstructorLiveSessionsPage() {
       if (res?.success) setCourses(res.data || []);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [programId]);
+
+  useEffect(() => {
+    (async () => {
+      if (!programId) { setQuiz(null); setQuizSubs([]); return; }
+      const q = await getInstructorCourseQuizService(programId);
+      if (q?.success) setQuiz(q.data || null); else setQuiz(null);
+      const s = await listQuizSubmissionsService(programId);
+      if (s?.success) setQuizSubs(s.data || []); else setQuizSubs([]);
+    })();
   }, [programId]);
 
   return (
@@ -187,6 +199,62 @@ function InstructorLiveSessionsPage() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Course Quiz Management */}
+      <div className="max-w-5xl mx-auto">
+        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Course Quiz</h3>
+            <Button
+              variant="default"
+              disabled={!programId}
+              onClick={() => navigate(`/instructor/quiz/${programId}`)}
+            >{quiz ? "Edit Quiz" : "Create Quiz"}</Button>
+          </div>
+          {!programId ? (
+            <p className="text-sm text-gray-600">Select a course to manage its quiz.</p>
+          ) : !quiz ? (
+            <p className="text-sm text-gray-600">No quiz found for this course. Click "Create Quiz" to add 10 questions.</p>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-700"><span className="font-medium">Title:</span> {quiz.title || "Course Quiz"}</p>
+                <p className="text-sm text-gray-700"><span className="font-medium">Questions:</span> {Array.isArray(quiz.questions) ? quiz.questions.length : 0} (fixed at 10)</p>
+              </div>
+              <div className="border rounded-lg">
+                <div className="p-3 font-medium text-sm bg-gray-50 rounded-t-lg">Recent Submissions</div>
+                {quizSubs && quizSubs.length > 0 ? (
+                  <div className="max-h-56 overflow-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left">
+                          <th className="p-2">Student</th>
+                          <th className="p-2">Score</th>
+                          <th className="p-2">Submitted</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {quizSubs.slice(0, 8).map(s => (
+                          <tr key={s._id} className="border-t">
+                            <td className="p-2">{s.studentName || s.studentId}</td>
+                            <td className="p-2">{s.score} / 10</td>
+                            <td className="p-2">{new Date(s.createdAt || s.submittedAt).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="p-3 text-sm text-gray-600">No submissions yet.</div>
+                )}
+              </div>
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => navigate(`/instructor/quiz/${programId}`)}>View All / Edit</Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

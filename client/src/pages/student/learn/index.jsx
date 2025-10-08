@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { fetchStudentViewCourseDetailsService, listProgramSessionsStudentService, downloadCertificateService, joinLiveSessionService, checkCertificateEligibilityService } from "@/services";
+import { fetchStudentViewCourseDetailsService, listProgramSessionsStudentService, downloadCertificateService, joinLiveSessionService, checkCertificateEligibilityService, getStudentQuizForCourseService, submitStudentQuizAnswersService } from "@/services";
 import { useAuth } from "@/context/auth-context";
 
 function LearnPage() {
@@ -14,6 +14,10 @@ function LearnPage() {
   const [downloading, setDownloading] = useState(false);
   const [eligible, setEligible] = useState(false);
   const [eligibilityChecked, setEligibilityChecked] = useState(false);
+  const [quiz, setQuiz] = useState(null);
+  const [mySubmission, setMySubmission] = useState(null);
+  const [answers, setAnswers] = useState(Array.from({ length: 10 }).map(() => null));
+  const [submittingQuiz, setSubmittingQuiz] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -39,6 +43,18 @@ function LearnPage() {
     }
     checkEligibility();
   }, [id, auth?.user?._id]);
+
+  useEffect(() => {
+    async function loadQuiz() {
+      if (!id) return;
+      const res = await getStudentQuizForCourseService(id);
+      if (res?.success) {
+        setQuiz(res.data?.quiz || null);
+        setMySubmission(res.data?.mySubmission || null);
+      }
+    }
+    loadQuiz();
+  }, [id]);
 
   const tabs = useMemo(() => ([
     { key: "overview", label: "Overview" },
@@ -173,8 +189,64 @@ function LearnPage() {
 
         {activeTab === "assignments" && (
           <div className="bg-white border rounded-xl p-5 shadow-sm">
-            <h3 className="font-semibold mb-2">Assignments</h3>
-            <p className="text-sm text-gray-600">No assignments configured.</p>
+            <h3 className="font-semibold mb-2">Assignments / Quiz</h3>
+            {!quiz ? (
+              <p className="text-sm text-gray-600">No quiz available.</p>
+            ) : mySubmission ? (
+              <div className="text-sm">
+                <p className="mb-2">You have submitted this quiz.</p>
+                <p className="font-semibold">Score: {mySubmission.score} / 10</p>
+                <p className="text-xs text-gray-600">You can review questions above once released by instructor.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h4 className="font-medium">{quiz.title || "Course Quiz"}</h4>
+                <ol className="space-y-3 list-decimal pl-5">
+                  {quiz.questions.map((q, idx) => (
+                    <li key={idx} className="space-y-2">
+                      <div className="font-medium">{q.questionText}</div>
+                      <div className="grid sm:grid-cols-2 gap-2">
+                        {q.options.map((opt, oIdx) => (
+                          <label key={oIdx} className={`border rounded p-2 flex items-center gap-2 cursor-pointer ${answers[idx] === oIdx ? 'border-black' : ''}`}>
+                            <input
+                              type="radio"
+                              name={`q-${idx}`}
+                              checked={answers[idx] === oIdx}
+                              onChange={() => setAnswers(prev => prev.map((a, i) => i === idx ? oIdx : a))}
+                            />
+                            <span className="text-sm">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+                <div className="flex justify-end">
+                  <Button
+                    disabled={submittingQuiz || answers.some(a => a === null)}
+                    onClick={async () => {
+                      try {
+                        setSubmittingQuiz(true);
+                        const resp = await submitStudentQuizAnswersService(id, {
+                          studentId: auth?.user?._id,
+                          studentName: auth?.user?.name,
+                          answers,
+                        });
+                        if (resp?.success) {
+                          setMySubmission({ score: resp.data?.score });
+                        } else {
+                          alert(resp?.message || "Failed to submit");
+                        }
+                      } catch (e) {
+                        alert(e.message || "Failed to submit");
+                      } finally {
+                        setSubmittingQuiz(false);
+                      }
+                    }}
+                  >{submittingQuiz ? "Submitting..." : "Submit Quiz"}</Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

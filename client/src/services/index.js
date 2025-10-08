@@ -320,5 +320,33 @@ export async function joinLiveSessionService(sessionId, { studentId, studentName
 }
 
 
+// Quizzes - instructor
+export async function upsertCourseQuizService(courseId, payload) {
+  const { data } = await axiosInstance.post(`/instructor/quizzes/${courseId}`, payload);
+  return data;
+}
+
+export async function getInstructorCourseQuizService(courseId) {
+  const { data } = await axiosInstance.get(`/instructor/quizzes/${courseId}`);
+  return data;
+}
+
+export async function listQuizSubmissionsService(courseId) {
+  const { data } = await axiosInstance.get(`/instructor/quizzes/${courseId}/submissions`);
+  return data;
+}
+
+// Quizzes - student
+export async function getStudentQuizForCourseService(courseId) {
+  const { data } = await axiosInstance.get(`/student/quizzes/${courseId}`);
+  return data;
+}
+
+export async function submitStudentQuizAnswersService(courseId, { studentId, studentName, answers }) {
+  const { data } = await axiosInstance.post(`/student/quizzes/${courseId}/submit`, { studentId, studentName, answers });
+  return data;
+}
+
+
 
 
