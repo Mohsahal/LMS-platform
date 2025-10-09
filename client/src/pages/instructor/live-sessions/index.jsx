@@ -188,7 +188,7 @@ function InstructorLiveSessionsPage() {
                     <button
                       type="button"
                       onClick={async () => {
-                        const url = prompt('Paste the meeting link (Zoom, Meet, etc.)');
+                        const url = prompt('Paste the meeting link');
                         if (url && /^https?:\/\//i.test(url)) {
                           try {
                             const resp = await setLiveSessionMeetingLinkService(s._id, url.trim());
