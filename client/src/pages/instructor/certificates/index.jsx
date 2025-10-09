@@ -132,12 +132,9 @@ function InstructorCertificatesPage() {
   return (
     <div className="p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-xl font-semibold">Certificate Approvals</h1>
-            <p className="text-xs text-gray-600">Approve or revoke student certificates for your courses.</p>
-          </div>
-          <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
+        <div className="mb-4">
+          <h1 className="text-xl font-semibold">Certificate Approvals</h1>
+          <p className="text-xs text-gray-600">Approve or revoke student certificates for your courses.</p>
         </div>
 
         <div className="bg-white border rounded-xl p-5 shadow-sm">

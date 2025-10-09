@@ -201,10 +201,10 @@ function VideoPlayer({
   return (
     <div
       ref={playerContainerRef}
-      className={`relative bg-black rounded-lg overflow-hidden shadow-2xl transition-all duration-300 ease-in-out group
+      className={`relative bg-black rounded-lg shadow-2xl transition-all duration-300 ease-in-out group
       ${isFullScreen ? "w-screen h-screen" : ""}
       `}
-      style={{ width, height }}
+      style={{ width, height, overflow: 'hidden' }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setShowControls(false)}
       onTouchStart={() => setShowControls(true)}
@@ -265,8 +265,8 @@ function VideoPlayer({
       )}
       <div
         ref={controlsRef}
-        className={`absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent`}
-        style={{ opacity: 0, pointerEvents: "none" }}
+        className={`absolute bottom-0 left-0 right-0 px-2 sm:px-3 py-2 sm:py-3 pb-3 sm:pb-4 bg-gradient-to-t from-black/95 via-black/80 to-transparent transition-opacity duration-200 ease-in-out`}
+        style={{ opacity: showControls ? 1 : 0, pointerEvents: showControls ? "auto" : "none" }}
       >
         <Slider
           value={[played * 100]}
@@ -274,75 +274,75 @@ function VideoPlayer({
           step={0.1}
           onValueChange={(value) => handleSeekChange([value[0] / 100])}
           onValueCommit={handleSeekMouseUp}
-          className="w-full mb-2 sm:mb-3 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 sm:[&::-webkit-slider-thumb]:h-5 sm:[&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:touch-manipulation"
+          className="w-full mb-1.5 sm:mb-2 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 sm:[&::-webkit-slider-thumb]:h-4 sm:[&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:touch-manipulation"
         />
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+        <div className="flex items-center justify-between w-full gap-0.5 sm:gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={handlePlayAndPause}
-              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0 p-0"
             >
               {playing ? (
-                <Pause className="h-4 w-4 sm:h-6 sm:w-6" />
+                <Pause className="h-3 w-3 sm:h-4 sm:w-4" />
               ) : (
-                <Play className="h-4 w-4 sm:h-6 sm:w-6" />
+                <Play className="h-3 w-3 sm:h-4 sm:w-4" />
               )}
             </Button>
             <Button
               onClick={handleRewind}
-              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0 p-0"
               variant="ghost"
               size="icon"
             >
-              <RotateCcw className="h-4 w-4 sm:h-6 sm:w-6" />
+              <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             <Button
               onClick={handleForward}
-              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0 p-0"
               variant="ghost"
               size="icon"
             >
-              <RotateCw className="h-4 w-4 sm:h-6 sm:w-6" />
+              <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             <Button
               onClick={handleToggleMute}
-              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0 p-0"
               variant="ghost"
               size="icon"
             >
               {muted ? (
-                <VolumeX className="h-4 w-4 sm:h-6 sm:w-6" />
+                <VolumeX className="h-3 w-3 sm:h-4 sm:w-4" />
               ) : (
-                <Volume2 className="h-4 w-4 sm:h-6 sm:w-6" />
+                <Volume2 className="h-3 w-3 sm:h-4 sm:w-4" />
               )}
             </Button>
-            <div className="hidden sm:block flex-shrink-0">
+            <div className="hidden md:block flex-shrink-0">
               <Slider
                 value={[volume * 100]}
                 max={100}
                 step={1}
                 onValueChange={(value) => handleVolumeChange([value[0] / 100])}
-                className="w-20 sm:w-24 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 sm:[&::-webkit-slider-thumb]:h-5 sm:[&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:touch-manipulation"
+                className="w-16 sm:w-20 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-runnable-track]:bg-gray-600 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 sm:[&::-webkit-slider-thumb]:h-4 sm:[&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:touch-manipulation"
               />
             </div>
           </div>
-          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            <div className="text-white text-xs sm:text-sm font-mono whitespace-nowrap">
-              {formatTime(currentTime)} / {formatTime(duration)}
+          <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 ml-auto">
+            <div className="text-white text-[9px] sm:text-[10px] font-mono whitespace-nowrap px-1">
+              {formatTime(currentTime)}/{formatTime(duration)}
             </div>
             <Button
-              className="text-white hover:bg-white/20 transition-colors duration-200 h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
+              className="text-white hover:bg-white/20 transition-colors duration-200 h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0 p-0"
               variant="ghost"
               size="icon"
               onClick={handleFullScreen}
               title={isFullScreen ? "Exit fullscreen" : "Enter fullscreen"}
             >
               {isFullScreen ? (
-                <Minimize className="h-4 w-4 sm:h-6 sm:w-6" />
+                <Minimize className="h-3 w-3 sm:h-4 sm:w-4" />
               ) : (
-                <Maximize className="h-4 w-4 sm:h-6 sm:w-6" />
+                <Maximize className="h-3 w-3 sm:h-4 sm:w-4" />
               )}
             </Button>
           </div>

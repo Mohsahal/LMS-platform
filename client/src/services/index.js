@@ -325,20 +325,7 @@ export async function joinLiveSessionService(sessionId, { studentId, studentName
 }
 
 // Google - instructor
-export async function getGoogleAuthUrlService() {
-  const { data } = await axiosInstance.get(`/instructor/google/auth-url`);
-  return data;
-}
-
-export async function getGoogleStatusService() {
-  const { data } = await axiosInstance.get(`/instructor/google/status`);
-  return data;
-}
-
-export async function disconnectGoogleService() {
-  const { data } = await axiosInstance.post(`/instructor/google/disconnect`);
-  return data;
-}
+// Google integration removed
 
 
 // Quizzes - instructor

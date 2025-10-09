@@ -23,7 +23,7 @@ const LiveSessionSchema = new mongoose.Schema(
     description: { type: String },
     startTime: { type: Date, required: true },
     durationMinutes: { type: Number, default: 60 },
-    meetingProvider: { type: String, enum: ["google"], default: "google" },
+    meetingProvider: { type: String, enum: ["link"], default: "link" },
     meetingLink: { type: String },
     moderatorLink: { type: String },
     recordingUrl: { type: String },

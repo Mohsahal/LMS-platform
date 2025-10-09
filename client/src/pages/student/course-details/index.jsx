@@ -425,7 +425,7 @@ function StudentViewCourseDetailsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 sm:p-6">
-                    <div className="aspect-video mb-4 sm:mb-6 rounded-xl overflow-hidden bg-gray-100">
+                    <div className="aspect-video mb-4 sm:mb-6 rounded-xl bg-gray-100">
                       <VideoPlayer
                         url={
                           getIndexOfFreePreviewUrl !== -1

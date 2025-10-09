@@ -77,9 +77,13 @@ const updateCourseByID = async (req, res) => {
     const { id } = req.params;
     const updatedCourseData = req.body;
 
+    // Preserve critical fields that shouldn't be overwritten during course edits
+    // Remove students array from update data to prevent resetting enrolled students
+    const { students, ...safeUpdateData } = updatedCourseData;
+
     const updatedCourse = await Course.findByIdAndUpdate(
       id,
-      { $set: updatedCourseData },
+      { $set: safeUpdateData },
       { new: true, runValidators: true }
     );
 
@@ -89,8 +93,6 @@ const updateCourseByID = async (req, res) => {
         message: "Course not found!",
       });
     }
-
-
 
     res.status(200).json({
       success: true,

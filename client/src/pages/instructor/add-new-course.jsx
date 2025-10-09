@@ -112,10 +112,14 @@ function AddNewCoursePage() {
       instructorName: auth?.user?.userName,
       date: new Date(),
       ...courseLandingFormData,
-      students: [],
       curriculum: courseCurriculumFormData,
       isPublised: true,
     };
+
+    // Only add students array when creating a new course, not when editing
+    if (currentEditedCourseId === null) {
+      courseFinalFormData.students = [];
+    }
 
     const response =
       currentEditedCourseId !== null

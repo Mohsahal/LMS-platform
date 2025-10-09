@@ -30,7 +30,6 @@ const studentLiveSessionRoutes = require("./routes/student-routes/live-session-r
 const instructorInternshipRoutes = require("./routes/instructor-routes/internship-routes");
 const instructorQuizRoutes = require("./routes/instructor-routes/quiz-routes");
 const studentQuizRoutes = require("./routes/student-routes/quiz-routes");
-const instructorGoogleRoutes = require("./routes/instructor-routes/google-routes");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -170,7 +169,6 @@ app.use((req, res, next) => {
       // Skip CSRF for instructor course endpoints (they handle their own security)
       req.path.startsWith('/instructor/course/') ||
       req.path.startsWith('/instructor/live-sessions/') ||
-      req.path.startsWith('/instructor/google/') ||
       req.path.startsWith('/instructor/quizzes/') ||
       // Skip CSRF for secure instructor endpoints (bearer auth only)
       req.path.startsWith('/secure/instructor/') ||
@@ -220,7 +218,6 @@ app.use("/student/analytics", studentAnalyticsRoutes);
 app.use("/notify", notifyRoutes);
 app.use("/secure/instructor", secureInstructorRoutes);
 app.use("/instructor/live-sessions", instructorLiveSessionRoutes);
-app.use("/instructor/google", instructorGoogleRoutes);
 app.use("/student/live-sessions", studentLiveSessionRoutes);
 app.use("/instructor/internships", instructorInternshipRoutes);
 app.use("/instructor/quizzes", instructorQuizRoutes);
