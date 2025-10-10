@@ -106,55 +106,105 @@ function InstructorLiveSessionsPage() {
   }, [programId]);
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="max-w-5xl mx-auto grid gap-6 lg:grid-cols-2">
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold">Schedule Live Session</h2>
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
+      <div className="max-w-6xl mx-auto grid gap-4 sm:gap-6 lg:grid-cols-2">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 lg:p-6 shadow-sm">
+          <div className="mb-4 sm:mb-5">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Schedule Live Session</h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">Create and manage your live sessions</p>
           </div>
-          <div className="grid gap-3">
-            <label className="text-sm font-medium text-gray-700">Course</label>
-            <select className="border p-2 rounded" value={programId} onChange={(e) => setProgramId(e.target.value)}>
-              <option value="">Select a course</option>
-              {courses.map((c) => (
-                <option key={c._id} value={c._id}>{c.title}</option>
-              ))}
-            </select>
-            <label className="text-sm font-medium text-gray-700 mt-2">Topic</label>
-            <input className="border p-2 rounded" placeholder="e.g. Orientation / Sprint Planning" value={topic} onChange={(e) => setTopic(e.target.value)} />
-            <label className="text-sm font-medium text-gray-700 mt-2">Date & Time</label>
-            <input className="border p-2 rounded" type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-            <label className="text-sm font-medium text-gray-700 mt-2">Meeting Link <span className="text-red-600">*</span></label>
-            <input className="border p-2 rounded" placeholder="Paste meeting URL (Zoom, Meet, etc.)" value={meetingLink} onChange={(e) => setMeetingLink(e.target.value)} required />
-            <div className="pt-2">
-              <Button onClick={handleCreate} disabled={!programId || !topic || !startTime || !meetingLink?.trim()} className="w-full">Create Session</Button>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Course</label>
+              <select 
+                className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm" 
+                value={programId} 
+                onChange={(e) => setProgramId(e.target.value)}
+              >
+                <option value="">Select a course</option>
+                {courses.map((c) => (
+                  <option key={c._id} value={c._id}>{c.title}</option>
+                ))}
+              </select>
             </div>
-            <p className="text-xs text-gray-500">Paste the meeting link from Zoom, Google Meet, Teams, etc.</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Topic</label>
+              <input 
+                className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm" 
+                placeholder="e.g. Orientation / Sprint Planning" 
+                value={topic} 
+                onChange={(e) => setTopic(e.target.value)} 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Date & Time</label>
+              <input 
+                className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm" 
+                type="datetime-local" 
+                value={startTime} 
+                onChange={(e) => setStartTime(e.target.value)} 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Meeting Link <span className="text-red-600">*</span>
+              </label>
+              <input 
+                className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm" 
+                placeholder="Paste meeting URL (Zoom, Meet, etc.)" 
+                value={meetingLink} 
+                onChange={(e) => setMeetingLink(e.target.value)} 
+                required 
+              />
+              <p className="text-xs text-gray-500 mt-1.5">Paste the meeting link from Zoom, Google Meet, Teams, etc.</p>
+            </div>
+            <div className="pt-2">
+              <Button 
+                onClick={handleCreate} 
+                disabled={!programId || !topic || !startTime || !meetingLink?.trim()} 
+                className="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-800 hover:to-gray-700"
+              >
+                Create Session
+              </Button>
+            </div>
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Upcoming Sessions</h3>
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 lg:p-6 shadow-sm">
+          <div className="mb-4 sm:mb-5">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">Upcoming Sessions</h3>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">View and manage scheduled sessions</p>
+          </div>
           {!programId && (
-            <p className="text-sm text-gray-600">Choose a course to view and schedule sessions.</p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">📅</span>
+              </div>
+              <p className="text-sm text-gray-600">Choose a course to view and schedule sessions.</p>
+            </div>
           )}
           {programId && upcomingSessions.length === 0 && (
-            <p className="text-sm text-gray-600">No sessions yet for this course.</p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">📚</span>
+              </div>
+              <p className="text-sm text-gray-600">No sessions yet for this course.</p>
+            </div>
           )}
           <div className="space-y-3">
             {programId && upcomingSessions.map((s) => (
-              <div key={s._id} className="p-3 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{s.topic}</p>
-                    <p className="text-xs text-gray-600">{new Date(s.startTime).toLocaleString()}</p>
+              <div key={s._id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow bg-gray-50">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{s.topic}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">{new Date(s.startTime).toLocaleString()}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {s.meetingLink && (
                       <button
                         type="button"
                         onClick={() => window.open(s.meetingLink, '_blank', 'noopener,noreferrer')}
-                        className="text-xs text-white bg-green-600 border border-green-700 px-3 py-1 rounded hover:bg-green-700"
-                      >Start Meeting</button>
+                        className="text-xs sm:text-sm text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                      >Start</button>
                     )}
                     <button
                       type="button"
@@ -167,8 +217,27 @@ function InstructorLiveSessionsPage() {
                           } catch {}
                         }
                       }}
-                      className="text-xs text-gray-700 border px-2 py-1 rounded hover:bg-gray-50"
-                    >Set Link</button>
+                      className="text-xs sm:text-sm text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                    >Link</button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const res = await getSessionAttendanceService(s._id);
+                          if (res?.success) {
+                            setAttendanceRows(res.data || []);
+                            setAttendanceFor(s);
+                            setAttendanceOpen(true);
+                          } else {
+                            toast({ title: 'Failed to load attendance', description: res?.message || 'Try again', variant: 'destructive' });
+                          }
+                        } catch (e) {
+                          const msg = e?.response?.data?.message || e?.message || 'Request failed';
+                          toast({ title: 'Failed to load attendance', description: msg, variant: 'destructive' });
+                        }
+                      }}
+                      className="text-xs sm:text-sm text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                    >Attendance</button>
                     <button
                       type="button"
                       onClick={async () => {
@@ -187,27 +256,8 @@ function InstructorLiveSessionsPage() {
                           toast({ title: 'Delete failed', description: msg, variant: 'destructive' });
                         }
                       }}
-                      className="text-xs text-red-600 border border-red-300 px-2 py-1 rounded hover:bg-red-50"
+                      className="text-xs sm:text-sm text-red-600 bg-white hover:bg-red-50 border border-red-300 px-3 py-1.5 rounded-lg font-medium transition-colors"
                     >Delete</button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          const res = await getSessionAttendanceService(s._id);
-                          if (res?.success) {
-                            setAttendanceRows(res.data || []);
-                            setAttendanceFor(s);
-                            setAttendanceOpen(true);
-                          } else {
-                            toast({ title: 'Failed to load attendance', description: res?.message || 'Try again', variant: 'destructive' });
-                          }
-                        } catch (e) {
-                          const msg = e?.response?.data?.message || e?.message || 'Request failed';
-                          toast({ title: 'Failed to load attendance', description: msg, variant: 'destructive' });
-                        }
-                      }}
-                      className="text-xs text-gray-700 border px-2 py-1 rounded hover:bg-gray-50"
-                    >Attendance</button>
                   </div>
                 </div>
               </div>
@@ -217,20 +267,35 @@ function InstructorLiveSessionsPage() {
       </div>
 
       {/* Course Quiz Management */}
-      <div className="max-w-5xl mx-auto">
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Course Quiz</h3>
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 lg:p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-5">
+            <div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Course Quiz</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage quiz questions and submissions</p>
+            </div>
             <Button
               variant="default"
               disabled={!programId}
               onClick={() => navigate(`/instructor/quiz/${programId}`)}
+              className="bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-800 hover:to-gray-700 w-full sm:w-auto"
             >{quiz ? "Edit Quiz" : "Create Quiz"}</Button>
           </div>
           {!programId ? (
-            <p className="text-sm text-gray-600">Select a course to manage its quiz.</p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">📝</span>
+              </div>
+              <p className="text-sm text-gray-600">Select a course to manage its quiz.</p>
+            </div>
           ) : !quiz ? (
-            <p className="text-sm text-gray-600">No quiz found for this course. Click "Create Quiz" to add 10 questions.</p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">✏️</span>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">No quiz found for this course.</p>
+              <p className="text-xs text-gray-500">Click "Create Quiz" to add 10 questions.</p>
+            </div>
           ) : (
             <div className="space-y-3">
               <div>

@@ -47,65 +47,46 @@ function RealTimeRevenueAnalysis({ listOfCourses = [] }) {
     lastUpdated: null
   });
 
-  // Load instructor analytics and poll periodically
+  // Load instructor analytics - fetch once on mount, no polling
   useEffect(() => {
     let isMounted = true;
-    let retryCount = 0;
     
     async function load() {
       if (!auth?.user?._id) return;
       
       try {
-        console.log("Fetching instructor analytics...", { retryCount });
+        console.log("Fetching instructor analytics...");
         const res = await fetchInstructorAnalyticsService(auth.user._id);
         
         if (isMounted && res?.success) {
-          console.log("Received analytics data:", res.data);
-          console.log("Daily data:", res.data?.dailyData);
-          console.log("Hourly data:", res.data?.hourlyData);
-          console.log("Monthly data:", res.data?.monthlyData);
+          console.log("Received analytics data");
           setAnalytics(res.data);
           
           // Derive today's stats from dailyData last item if available
           const today = res.data?.dailyData?.[res.data.dailyData.length - 1];
           const totals = res.data?.totals || {};
           
-          setLiveStats((prev) => {
-            const newLiveStats = {
-              ...prev,
-              totalRevenue: Number(totals.totalRevenue || 0),
-              totalStudents: Number(totals.totalStudents || 0),
-              todayRevenue: Number(today?.revenue || 0),
-              todayStudents: Number(today?.students || 0),
-              lastEnrollment: res.data?.lastEnrollment || null,
-              lastUpdated: new Date().toLocaleTimeString(),
-            };
-            console.log("Updated liveStats:", newLiveStats);
-            return newLiveStats;
+          setLiveStats({
+            totalRevenue: Number(totals.totalRevenue || 0),
+            totalStudents: Number(totals.totalStudents || 0),
+            todayRevenue: Number(today?.revenue || 0),
+            todayStudents: Number(today?.students || 0),
+            lastEnrollment: res.data?.lastEnrollment || null,
+            lastUpdated: new Date().toLocaleTimeString(),
           });
-          
-          // Reset retry count on successful fetch
-          retryCount = 0;
         } else if (res && !res.success) {
           console.error("Failed to fetch analytics:", res.message);
-          retryCount++;
         }
       } catch (error) {
         console.error("Error fetching analytics:", error);
-        retryCount++;
       }
     }
     
-    // Initial load
+    // Initial load only
     load();
     
-    // Set up polling with exponential backoff on errors
-    const pollInterval = retryCount > 0 ? Math.min(5000 * Math.pow(2, retryCount), 30000) : 3000;
-    const id = setInterval(load, pollInterval);
-    
     return () => { 
-      isMounted = false; 
-      clearInterval(id); 
+      isMounted = false;
     };
   }, [auth?.user?._id]);
 
