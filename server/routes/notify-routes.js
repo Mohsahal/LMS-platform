@@ -1,12 +1,11 @@
 const express = require("express");
 const fetch = require("node-fetch");
-const { sendAdminContactEmail } = require("../helpers/mailer");
+const { sendAdminContactEmail } = require("../helpers/resend-mailer");
 
 const router = express.Router();
 
 // Contact form handler with robust email delivery (SMTP/Ethereal/JSON -> Resend fallback)
 const handleContactForm = async (req, res) => {
-  console.log("=== Contact Form Request Started ===");
   console.log("Environment:", process.env.NODE_ENV);
   
   try {

@@ -1,7 +1,7 @@
 const User = require("../../models/User");
 const bcrypt = require("bcryptjs");
 const validator = require("validator");
-const { sendOTPEmail } = require("../../helpers/mailer");
+const { sendOTPEmail } = require("../../helpers/resend-mailer");
 
 // Store OTPs in memory (in production, use Redis or similar)
 const otpStore = new Map();
