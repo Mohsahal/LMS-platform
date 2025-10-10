@@ -3,7 +3,9 @@ const fetch = require("node-fetch");
 // Resend API configuration
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_JUodk58j_PtJpbXXSjgvu4du4EY76PEq1";
 const RESEND_API_URL = "https://api.resend.com/emails";
-const FROM_EMAIL = process.env.ADMIN_EMAIL || "mohammedsahal1243@gmail.com";
+// Resend requires onboarding@resend.dev for testing or your verified domain
+const FROM_EMAIL = process.env.FROM_EMAIL || "onboarding@resend.dev";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "mohammedsahal1243@gmail.com";
 
 /**
  * Send contact form email using Resend API
@@ -72,14 +74,15 @@ This email was sent from the BravyNex Engineering contact form.
 
     const emailData = {
       from: `BravyNex Engineering <${FROM_EMAIL}>`,
-      to: [FROM_EMAIL],
+      to: [ADMIN_EMAIL],
       reply_to: displayEmail !== 'Not provided' ? displayEmail : undefined,
       subject: subject || "New Contact Form Submission - BravyNex Engineering",
       html: emailHtml,
       text: emailText
     };
 
-    console.log(`📤 [RESEND] Sending to: ${FROM_EMAIL}`);
+    console.log(`📤 [RESEND] From: ${FROM_EMAIL}`);
+    console.log(`📤 [RESEND] To: ${ADMIN_EMAIL}`);
     console.log(`📤 [RESEND] Reply-to: ${emailData.reply_to || 'N/A'}`);
 
     const response = await fetch(RESEND_API_URL, {
