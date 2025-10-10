@@ -2,30 +2,50 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthContext } from "@/context/auth-context";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ResetPassword({ onBack }) {
-  const { handleResetPassword, isResettingPassword, forgotPasswordEmail } = useContext(AuthContext);
+  const { handleResetPassword, isResettingPassword, forgotPasswordEmail, handleResendOTP, isRequestingOTP } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     otp: "",
     newPassword: "",
     confirmPassword: "",
   });
   const [error, setError] = useState("");
+  const [resendTimer, setResendTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+
+  // Timer for resend OTP
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCanResend(true);
+    }
+  }, [resendTimer]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+    
     if (formData.newPassword !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-
+    
     const success = await handleResetPassword(formData.otp, formData.newPassword);
     if (success) {
       onBack("signin");
+    }
+  };
+
+  const handleResend = async () => {
+    const success = await handleResendOTP();
+    if (success) {
+      setResendTimer(60);
+      setCanResend(false);
     }
   };
 
@@ -40,7 +60,19 @@ export default function ResetPassword({ onBack }) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="otp">OTP Code</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="otp">OTP Code</Label>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                onClick={handleResend}
+                disabled={!canResend || isRequestingOTP}
+                className="h-auto p-0 text-xs"
+              >
+                {isRequestingOTP ? "Sending..." : canResend ? "Resend OTP" : `Resend in ${resendTimer}s`}
+              </Button>
+            </div>
             <Input
               id="otp"
               type="text"

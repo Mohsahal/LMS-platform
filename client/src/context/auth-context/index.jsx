@@ -290,6 +290,19 @@ export default function AuthProvider({ children }) {
     }
   }
 
+  async function handleResendOTP() {
+    if (!forgotPasswordEmail) {
+      toast({
+        title: "Error",
+        description: "Email not found. Please restart the password reset process.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    return await handleForgotPassword(forgotPasswordEmail);
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -313,6 +326,7 @@ export default function AuthProvider({ children }) {
         isResettingPassword,
         handleForgotPassword,
         handleResetPassword,
+        handleResendOTP,
       }}
     >
       {loading ? <Skeleton /> : children}
