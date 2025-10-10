@@ -245,6 +245,7 @@ function RealTimeRevenueAnalysis({ listOfCourses = [] }) {
       )}
 
       {/* KPI Cards */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {kpiCards.map((kpi, index) => (
           <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white">
