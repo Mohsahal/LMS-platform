@@ -280,6 +280,8 @@ function StudentHomePage() {
   const timeoutRef = useRef(null);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  const [touchStartY, setTouchStartY] = useState(null);
+  const [touchEndY, setTouchEndY] = useState(null);
   // Featured Courses: show 3 rows initially (approx 12 items), then load more in chunks
   const INITIAL_FEATURED_COUNT = 12;
   const LOAD_MORE_CHUNK = 12;
@@ -362,32 +364,46 @@ function StudentHomePage() {
     transitionTo(current - 1, -1);
   }
 
-  // Touch gesture handlers for mobile slider
+  // Touch gesture handlers for mobile slider - only horizontal swipes
   const handleTouchStart = (e) => {
     setTouchEnd(null);
+    setTouchEndY(null);
     setTouchStart(e.targetTouches[0].clientX);
+    setTouchStartY(e.targetTouches[0].clientY);
   };
 
   const handleTouchMove = (e) => {
     setTouchEnd(e.targetTouches[0].clientX);
+    setTouchEndY(e.targetTouches[0].clientY);
   };
 
   const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
+    if (!touchStart || !touchEnd || !touchStartY || !touchEndY) return;
     
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
+    const distanceX = touchStart - touchEnd;
+    const distanceY = touchStartY - touchEndY;
+    
+    // Only trigger swipe if horizontal movement is greater than vertical
+    if (Math.abs(distanceX) > Math.abs(distanceY)) {
+      const isLeftSwipe = distanceX > 50;
+      const isRightSwipe = distanceX < -50;
 
-    if (isLeftSwipe) {
-      next();
-    } else if (isRightSwipe) {
-      prev();
+      if (isLeftSwipe) {
+        next();
+      } else if (isRightSwipe) {
+        prev();
+      }
     }
+    
+    // Reset touch states
+    setTouchStart(null);
+    setTouchEnd(null);
+    setTouchStartY(null);
+    setTouchEndY(null);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-y-auto">
       {/* Hero Slider */}
       <section className="px-3 sm:px-4 lg:px-8 pt-4 sm:pt-6">
         <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-transparent overflow-hidden border-0">
@@ -435,7 +451,7 @@ function StudentHomePage() {
 
             {/* Right: Visual (buttons are anchored to this container for perfect alignment) */}
             <div 
-              className="relative order-1 lg:order-2"
+              className="relative order-1 lg:order-2 touch-pan-y"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -504,20 +520,20 @@ function StudentHomePage() {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Courses</h2>
             <p className="text-gray-600 text-lg">Discover our most popular and highly-rated courses</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {studentViewCoursesList && studentViewCoursesList.length > 0 ? (
             studentViewCoursesList.slice(0, visibleFeaturedCount).map((courseItem) => (
               <div
                 key={courseItem?._id}
                 onClick={() => handleCourseNavigate(courseItem?._id)}
-                  className="group bg-white rounded overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border-0 course-card-animated"
+                  className="group bg-white rounded overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border-0 course-card-animated touch-manipulation"
               >
                   <div className="relative">
                 <img
                   src={courseItem?.image}
                   width={300}
                       height={200}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 course-image"
+                      className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300 course-image"
                     />
                     <div className="absolute top-3 right-3">
                       <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
@@ -526,7 +542,7 @@ function StudentHomePage() {
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
-                  <div className="p-6">
+                  <div className="p-4 sm:p-6">
                     <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-gray-700 transition-colors duration-200">
                       {courseItem?.title}
                     </h3>
