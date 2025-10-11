@@ -307,47 +307,14 @@ function StudentHomePage() {
   function transitionTo(index, direction = 1) {
     if (isAnimatingRef.current) return;
     isAnimatingRef.current = true;
-
-    const title = document.querySelector('.hero-title');
-    const subtitle = document.querySelector('.hero-subtitle');
-    const badge = document.querySelector('.hero-badge');
-    const buttons = document.querySelector('.hero-button');
-    const image = document.querySelector('.hero-image');
-
-    const outTl = gsap.timeline({ defaults: { duration: 0.25, ease: 'power2.in' } });
-    outTl
-      .to(badge, { y: -10, opacity: 0 }, 0)
-      .to(title, { y: -15, opacity: 0 }, 0)
-      .to(subtitle, { y: -10, opacity: 0 }, 0)
-      .to(buttons, { y: -10, opacity: 0 }, 0)
-      .to(image, { x: direction * -40, opacity: 0 }, 0)
-      .add(() => {
-        setCurrent((index + slides.length) % slides.length);
-      })
-      .add(() => {
-        // allow time for DOM to update
-      })
-      .add(() => {
-        const newTitle = document.querySelector('.hero-title');
-        const newSubtitle = document.querySelector('.hero-subtitle');
-        const newBadge = document.querySelector('.hero-badge');
-        const newButtons = document.querySelector('.hero-button');
-        const newImage = document.querySelector('.hero-image');
-
-        gsap.set([newBadge, newTitle, newSubtitle, newButtons], { opacity: 0, y: 15 });
-        gsap.set(newImage, { opacity: 0, x: direction * 40 });
-
-        const inTl = gsap.timeline({ defaults: { duration: 0.3, ease: 'power2.out' } });
-        inTl
-          .to(newImage, { x: 0, opacity: 1 }, 0)
-          .to(newBadge, { y: 0, opacity: 1 }, 0.05)
-          .to(newTitle, { y: 0, opacity: 1 }, 0.08)
-          .to(newSubtitle, { y: 0, opacity: 1 }, 0.1)
-          .to(newButtons, { y: 0, opacity: 1 }, 0.12)
-          .add(() => {
-            isAnimatingRef.current = false;
-          });
-      });
+    
+    // Instant transition without animation
+    setCurrent((index + slides.length) % slides.length);
+    
+    // Small timeout to allow DOM update
+    setTimeout(() => {
+      isAnimatingRef.current = false;
+    }, 50);
   }
 
   function goTo(index) {

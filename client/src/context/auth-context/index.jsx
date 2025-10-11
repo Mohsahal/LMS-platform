@@ -122,14 +122,12 @@ export default function AuthProvider({ children }) {
         console.log("✅ Login successful! User:", data.data.user);
         toast({ title: "Login successful", description: `Welcome back, ${data.data.user.userName || "student"}!` });
         
-        // Redirect based on user role (slight delay to allow toast to show)
-        setTimeout(() => {
-          if (data.data.user.role === "instructor") {
-            navigate("/instructor");
-          } else {
-            navigate("/");
-          }
-        }, 600);
+        // Redirect based on user role immediately
+        if (data.data.user.role === "instructor") {
+          navigate("/instructor");
+        } else {
+          navigate("/");
+        }
       } else {
         console.error("❌ Login failed:", data.message);
         toast({ title: "Login failed", description: data.message || "Check your credentials" });

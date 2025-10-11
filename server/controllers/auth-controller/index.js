@@ -56,6 +56,20 @@ const registerUser = async (req, res) => {
     if (isNaN(dateObj.getTime())) {
       return res.status(400).json({ success: false, message: "Invalid date of birth" });
     }
+    
+    // Validate that date of birth is not in the future
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dobDate = new Date(dateObj);
+    dobDate.setHours(0, 0, 0, 0);
+    
+    if (dobDate > today) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Date of birth cannot be in the future" 
+      });
+    }
+    
     parsedDob = dateObj;
   }
   const safeGuardianDetails = guardianName

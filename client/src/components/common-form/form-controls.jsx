@@ -11,9 +11,40 @@ import { Textarea } from "../ui/textarea";
 import { useState } from "react";
 import { Info } from "lucide-react";
 import PropTypes from "prop-types";
+import { useToast } from "@/hooks/use-toast";
 
 function FormControls({ formControls = [], formData, setFormData }) {
   const [focusedField, setFocusedField] = useState(null);
+  const { toast } = useToast();
+
+  // Date validation handler
+  const handleDateChange = (event, fieldName) => {
+    const selectedDate = event.target.value;
+    
+    if (fieldName === "dob" && selectedDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to start of day
+      
+      const selected = new Date(selectedDate);
+      selected.setHours(0, 0, 0, 0);
+      
+      if (selected > today) {
+        toast({
+          title: "Invalid Date of Birth",
+          description: "Date of birth cannot be in the future. Please select a valid date.",
+          variant: "destructive",
+        });
+        // Don't update the form data with future date
+        return;
+      }
+    }
+    
+    // Update form data if validation passes
+    setFormData({
+      ...formData,
+      [fieldName]: selectedDate,
+    });
+  };
 
   function renderComponentByType(getControlItem) {
     let element = null;
@@ -29,12 +60,17 @@ function FormControls({ formControls = [], formData, setFormData }) {
               placeholder={getControlItem.placeholder}
               type={getControlItem.type}
               value={currentControlItemValue}
-              onChange={(event) =>
-                setFormData({
-                  ...formData,
-                  [getControlItem.name]: event.target.value,
-                })
-              }
+              max={getControlItem.type === "date" && getControlItem.name === "dob" ? new Date().toISOString().split('T')[0] : undefined}
+              onChange={(event) => {
+                if (getControlItem.type === "date") {
+                  handleDateChange(event, getControlItem.name);
+                } else {
+                  setFormData({
+                    ...formData,
+                    [getControlItem.name]: event.target.value,
+                  });
+                }
+              }}
               onFocus={() => setFocusedField(getControlItem.name)}
               onBlur={() => setFocusedField(null)}
             />
