@@ -31,12 +31,8 @@ export default function RouteGuard({ children, requireAuth = true, allowedRoles 
   // If route has role restrictions
   if (allowedRoles.length > 0 && auth.authenticate && auth.user?.role) {
     if (!allowedRoles.includes(auth.user.role)) {
-      // Redirect to appropriate dashboard based on role instead of unauthorized page
-      if (auth.user.role === "instructor") {
-        return <Navigate to="/instructor" replace />;
-      } else {
-        return <Navigate to="/" replace />;
-      }
+      // User is authenticated but doesn't have the right role - show unauthorized page
+      return <Navigate to="/unauthorized" replace />;
     }
   }
 
