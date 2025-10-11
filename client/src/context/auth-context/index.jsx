@@ -7,6 +7,7 @@ import validator from "validator";
 import { useToast } from "@/hooks/use-toast";
 import axiosInstance from "@/api/axiosInstance"; // 使用配置好的axiosInstance
 import { useNavigate } from "react-router-dom";
+import { SpinnerFullPage } from "@/components/ui/spinner";
 
 export const AuthContext = createContext(null);
 
@@ -327,7 +328,7 @@ export default function AuthProvider({ children }) {
         handleResendOTP,
       }}
     >
-      {loading ? <Skeleton /> : children}
+      {loading ? <SpinnerFullPage message="Checking authentication..." /> : children}
     </AuthContext.Provider>
   );
 }

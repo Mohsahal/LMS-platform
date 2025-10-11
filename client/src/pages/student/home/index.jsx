@@ -15,6 +15,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { 
   usePageTransition
 } from "@/hooks/use-gsap";
+import { SpinnerOverlay } from "@/components/ui/spinner";
 
 // Register ScrollTrigger
 gsap.registerPlugin(ScrollTrigger);
@@ -533,6 +534,10 @@ function StudentHomePage() {
                 </div>
               </div>
             ))
+          ) : studentViewCoursesList === null ? (
+            <div className="col-span-full">
+              <SpinnerOverlay message="Loading courses..." />
+            </div>
           ) : (
               <div className="col-span-full text-center py-16">
                 <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">

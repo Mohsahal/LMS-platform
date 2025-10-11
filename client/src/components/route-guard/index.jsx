@@ -1,28 +1,15 @@
 import { useContext } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { AuthContext } from "@/context/auth-context";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SpinnerFullPage } from "@/components/ui/spinner";
 
 export default function RouteGuard({ children, requireAuth = true, allowedRoles = [] }) {
   const { auth, loading } = useContext(AuthContext);
   const location = useLocation();
 
-  console.log("RouteGuard:", { 
-    pathname: location.pathname, 
-    requireAuth, 
-    allowedRoles, 
-    auth: auth.authenticate, 
-    userRole: auth.user?.role,
-    loading 
-  });
-
-  // Show loading skeleton while checking authentication
+  // Show loading spinner while checking authentication
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Skeleton className="w-full max-w-md h-96" />
-      </div>
-    );
+    return <SpinnerFullPage message="Loading..." />;
   }
 
   // If route requires authentication but user is not authenticated
@@ -42,9 +29,15 @@ export default function RouteGuard({ children, requireAuth = true, allowedRoles 
   }
 
   // If route has role restrictions
-  if (allowedRoles.length > 0 && auth.user?.role && !allowedRoles.includes(auth.user.role)) {
-    // Redirect to unauthorized page or home
-    return <Navigate to="/unauthorized" replace />;
+  if (allowedRoles.length > 0 && auth.authenticate && auth.user?.role) {
+    if (!allowedRoles.includes(auth.user.role)) {
+      // Redirect to appropriate dashboard based on role instead of unauthorized page
+      if (auth.user.role === "instructor") {
+        return <Navigate to="/instructor" replace />;
+      } else {
+        return <Navigate to="/" replace />;
+      }
+    }
   }
 
   // If all checks pass, render the protected content

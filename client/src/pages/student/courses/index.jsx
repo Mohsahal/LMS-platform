@@ -20,6 +20,7 @@ import {
 import { ArrowUpDownIcon, BookOpen } from "lucide-react";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { SpinnerOverlay } from "@/components/ui/spinner";
 // Removed GSAP animations for cleaner mobile stacking UX
 
 function createSearchParamsHelper(filterParams) {
@@ -326,17 +327,7 @@ function StudentViewCoursesPage() {
                 ) : null}
               </>
             ) : loadingState ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-xl shadow-md p-3 sm:p-4">
-                    <Skeleton className="w-full h-36 sm:h-40 rounded-lg" />
-                    <div className="mt-3 sm:mt-4 space-y-2">
-                      <Skeleton className="h-5 sm:h-6 w-3/4" />
-                      <Skeleton className="h-3 sm:h-4 w-1/2" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <SpinnerOverlay message="Loading courses..." />
             ) : (
               <div className="text-center py-12 sm:py-16">
                 <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">

@@ -19,6 +19,7 @@ import {
   checkCoursePurchaseInfoService,
 } from "@/services";
 import { CheckCircle, Lock, PlayCircle, BookOpen, Loader2 } from "lucide-react";
+import { SpinnerFullPage } from "@/components/ui/spinner";
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -218,7 +219,7 @@ function StudentViewCourseDetailsPage() {
     }
   }, [location.pathname, setStudentViewCourseDetails, setCurrentCourseDetailsId]);
 
-  if (loadingState) return <Skeleton />;
+  if (loadingState) return <SpinnerFullPage message="Loading course details..." />;
 
   if (approvalUrl !== "") {
     window.location.href = approvalUrl;
@@ -246,54 +247,6 @@ function StudentViewCourseDetailsPage() {
                   {studentViewCourseDetails?.title}
                 </h1>
               </div>
-              {/* <p className="text-lg text-gray-600 mb-8 max-w-4xl leading-relaxed">
-                {studentViewCourseDetails?.subtitle}
-              </p> */}
-{/*               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <Users className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="font-semibold text-gray-900">Instructor</span>
-                  </div>
-                  <p className="text-gray-600">{studentViewCourseDetails?.instructorName}</p>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <Globe className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="font-semibold text-gray-900">Language</span>
-                  </div>
-                  <p className="text-gray-600">{studentViewCourseDetails?.primaryLanguage}</p>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <Users className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="font-semibold text-gray-900">Students</span>
-                  </div>
-                  <p className="text-gray-600">
-                    {studentViewCourseDetails?.students.length}{" "}
-                    {studentViewCourseDetails?.students.length <= 1 ? "Student" : "Students"}
-                  </p>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <Calendar className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="font-semibold text-gray-900">Created</span>
-                  </div>
-                  <p className="text-gray-600">{studentViewCourseDetails?.date.split("T")[0]}</p>
-                </div>
-              </div> */}
             </div>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { fetchStudentBoughtCoursesService } from "@/services";
 import { Watch } from "lucide-react";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { SpinnerOverlay } from "@/components/ui/spinner";
 
 function StudentCoursesPage() {
   const { auth } = useContext(AuthContext);
@@ -59,26 +60,7 @@ function StudentCoursesPage() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, idx) => (
-              <Card key={idx} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="relative aspect-video w-full overflow-hidden">
-                  <Skeleton className="w-full h-full" />
-                </div>
-                <CardContent className="p-5">
-                  <Skeleton className="h-5 w-3/4 mb-3" />
-                  <div className="flex items-center gap-2 mb-4">
-                    <Skeleton className="h-6 w-6 rounded-full" />
-                    <Skeleton className="h-4 w-32" />
-                  </div>
-                  <Skeleton className="h-2 w-full rounded" />
-                </CardContent>
-                <CardFooter className="p-5 pt-0">
-                  <Skeleton className="h-10 w-full rounded" />
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+          <SpinnerOverlay message="Loading your courses..." />
         ) : studentBoughtCoursesList && studentBoughtCoursesList.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {studentBoughtCoursesList.map((course) => (
