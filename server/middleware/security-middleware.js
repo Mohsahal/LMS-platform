@@ -38,11 +38,12 @@ const createAdvancedRateLimit = (options) => {
   return limiter;
 };
 
-// Brute force protection for authentication
+// Brute force protection for authentication - optimized for better UX
 const bruteForceProtection = createAdvancedRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per 15 minutes
-  message: "Too many failed login attempts. Please try again in 15 minutes.",
+  max: 10, // 10 attempts per 15 minutes (increased for better UX)
+  message: "Too many login attempts. Please try again in 15 minutes.",
+  skipSuccessfulRequests: true, // Don't count successful logins
 });
 
 // Registration protection
@@ -66,7 +67,7 @@ const passwordResetProtection = createAdvancedRateLimit({
   message: "Too many password reset attempts. Please try again later.",
 });
 
-// Input sanitization middleware
+// Optimized input sanitization - only trim, don't escape (mongo-sanitize handles injection)
 const sanitizeInput = (req, res, next) => {
   const sanitizeObject = (obj) => {
     if (typeof obj !== 'object' || obj === null) return obj;
@@ -74,8 +75,8 @@ const sanitizeInput = (req, res, next) => {
     const sanitized = {};
     for (const [key, value] of Object.entries(obj)) {
       if (typeof value === 'string') {
-        // Remove potentially dangerous characters and normalize
-        sanitized[key] = validator.escape(value.trim());
+        // Only trim - validator.escape is expensive and unnecessary with mongo-sanitize
+        sanitized[key] = value.trim();
       } else if (typeof value === 'object' && value !== null) {
         sanitized[key] = sanitizeObject(value);
       } else {

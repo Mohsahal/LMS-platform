@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 const { generalApiLimiter } = require("./middleware/rate-limiters");
 const { cspOptions, securityLoggerMiddleware } = require("./middleware/security-middleware");
@@ -103,6 +104,17 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
+// Enable gzip compression for all responses
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    return compression.filter(req, res);
+  },
+  level: 6, // Compression level (0-9, 6 is default)
+}));
+
 app.use(securityLoggerMiddleware);
 app.use(cookieParser());
 app.use(express.json({ limit: "100kb" }));
@@ -197,8 +209,14 @@ app.get("/csrf-token", (req, res) => {
 });
 
 // ----------------- Database -----------------
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
+// Optimized MongoDB connection with pooling for better performance
+mongoose.connect(MONGO_URI, {
+  maxPoolSize: 10, // Maintain up to 10 socket connections
+  minPoolSize: 2,  // Maintain at least 2 socket connections
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+})
+  .then(() => console.log("✅ MongoDB connected with optimized pooling"))
   .catch(err => {
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);

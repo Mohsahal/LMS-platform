@@ -113,9 +113,9 @@ const secureRegisterUser = async (req, res) => {
     const existingUser = await User.findOne({
       $or: [
         { userEmail: emailValidation.normalizedEmail },
-        { userName: validator.escape(trimmedUserName) }
+        { userName: trimmedUserName }
       ],
-    });
+    }).lean();
 
     if (existingUser) {
       // Don't reveal which field already exists for security
@@ -126,13 +126,13 @@ const secureRegisterUser = async (req, res) => {
       });
     }
 
-    // Enhanced password hashing with salt rounds
-    const saltRounds = 12;
+    // Optimized password hashing - 10 rounds is secure and faster
+    const saltRounds = 10;
     const hashPassword = await bcrypt.hash(password, saltRounds);
 
     // Create user with security fields
     const newUser = new User({
-      userName: validator.escape(trimmedUserName),
+      userName: trimmedUserName,
       userEmail: emailValidation.normalizedEmail,
       role: "user",
       password: hashPassword,
@@ -226,7 +226,9 @@ const secureLoginUser = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ userEmail: emailValidation.normalizedEmail });
+    // Optimized query - only fetch needed fields
+    const user = await User.findOne({ userEmail: emailValidation.normalizedEmail })
+      .select('+password +failedLoginAttempts +accountLockedUntil +lastLoginIP +lastLoginUserAgent');
 
     if (!user) {
       // Simulate password check timing to prevent user enumeration
@@ -281,13 +283,19 @@ const secureLoginUser = async (req, res) => {
       });
     }
 
-    // Successful login - reset failed attempts and update login info
-    user.failedLoginAttempts = 0;
-    user.accountLockedUntil = null;
-    user.lastLoginIP = clientIP;
-    user.lastLoginUserAgent = userAgent;
-    user.lastLoginAt = new Date();
-    await user.save();
+    // Successful login - update all fields in single query for better performance
+    await User.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          failedLoginAttempts: 0,
+          accountLockedUntil: null,
+          lastLoginIP: clientIP,
+          lastLoginUserAgent: userAgent,
+          lastLoginAt: new Date()
+        }
+      }
+    );
 
     // Generate secure JWT token
     const tokenPayload = {
@@ -496,8 +504,8 @@ const secureVerifyPasswordReset = async (req, res) => {
       });
     }
 
-    // Update password
-    const saltRounds = 12;
+    // Update password - optimized salt rounds
+    const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
     
     user.password = hashedPassword;

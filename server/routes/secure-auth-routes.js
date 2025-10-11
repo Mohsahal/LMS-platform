@@ -32,15 +32,21 @@ router.post("/reset-password", passwordResetProtection, secureVerifyPasswordRese
 // Contact form route with enhanced security
 router.post("/contact", contactFormProtection, secureContactSubmission);
 
-// Auth check route
+// Auth check route - optimized to return only essential user data
 router.get("/check-auth", authenticateMiddleware, (req, res) => {
   const user = req.user;
 
+  // Only return essential fields to reduce payload size
   res.status(200).json({
     success: true,
     message: "Authenticated user!",
     data: {
-      user,
+      user: {
+        _id: user._id,
+        userName: user.userName,
+        userEmail: user.userEmail,
+        role: user.role,
+      },
     },
   });
 });

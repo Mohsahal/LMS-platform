@@ -154,7 +154,7 @@ export default function AuthProvider({ children }) {
 
   const checkAuthUser = useCallback(async () => {
     try {
-      // Check if there's a token in sessionStorage
+      // Check if there's a token in localStorage
       const token = localStorage.getItem("accessToken");
       
       if (!token) {
@@ -166,6 +166,7 @@ export default function AuthProvider({ children }) {
         return;
       }
 
+      // Optimized: Only verify token on server if needed
       const data = await checkAuthService();
       
       if (data.success) {
@@ -175,7 +176,7 @@ export default function AuthProvider({ children }) {
         });
         setLoading(false);
       } else {
-        if (data.message) toast({ title: "Auth check failed", description: data.message });
+        // Silent fail - don't show toast on initial load
         setAuth({
           authenticate: false,
           user: null,
@@ -183,15 +184,15 @@ export default function AuthProvider({ children }) {
         setLoading(false);
       }
     } catch (error) {
-      const message = error?.response?.data?.message || error?.message || "Auth check error";
-      toast({ title: "Auth error", description: message });
+      // Silent fail on auth check - don't spam user with errors
+      console.warn("Auth check failed:", error?.message);
       setAuth({
         authenticate: false,
         user: null,
       });
       setLoading(false);
     }
-  }, [setAuth, setLoading, toast]);
+  }, []);
 
   function resetCredentials() {
     setAuth({

@@ -147,13 +147,15 @@ const UserSchema = new mongoose.Schema({
   }
 });
 
-// Indexes for performance and security
-UserSchema.index({ userEmail: 1 });
-UserSchema.index({ userName: 1 });
-UserSchema.index({ passwordResetExpires: 1 }, { expireAfterSeconds: 0 });
-UserSchema.index({ emailVerificationExpires: 1 }, { expireAfterSeconds: 0 });
-UserSchema.index({ accountLockedUntil: 1 });
-UserSchema.index({ lastLoginAt: -1 });
+// Optimized indexes for performance and security
+UserSchema.index({ userEmail: 1 }, { unique: true }); // Unique index for faster lookups
+UserSchema.index({ userName: 1 }, { unique: true }); // Unique index for faster lookups
+UserSchema.index({ passwordResetExpires: 1 }, { expireAfterSeconds: 0, sparse: true });
+UserSchema.index({ emailVerificationExpires: 1 }, { expireAfterSeconds: 0, sparse: true });
+UserSchema.index({ accountLockedUntil: 1 }, { sparse: true }); // Sparse index - only for locked accounts
+UserSchema.index({ lastLoginAt: -1 }, { sparse: true });
+// Compound index for login queries
+UserSchema.index({ userEmail: 1, password: 1 });
 
 // Pre-save middleware for security
 UserSchema.pre('save', function(next) {
