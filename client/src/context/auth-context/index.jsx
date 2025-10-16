@@ -158,6 +158,7 @@ export default function AuthProvider({ children }) {
       const token = localStorage.getItem("accessToken");
       
       if (!token) {
+        // No token - immediately set to not authenticated (no loading needed)
         setAuth({
           authenticate: false,
           user: null,
@@ -166,7 +167,8 @@ export default function AuthProvider({ children }) {
         return;
       }
 
-      // Optimized: Only verify token on server if needed
+      // Token exists - verify it with server
+      // This is necessary for security and to get fresh user data
       const data = await checkAuthService();
       
       if (data.success) {
@@ -174,22 +176,24 @@ export default function AuthProvider({ children }) {
           authenticate: true,
           user: data.data.user,
         });
-        setLoading(false);
       } else {
-        // Silent fail - don't show toast on initial load
+        // Token invalid or expired - clear it
+        localStorage.removeItem("accessToken");
         setAuth({
           authenticate: false,
           user: null,
         });
-        setLoading(false);
       }
     } catch (error) {
-      // Silent fail on auth check - don't spam user with errors
+      // Network error or server error - clear token to be safe
       console.warn("Auth check failed:", error?.message);
+      localStorage.removeItem("accessToken");
       setAuth({
         authenticate: false,
         user: null,
       });
+    } finally {
+      // Always set loading to false, regardless of outcome
       setLoading(false);
     }
   }, []);
@@ -329,7 +333,14 @@ export default function AuthProvider({ children }) {
         handleResendOTP,
       }}
     >
-      {loading ? <SpinnerFullPage message="Checking authentication..." /> : children}
+      {loading ? (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4"></div>
+            <p className="text-sm text-gray-600">Loading...</p>
+          </div>
+        </div>
+      ) : children}
     </AuthContext.Provider>
   );
 }
