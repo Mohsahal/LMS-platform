@@ -6,9 +6,12 @@ const router = express.Router();
 
 router.use(authenticate);
 
+// More specific routes first
+router.get("/:courseId/submissions", listQuizSubmissions);
+
+// Then general CRUD routes
 router.post("/:courseId", upsertCourseQuiz);
 router.get("/:courseId", getCourseQuiz);
-router.get("/:courseId/submissions", listQuizSubmissions);
 router.delete("/:courseId", deleteCourseQuiz);
 
 module.exports = router;

@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getInstructorCourseQuizService, upsertCourseQuizService, listQuizSubmissionsService } from "@/services";
-import { Loader2, ArrowLeft, Save, CheckCircle2 } from "lucide-react";
+import { getInstructorCourseQuizService, upsertCourseQuizService, listQuizSubmissionsService, deleteCourseQuizService } from "@/services";
+import { Loader2, ArrowLeft, Save, CheckCircle2, Trash2 } from "lucide-react";
 
 function InstructorQuizEditorPage() {
   const { courseId } = useParams();
@@ -15,7 +15,9 @@ function InstructorQuizEditorPage() {
     Array.from({ length: 10 }).map(() => ({ questionText: "", options: ["", "", "", ""], correctIndex: 0 }))
   );
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [submissions, setSubmissions] = useState([]);
+  const [quizExists, setQuizExists] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -24,6 +26,9 @@ function InstructorQuizEditorPage() {
       if (res?.success && res?.data) {
         setTitle(res.data.title || "Course Quiz");
         setQuestions(res.data.questions || questions);
+        setQuizExists(true);
+      } else {
+        setQuizExists(false);
       }
       const subs = await listQuizSubmissionsService(courseId);
       if (subs?.success) setSubmissions(subs.data || []);
@@ -51,12 +56,32 @@ function InstructorQuizEditorPage() {
       const payload = { title, questions };
       const res = await upsertCourseQuizService(courseId, payload);
       if (!res?.success) throw new Error(res?.message || "Failed to save");
+      setQuizExists(true);
       // brief delay to show spinner then navigate back
       setTimeout(() => navigate(-1), 500);
     } catch (e) {
       alert(e.message || "Failed to save quiz");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this quiz? This will also delete all student submissions. This action cannot be undone."
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      const res = await deleteCourseQuizService(courseId);
+      if (!res?.success) throw new Error(res?.message || "Failed to delete quiz");
+      alert("Quiz deleted successfully");
+      navigate(-1);
+    } catch (e) {
+      alert(e.message || "Failed to delete quiz");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -77,6 +102,27 @@ function InstructorQuizEditorPage() {
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Quiz Editor</h1>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">Create and manage quiz questions (10 questions)</p>
           </div>
+          {quizExists && (
+            <Button 
+              onClick={handleDelete} 
+              disabled={deleting || saving}
+              variant="destructive"
+              className="flex items-center gap-2"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="hidden sm:inline">Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Delete Quiz</span>
+                  <span className="sm:hidden">Delete</span>
+                </>
+              )}
+            </Button>
+          )}
           <Button 
             onClick={handleSave} 
             disabled={saving}

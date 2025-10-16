@@ -344,6 +344,11 @@ export async function listQuizSubmissionsService(courseId) {
   return data;
 }
 
+export async function deleteCourseQuizService(courseId) {
+  const { data } = await axiosInstance.delete(`/instructor/quizzes/${courseId}`);
+  return data;
+}
+
 // Quizzes - student
 export async function getStudentQuizForCourseService(courseId) {
   const { data } = await axiosInstance.get(`/student/quizzes/${courseId}`);

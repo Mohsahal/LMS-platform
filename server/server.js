@@ -280,12 +280,20 @@ if (fs.existsSync(clientDistPath)) {
 
 // ----------------- SPA Catch-all Route (must be last) -----------------
 app.get("*", (req, res) => {
+  // Only treat as API if it's an actual API path that wasn't matched by routes above
+  // This prevents frontend routes from being blocked
   const apiPrefixes = [
-    "/auth", "/secure", "/media", "/student", "/instructor",
-    "/notify", "/csrf-token", "/health", "/favicon.ico"
+    "/auth/", "/secure/", "/media/", "/student/", "/instructor/",
+    "/notify/", "/csrf-token", "/health", "/favicon.ico"
   ];
 
-  const isApi = apiPrefixes.some(prefix => req.path === prefix || req.path.startsWith(prefix + "/"));
+  // Check if it's an API route (with trailing slash to avoid blocking /auth frontend route)
+  const isApi = apiPrefixes.some(prefix => {
+    if (prefix.endsWith('/')) {
+      return req.path.startsWith(prefix);
+    }
+    return req.path === prefix;
+  });
   
   if (isApi) {
     return res.status(404).json({
