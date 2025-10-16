@@ -248,7 +248,12 @@ const securityLoggerMiddleware = (req, res, next) => {
     const isMedia = req.url.includes('/media/') || req.url.includes('/upload');
     const isCertificate = req.url.includes('/certificate/');
     const shouldSkipDuration = isMedia || isCertificate;
-    if (res.statusCode >= 400 || (duration > 5000 && !shouldSkipDuration)) {
+    
+    // Don't flag 404s as suspicious - they're usually just incorrect URLs or crawlers
+    const is404 = res.statusCode === 404;
+    
+    // Only log actual errors (500s) or slow requests, not 404s or client errors
+    if ((res.statusCode >= 500 || (duration > 5000 && !shouldSkipDuration)) && !is404) {
       securityLogger.warn('Suspicious activity detected', logData);
     }
   });

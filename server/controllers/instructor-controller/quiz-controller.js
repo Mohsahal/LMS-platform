@@ -58,10 +58,51 @@ const listQuizSubmissions = async (req, res) => {
   }
 };
 
+// Delete a quiz (only by the instructor who created it)
+const deleteCourseQuiz = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const instructorId = req.user?.id || req.user?._id;
+
+    if (!instructorId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Find the quiz
+    const quiz = await Quiz.findOne({ courseId });
+    if (!quiz) {
+      return res.status(404).json({ success: false, message: "Quiz not found" });
+    }
+
+    // Check if the current user is the creator of the quiz
+    if (quiz.instructorId.toString() !== instructorId.toString()) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "You are not authorized to delete this quiz. Only the quiz creator can delete it." 
+      });
+    }
+
+    // Delete the quiz
+    await Quiz.findOneAndDelete({ courseId });
+
+    // Optionally, delete all submissions for this quiz
+    await QuizSubmission.deleteMany({ quizId: quiz._id.toString() });
+
+    return res.status(200).json({ 
+      success: true, 
+      message: "Quiz and all related submissions deleted successfully" 
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Failed to delete quiz" });
+  }
+};
+
 module.exports = {
   upsertCourseQuiz,
   getCourseQuiz,
   listQuizSubmissions,
+  deleteCourseQuiz,
 };
 
 
