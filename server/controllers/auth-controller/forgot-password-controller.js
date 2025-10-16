@@ -28,7 +28,7 @@ const initiatePasswordReset = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "No account found with this email",
+        message: "Email not found. Please check your email address or register for a new account.",
       });
     }
 
@@ -43,7 +43,17 @@ const initiatePasswordReset = async (req, res) => {
     });
 
     // Send OTP email
-    await sendOTPEmail({ email: normalizedEmail, otp });
+    try {
+      await sendOTPEmail({ email: normalizedEmail, otp });
+    } catch (emailError) {
+      // Remove OTP from store if email fails
+      otpStore.delete(normalizedEmail);
+      console.error("Failed to send OTP email:", emailError);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP email. Please verify your email address is valid and try again.",
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -53,7 +63,7 @@ const initiatePasswordReset = async (req, res) => {
     console.error("Password reset initiation error:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to initiate password reset",
+      message: "An error occurred while processing your request. Please try again later.",
     });
   }
 };
@@ -89,7 +99,7 @@ const verifyOTPAndResetPassword = async (req, res) => {
     if (!otpData) {
       return res.status(400).json({
         success: false,
-        message: "No OTP request found. Please request a new OTP",
+        message: "No password reset request found. Please request an OTP first from the forgot password page.",
       });
     }
 
