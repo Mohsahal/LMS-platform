@@ -329,6 +329,10 @@ const generateCompletionCertificate = async (req, res) => {
     const certificateId = randomBytes(8).toString("hex").toUpperCase();
     const issuedOn = new Date(progress.completionDate || Date.now()).toDateString();
 
+    // Save certificateId to approval record for verification
+    approval.certificateId = certificateId;
+    await approval.save();
+
     console.log('Generating certificate for:', {
       userName: studentNameToPrint,
       courseTitle: courseNameToPrint,
@@ -528,13 +532,12 @@ const generateCompletionCertificate = async (req, res) => {
     // Restore coordinate system after all text rendering
     doc.restore();
 
-    // Generate and place QR code that links to student dashboard
+    // Generate and place QR code that links to public certificate verification
     try {
-      // Build a dashboard URL; prefer CLIENT_URL env, else use the configured client URL
-      const frontendBase = process.env.CLIENT_URL 
-      // Adjust path to your student dashboard route (root path for consistency with route guard)
-      const dashboardPath = "/"; // Student dashboard route (root)
-      const qrTargetUrl = `${frontendBase}${dashboardPath}`;
+      // Build verification URL with certificate ID
+      const frontendBase = process.env.CLIENT_URL || "http://localhost:5173";
+      const verificationPath = `/verify-certificate/${certificateId}`;
+      const qrTargetUrl = `${frontendBase}${verificationPath}`;
 
       const qrDataUrl = await QRCode.toDataURL(qrTargetUrl, {
         errorCorrectionLevel: "H",

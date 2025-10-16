@@ -22,11 +22,15 @@ import AnimationProvider from "./context/animation-context";
 import PageTransition from "./components/page-transition";
 import InstructorCertificatesPage from "./pages/instructor/certificates";
 import InstructorQuizEditorPage from "./pages/instructor/quiz-editor";
+import CertificateVerificationPage from "./pages/public/certificate-verification";
 
 function App() {
   return (
     <AnimationProvider>
       <Routes>
+        {/* Public Routes - No Authentication Required */}
+        <Route path="/verify-certificate/:certificateId" element={<CertificateVerificationPage />} />
+
         {/* Public Auth Route - redirects authenticated users */}
         <Route
           path="/auth"

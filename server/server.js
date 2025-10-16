@@ -31,6 +31,7 @@ const studentLiveSessionRoutes = require("./routes/student-routes/live-session-r
 const instructorInternshipRoutes = require("./routes/instructor-routes/internship-routes");
 const instructorQuizRoutes = require("./routes/instructor-routes/quiz-routes");
 const studentQuizRoutes = require("./routes/student-routes/quiz-routes");
+const publicRoutes = require("./routes/public-routes");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -159,6 +160,8 @@ app.use((req, res, next) => {
       req.path === '/favicon.ico' ||
       req.path.startsWith('/static/') ||
       req.path.startsWith('/assets/') ||
+      // Skip CSRF for public endpoints (no authentication required)
+      req.path.startsWith('/public/') ||
       // Skip CSRF for notify contact endpoint (public form submission)
       req.path === '/notify/contact-admin' ||
       // Skip CSRF for authentication endpoints
@@ -223,6 +226,7 @@ mongoose.connect(MONGO_URI, {
   });
 
 // ----------------- API Routes -----------------
+app.use("/public", publicRoutes); // Public routes - no auth required
 app.use("/auth", authRoutes);
 app.use("/secure", secureAuthRoutes);
 app.use("/media", mediaRoutes);
@@ -283,7 +287,7 @@ app.get("*", (req, res) => {
   // Only treat as API if it's an actual API path that wasn't matched by routes above
   // This prevents frontend routes from being blocked
   const apiPrefixes = [
-    "/auth/", "/secure/", "/media/", "/student/", "/instructor/",
+    "/public/", "/auth/", "/secure/", "/media/", "/student/", "/instructor/",
     "/notify/", "/csrf-token", "/health", "/favicon.ico"
   ];
 
