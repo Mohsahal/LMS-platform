@@ -109,6 +109,13 @@ export default function CertificateVerificationPage() {
                 <p className="text-lg font-semibold text-gray-900">{verification?.studentName}</p>
               </div>
 
+              {verification?.studentId && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-500">Student ID</p>
+                  <p className="text-lg font-mono font-semibold text-blue-600">{verification?.studentId}</p>
+                </div>
+              )}
+
               {verification?.studentFatherName && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-gray-500">Guardian Name</p>

@@ -28,13 +28,14 @@ const verifyCertificate = async (req, res) => {
     const course = await Course.findById(approval.courseId);
     
     // Get student details (optional - only public info)
-    const student = await User.findById(approval.studentId).select('userName userEmail');
+    const student = await User.findById(approval.studentId).select('userName userEmail studentId');
 
     // Return verification data
     return res.status(200).json({
       success: true,
       data: {
         certificateId: approval.certificateId,
+        studentId: approval.customStudentId || student?.studentId, // Custom student ID (BRX-STU-XXXX)
         studentName: approval.studentName || student?.userName,
         studentFatherName: approval.studentFatherName,
         courseTitle: approval.courseTitle || course?.title,

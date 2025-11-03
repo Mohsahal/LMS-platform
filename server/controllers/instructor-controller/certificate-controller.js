@@ -15,6 +15,7 @@ const approveCertificate = async (req, res) => {
     const studentName = user?.userName || user?.userEmail || String(studentId);
     const studentEmail = user?.userEmail || undefined;
     const studentFatherName = user?.guardianName || user?.guardianDetails || undefined;
+    const customStudentId = user?.studentId || undefined; // Custom student ID (BRX-STU-XXXX)
     const courseTitle = course?.certificateCourseName || course?.title || undefined;
 
     const doc = await CertificateApproval.findOneAndUpdate(
@@ -27,6 +28,7 @@ const approveCertificate = async (req, res) => {
         studentName,
         studentEmail,
         studentFatherName,
+        customStudentId,
         courseTitle,
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }

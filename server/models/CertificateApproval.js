@@ -14,6 +14,7 @@ const CertificateApprovalSchema = new mongoose.Schema(
     studentName: { type: String },
     studentEmail: { type: String },
     studentFatherName: { type: String },
+    customStudentId: { type: String }, // Custom student ID format (BRX-STU-XXXX)
     courseTitle: { type: String },
     grade: { type: String, default: "A" },
   },

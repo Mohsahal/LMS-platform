@@ -325,17 +325,20 @@ const generateCompletionCertificate = async (req, res) => {
     const fatherNameToPrint = approval.studentFatherName || user.guardianName || user.guardianDetails || "";
     const courseNameToPrint = approval.courseTitle || course.certificateCourseName || course.title;
     const printedGrade = approval.grade || course.defaultCertificateGrade || "A";
+    const studentIdToPrint = user.studentId || `BRX-STU-${userId.substring(userId.length - 4)}`; // Use custom studentId or fallback
 
     const certificateId = randomBytes(8).toString("hex").toUpperCase();
     const issuedOn = new Date(progress.completionDate || Date.now()).toDateString();
 
-    // Save certificateId to approval record for verification
+    // Save certificateId and customStudentId to approval record for verification
     approval.certificateId = certificateId;
+    approval.customStudentId = studentIdToPrint;
     await approval.save();
 
     console.log('Generating certificate for:', {
       userName: studentNameToPrint,
       courseTitle: courseNameToPrint,
+      studentId: studentIdToPrint,
       certificateId,
       issuedOn
     });
@@ -447,7 +450,7 @@ const generateCompletionCertificate = async (req, res) => {
       // Name and Guardian section (top area) - FIXED COORDINATES
       name: { x: 170, y: 258, width: 260, height: 20 },
       guardian: { x: 400, y: 258, width: 240, height: 20 },
-      studentId: { x: 605, y: 257, width: 190, height: 20 },
+      studentId: { x: 605, y: 258, width: 190, height: 20 },
       
       // Course completion section (middle area) - FIXED COORDINATES
       courseName: { x: 418, y: 284, width: 240, height: 20 },
@@ -512,8 +515,8 @@ const generateCompletionCertificate = async (req, res) => {
       renderTextWithFallback(guardianLine, textPositions.guardian);
     }
     
-    // Student ID
-    renderTextWithFallback(userId, textPositions.studentId);
+    // Student ID - Use custom studentId format (BRX-STU-XXXX)
+    renderTextWithFallback(studentIdToPrint, textPositions.studentId);
 
     // has successfully completed the [Course] Course
     renderTextWithFallback(courseNameToPrint, textPositions.courseName);

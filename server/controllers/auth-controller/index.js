@@ -2,6 +2,7 @@ const User = require("../../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const validator = require("validator");
+const { generateUniqueStudentId } = require("../../helpers/studentIdGenerator");
 
 
 const registerUser = async (req, res) => {
@@ -89,6 +90,10 @@ const registerUser = async (req, res) => {
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
+    
+    // Generate unique student ID for users with 'user' role
+    const studentId = await generateUniqueStudentId();
+    
     const newUser = new User({
       // Preserve single spaces; model validation trims
       userName: normalizedUserName,
@@ -97,6 +102,7 @@ const registerUser = async (req, res) => {
       password: hashPassword,
       dob: parsedDob,
       guardianDetails: safeGuardianDetails,
+      studentId: studentId, // Assign custom student ID
     });
 
     await newUser.save();
@@ -105,7 +111,8 @@ const registerUser = async (req, res) => {
       userName: newUser.userName,
       userEmail: newUser.userEmail,
       role: newUser.role,
-      id: newUser._id
+      id: newUser._id,
+      studentId: newUser.studentId
     });
 
     return res.status(201).json({
